@@ -86,4 +86,20 @@ class Orderitem extends AbstractWrapper
         return $order->getUniqueId();
     }
 
+    /**
+     * Returns whether this order item is "in stock"
+     * @return bool
+     */
+    public function isInStock(){
+        if(!$this->getProduct()){
+            return false;
+        }
+        $stockitem = $this->getEavService()->loadEntity($this->getLoadedNodeId(), 'stockitem', $this->getProduct()->getStoreId(), $this->getProduct()->getUniqueId());
+        if(!$stockitem){
+            return false;
+        }
+
+        return ($stockitem->getData('available', 0) >= $this->getData('quantity', 0));
+    }
+
 }

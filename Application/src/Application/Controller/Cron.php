@@ -71,6 +71,8 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
     }
 
     public function runAction(){
+        new \Application\Helper\ErrorHandler();
+        
         if (extension_loaded('newrelic')) {
             newrelic_background_job(true);
         }

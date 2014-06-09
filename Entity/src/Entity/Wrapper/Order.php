@@ -109,4 +109,17 @@ class Order extends AbstractWrapper
         }
         return (int) $totalItemAggregate['agg_quantity_sum'];
     }
+
+    /**
+     * Returns whether or not this order is fully in stock
+     * @return bool
+     */
+    public function isInStock(){
+        foreach($this->getOrderItems() as $item){
+            if(!$item->isInStock()){
+                return false;
+            }
+        }
+        return true;
+    }
 }
