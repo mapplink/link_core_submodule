@@ -4,7 +4,7 @@ namespace Application\Helper;
 
 class ErrorHandler {
 
-    const ERROR_TO = 'matt@lero9.co.nz';
+    const ERROR_TO = 'admin@lero9.co.nz';
     const ERROR_FROM = 'noreply@lero9.co.nz';
 
     protected static $allowEx = null;
