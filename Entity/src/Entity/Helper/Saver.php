@@ -275,7 +275,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     throw new MagelinkException('Unknown error executing attribute update query: ' . $s);
                 }
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_commit', 'updateData - ' . $entity->getId() . ' committed, ' . count($sql) . ' queries ran', array('sql'=>$s), array('entity'=>$entity));
+            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_commit', 'updateData - ' . $entity->getId() . ' committed, ' . count($sql) . ' queries ran', array('sql'=>$sql), array('entity'=>$entity));
             $this->commitTransaction('save-'.$entity->getId());
         }catch(\Exception $e){
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'sav_update_err', 'updateData - ' . $entity->getId() . ' - Exception in processing, rolling back', array('message'=>$e->getMessage()), array('entity'=>$entity, 'exception'=>$e));
