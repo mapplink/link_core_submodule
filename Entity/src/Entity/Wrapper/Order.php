@@ -34,6 +34,15 @@ class Order extends AbstractWrapper
      * Retrieve all the order items attached to this order
      * @return \Entity\Wrapper\Orderitem[]
      */
+    public function getItems()
+    {
+        return $this->getOrderItems();
+    }
+
+    /**
+     * Retrieve all the order items attached to this order
+     * @return \Entity\Wrapper\Orderitem[]
+     */
     public function getOrderItems()
     {
         return $this->getChildren('orderitem');
