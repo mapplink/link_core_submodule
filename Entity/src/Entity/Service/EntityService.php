@@ -498,18 +498,6 @@ class EntityService implements ServiceLocatorAwareInterface {
 
         return $entity;
     }
-
-    /**
-     * Perform a silent update of data to an entity - nothing is logged nor processed. SHOULD NOT BE USED WITHOUT EXTREME REASON.
-     *
-     * @param \Entity\Entity $entity
-     * @param array $data
-     * @param array|bool merge
-     * @return array
-     */
-    public function silentUpdateEntity(\Entity\Entity $entity, $data, $merge=false){
-        return $this->getSaver()->saveEntity($entity, $data, $merge);
-    }
     
     /**
      * Creates an entity identifier entry to link the given entity to this node.
@@ -731,6 +719,18 @@ class EntityService implements ServiceLocatorAwareInterface {
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'update', 'updateEntity - Keys updated - ' . $node_id . ' - ' . $entity->getId(), array('updated'=>$attributes, 'keys'=>array_keys($data), 'tfkeys'=>array_keys($transformedData)), array('entity'=>$entity, 'node'=>$node_id));
             $this->getServiceLocator()->get('routerService')->distributeUpdate($entity, $changedData, $node_id, \Entity\Update::TYPE_UPDATE);
         }
+    }
+
+    /**
+     * Perform a silent update of data to an entity - nothing is logged nor processed. SHOULD NOT BE USED WITHOUT EXTREME REASON.
+     *
+     * @param \Entity\Entity $entity
+     * @param array $data
+     * @param array|bool merge
+     * @return array
+     */
+    public function silentUpdateEntity(\Entity\Entity $entity, $data, $merge=false){
+        return $this->getSaver()->saveEntity($entity, $data, $merge);
     }
 
     /**

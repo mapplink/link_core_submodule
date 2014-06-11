@@ -239,8 +239,9 @@ class NodeService implements ServiceLocatorAwareInterface {
      * Unassociates the given attribute with the given node. No data is removed and the attribute is left in place.
      * @param int $node_id
      * @param string $attribute_code
+     * @param string $entity_type
      */
-    public function unsubscribeAttribute($node_id, $attribute_code){
+    public function unsubscribeAttribute($node_id, $attribute_code, $entity_type){
         unset($this->_subscribedAttributeCodeCache[$node_id]);
 
         $entity_type = $this->verifyEntityType($entity_type);

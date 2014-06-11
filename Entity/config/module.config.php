@@ -34,6 +34,7 @@ return array (
         'address'=>'\Entity\Wrapper\Address',
         'orderitem'=>'\Entity\Wrapper\Orderitem',
         'product'=>'\Entity\Wrapper\Product',
+        'creditmemo'=>'\Entity\Wrapper\Creditmemo',
     ),
 
     'magelink_cron' => array(
