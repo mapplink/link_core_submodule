@@ -86,7 +86,6 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
 
         $adapter = $this->getAdapter();
         $this->beginTransaction('touch-'.$entity->getId());
-        $adapter->getDriver()->getConnection()->beginTransaction();
         try{
             foreach($sql as $s){
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_touch_sql', 'touchEntity - ' . $entity->getId() . ' SQL: ' . $s, array('sql'=>$s), array('entity'=>$entity));

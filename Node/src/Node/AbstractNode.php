@@ -118,27 +118,6 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
 
         $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'update', 'AbstractNode update', array('updates'=>count($updates), 'actions'=>count($actions)), array('node'=>$this));
 
-        foreach($actions as $act){
-            /* @var $act \Entity\Action */
-            $entType = $act->getEntity()->getTypeStr();
-            if(!isset($this->_gateway[$entType])){
-                // Lazy-load gateway for entity type
-                $this->_gateway[$entType] = $this->_lazyLoad($entType);
-            }
-            try{
-                $result = true;
-                if($this->_gateway[$entType]){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'send_action', 'Sending action ' . $act->getId() . ' to ' . $this->getNodeId(), array($act->getId()), array('entity'=>$act->getEntity(), 'node'=>$this));
-                    $result = $this->_gateway[$entType]->writeAction($act);
-                }
-                if($result){
-                    $nodeService->setActionStatus($this->_entity, $act, 1);
-                }
-            }catch(\Magelink\Exception\MagelinkException $e){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'action_ex', 'Uncaught exception during action processing for ' . $act->getId() . ' to ' . $this->getNodeId() . ': ' . $e->getMessage(), array($e->getMessage(), $e->getTraceAsString()), array('exception'=>$e));
-            }
-        }
-
         // Separate all updates into an array for each entity type
         $updatesByType = array();
         foreach($updates as $upd){
@@ -189,6 +168,27 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
 
             foreach($arr as $upd){
                 $nodeService->setUpdateStatus($this->_entity, $upd, 1);
+            }
+        }
+
+        foreach($actions as $act){
+            /* @var $act \Entity\Action */
+            $entType = $act->getEntity()->getTypeStr();
+            if(!isset($this->_gateway[$entType])){
+                // Lazy-load gateway for entity type
+                $this->_gateway[$entType] = $this->_lazyLoad($entType);
+            }
+            try{
+                $result = true;
+                if($this->_gateway[$entType]){
+                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'send_action', 'Sending action ' . $act->getId() . ' to ' . $this->getNodeId(), array($act->getId()), array('entity'=>$act->getEntity(), 'node'=>$this));
+                    $result = $this->_gateway[$entType]->writeAction($act);
+                }
+                if($result){
+                    $nodeService->setActionStatus($this->_entity, $act, 1);
+                }
+            }catch(\Magelink\Exception\MagelinkException $e){
+                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'action_ex', 'Uncaught exception during action processing for ' . $act->getId() . ' to ' . $this->getNodeId() . ': ' . $e->getMessage(), array($e->getMessage(), $e->getTraceAsString()), array('exception'=>$e));
             }
         }
     }
