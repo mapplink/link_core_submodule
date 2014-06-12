@@ -162,7 +162,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                     $this->_gateway[$entType]->writeUpdates($upd['entity'], $upd['attributes'], $upd['type']);
                 }catch(\Magelink\Exception\MagelinkException $e){
                     $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'update_ex', 'Uncaught exception during update processing for ' . $eid . ' to ' . $this->getNodeId() . ': ' . $e->getMessage(), array($e->getMessage(), $e->getTraceAsString()), array('exception'=>$e));
-                    throw new \Magelink\Exception\NodeException('Error applying updates:' . $e->getMessage(), 0, $e);
+                    throw new \Magelink\Exception\NodeException('Error applying updates: ' . $e->getMessage(), 0, $e);
                 }
             }
 
@@ -181,7 +181,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
             try{
                 $result = true;
                 if($this->_gateway[$entType]){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'send_action', 'Sending action ' . $act->getId() . ' to ' . $this->getNodeId(), array($act->getId()), array('entity'=>$act->getEntity(), 'node'=>$this));
+                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'send_action', 'Sending action ' . $act->getId() . ' to ' . $this->getNodeId() . ' (' . $act->getEntity()->getUniqueId() . ')', array($act->getId()), array('entity'=>$act->getEntity(), 'node'=>$this));
                     $result = $this->_gateway[$entType]->writeAction($act);
                 }
                 if($result){
@@ -189,6 +189,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                 }
             }catch(\Magelink\Exception\MagelinkException $e){
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'action_ex', 'Uncaught exception during action processing for ' . $act->getId() . ' to ' . $this->getNodeId() . ': ' . $e->getMessage(), array($e->getMessage(), $e->getTraceAsString()), array('exception'=>$e));
+                throw new \Magelink\Exception\NodeException('Error applying actions: ' . $e->getMessage(), 0, $e);
             }
         }
     }
