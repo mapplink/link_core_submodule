@@ -47,6 +47,8 @@ class ErrorHandler {
         echo $ex->getTraceAsString();
     }
 
+    protected $_lastErr = false;
+
     /**
      * Error handler callback
      * @param int $errno
@@ -119,6 +121,12 @@ Line {$errline} in file {$errfile}.
 
 EOF;
 ;
+
+        if($this->_lastErr == $content){
+            return false; // Already sent
+        }else{
+            $this->_lastErr = $content;
+        }
 
         mail(self::ERROR_TO, 'MageLink Error Handler: ' . $typestr, $content, 'From: ' . self::ERROR_FROM);
 

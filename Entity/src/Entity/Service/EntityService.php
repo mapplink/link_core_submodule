@@ -705,7 +705,7 @@ class EntityService implements ServiceLocatorAwareInterface {
             }
             $data[$k] = $v;
         }
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'update_tf', 'updateEntity - transform gave ' . count($transformedData) . ' updates for - ' . $entity->getId(), array('tfdata'=>$transformedData, 'predata'=>$preData), array('entity'=>$entity, 'node'=>$node_id));
+        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'update_tf', 'updateEntity - transform gave ' . count($transformedData) . ' updates for - ' . $entity->getId(), array('tfdata'=>$transformedData, 'predata'=>$preData), array('entity'=>$entity, 'node'=>$node_id));
 
         $attributes = $this->getSaver()->saveEntity($entity, $data, $merge);
 

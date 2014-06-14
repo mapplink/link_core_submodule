@@ -91,7 +91,7 @@ abstract class AbstractConsole extends AbstractActionController implements Servi
 
     /**
      * Cache of preloaded table gateways
-     * @var TableGateway[]
+     * @var \Zend\Db\TableGateway\TableGateway[]
      */
     protected $_tgCache = array();
 
@@ -104,7 +104,7 @@ abstract class AbstractConsole extends AbstractActionController implements Servi
         if(isset($this->_tgCache[$table])){
             return $this->_tgCache[$table];
         }
-        $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
+        $this->_tgCache[$table] = new \Zend\Db\TableGateway\TableGateway($table, $this->getServiceLocator()->get('zend_db'));
         return $this->_tgCache[$table];
     }
 

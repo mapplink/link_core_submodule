@@ -67,8 +67,8 @@ abstract class AbstractFilter implements ServiceLocatorAwareInterface {
      * Run this filter for an edge.
      * If not supported, must return true.
      *
-     * @param $sourceNodeId The source of the current update being passed through
-     * @param $targetNodeId The target of the current update being passed through (this filter is run once for each target)
+     * @param int $sourceNodeId The source of the current update being passed through
+     * @param int $targetNodeId The target of the current update being passed through (this filter is run once for each target)
      * @param array $attributes A list of changed attributes, key=>value with new values. Old values / other data is in the provided Entity
      * @return boolean Whether this edge should be processed. Return true to continue normally, false to block the update from propagating.
      */
