@@ -17,7 +17,7 @@ use Node\Entity\Node;
 
 
 class NodeForm extends DoctrineZFBaseForm
-{  
+{
 
     protected $config;
 
@@ -27,7 +27,7 @@ class NodeForm extends DoctrineZFBaseForm
      * @param string $name
      */
     public function __construct(\Doctrine\ORM\EntityManager $entityManager, array $config, $name = null)
-    {   
+    {
         parent::__construct($entityManager, $name);
 
         $this->config = $config;
@@ -87,7 +87,7 @@ class NodeForm extends DoctrineZFBaseForm
         if ($object->getId()) {
 
             $this->getObject()->loadSimpleData();
- 
+
             $nodeDataConfig = $this->config['node_types'][$object->getType()]['config'];
 
             foreach ($nodeDataConfig as $name => $dataConfig) {
@@ -100,7 +100,7 @@ class NodeForm extends DoctrineZFBaseForm
                     'attributes' => array(
                         'value' => $this->getObject()->getSimpleData($name),
                     )
-                )); 
+                ));
             }
         }
     }
@@ -114,7 +114,7 @@ class NodeForm extends DoctrineZFBaseForm
         $existed = (bool) $this->getObject()->getId();
 
         $result = parent::save();
-        
+
         if ($existed) {
             foreach ($this->config['node_types'][$this->getObject()->getType()]['config'] as $name => $config) {
                 if ($field = $this->get($name)) {
@@ -128,5 +128,5 @@ class NodeForm extends DoctrineZFBaseForm
         return $result;
     }
 
-   
+
 }
