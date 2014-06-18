@@ -17,9 +17,15 @@ return array (
 
             'BjyAuthorize\Guard\Controller' => function($serviceLocator) {
                 $config = $serviceLocator->get('BjyAuthorize\Config');
-
-                return new \Magelink\Auth\ACLGuardController($config['guards']['BjyAuthorize\Guard\Controller'], $serviceLocator);
+                return new \Magelink\Auth\ACLGuardController(
+                    $config['guards']['BjyAuthorize\Guard\Controller'], $serviceLocator);
             },
+
+            'BjyAuthorize\Guard\Route' => function($serviceLocator) {
+                    $config = $serviceLocator->get('BjyAuthorize\Config');
+                    return new \Magelink\Auth\ACLGuardController(
+                        $config['guards']['BjyAuthorize\Guard\Route'], $serviceLocator);
+            }
         )
     ),
     
