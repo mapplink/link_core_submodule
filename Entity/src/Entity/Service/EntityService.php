@@ -850,6 +850,83 @@ class EntityService implements ServiceLocatorAwareInterface {
     }
 
     /**
+     * @param        $method
+     * @param        $amount
+     * @param string $ccType
+     * @return array
+     */
+    public function convertPaymentData($method, $amount, $ccType = '')
+    {
+        $methodCcType = $method.($ccType ? '{{'.$ccType.'}}' : '');
+        $payments = array($methodCcType => $amount);
+
+        return $payments;
+    }
+
+    protected function getMethodCcType($extendMethod)
+    {
+        $findCcTypeRegEx = '#{{([^}]+)}}#ism';
+        preg_match($findCcTypeRegEx, $extendMethod, $ccType);
+
+        if ($ccType) {
+            $ccType = $ccType[1];
+            $method = str_replace('{{'.$ccType.'}}', '', $extendMethod);
+        }else{
+            $method = $extendMethod;
+            $ccType = '';
+        }
+
+        return array('method' => $method, 'ccType' => $ccType);
+    }
+
+    /**
+     * @param \Entity\Entity $order
+     * @param string $dataType
+     * @return array $paymentData
+     */
+    protected  function getPaymentData(array $paymentMethod, $dataType)
+    {
+        if (is_string($dataType)) {
+            $paymentData = array();
+            foreach ($paymentMethod as $extendMethod => $amount) {
+                extract($this->getMethodCcType($extendMethod));
+                if (in_array($dataType, array('method', 'ccType', 'amount'))) {
+                    $paymentData[$extendMethod] = $$dataType;
+                }
+            }
+        }
+
+        return $paymentData;
+    }
+
+    /**
+     * @param \Entity\Entity $order
+     * @return array $ccTypes
+     */
+    public function getCcTypes(array $paymentMethod)
+    {
+        return $this->getPaymentData($paymentMethod, 'ccType');
+    }
+
+    /**
+     * @param \Entity\Entity $order
+     * @return array $ccTypes
+     */
+    public function getPaymentMethods(array $paymentMethod)
+    {
+        return $this->getPaymentData($paymentMethod, 'method');
+    }
+
+    /**
+     * @param \Entity\Entity $order
+     * @return array $ccTypes
+     */
+    public function getPaymentAmounts(array $paymentMethod)
+    {
+        return $this->getPaymentData($paymentMethod, 'amount');
+    }
+
+    /**
      * Parse a MLQL query (for debugging)
      * @param string $mlql The MLQL to be parsed (see separate MLQL docs)
      * @return array
