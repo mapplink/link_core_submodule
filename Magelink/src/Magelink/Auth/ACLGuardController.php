@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Magelink\Auth;
 
 use BjyAuthorize\Guard\Controller as BaseGuardController;
@@ -10,7 +9,7 @@ use Zend\Console\Request as ConsoleRequest;
 class ACLGuardController extends BaseGuardController
 {  
     /**
-    * @see pareng::onDispatch()
+    * @see parent::onDispatch()
     * @param  MvcEvent $event
     * @return 
     */
