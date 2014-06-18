@@ -10,13 +10,17 @@ class TransformFactory implements ServiceLocatorAwareInterface {
     /**
      * Return a new Transform instance
      * @param \Router\Entity\RouterTransform $entity
-     * @return \Router\Transform\AbstractTransform
+     * @return \Router\Transform\AbstractTransform|null
      */
     public function getTransform(\Router\Entity\RouterTransform $entity) {
 
         $code = $entity->getTransformType();
 
-        return $this->getServiceLocator()->get('transform_' . strtolower($code));
+        try{
+            return $this->getServiceLocator()->get('transform_' . strtolower($code));
+        }catch(\Zend\ServiceManager\Exception\ServiceNotFoundException $snfe){
+            return null;
+        }
 
     }
 

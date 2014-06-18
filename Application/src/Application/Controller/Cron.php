@@ -109,12 +109,6 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                 continue;
             }
 
-            $lock = $this->acquireLock('cron-'.$name);
-            if(!$lock){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'cron_locked', 'Locked cron job ' . $name, array('time'=>$time, 'name'=>$name, 'class'=>$class));
-                continue;
-            }
-
             $ran = true;
 
             $obj = new $class();
@@ -132,10 +126,13 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
             }
             if(!$check){
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'cron_skip', 'Skipping cron job ' . $name, array('time'=>$time, 'name'=>$name, 'class'=>$class));
-                $this->releaseLock('cron-'.$name);
                 continue;
             }else{
-                $ran = true;
+                $lock = $this->acquireLock('cron-'.$name);
+                if(!$lock){
+                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'cron_locked', 'Locked cron job ' . $name, array('time'=>$time, 'name'=>$name, 'class'=>$class));
+                    continue;
+                }
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'cron_run', 'Running cron job ' . $name, array('time'=>$time, 'name'=>$name, 'class'=>$class));
                 $obj->cronRun();
                 $this->releaseLock('cron-'.$name);
