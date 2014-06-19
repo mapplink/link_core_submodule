@@ -71,7 +71,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
      * @param $entType
      * @return AbstractGateway
      */
-    private function _lazyLoad($entType){
+    protected function _lazyLoad($entType){
         $gateway = $this->_createGateway($entType);
         if($gateway instanceof ServiceLocatorAwareInterface){
             $gateway->setServiceLocator($this->getServiceLocator());
