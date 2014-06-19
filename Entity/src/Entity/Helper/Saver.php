@@ -80,7 +80,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         $sql = array('UPDATE entity AS e SET e.updated_at = ' . $this->escape($ts) . ' WHERE e.entity_id = ' . $this->escape($entity->getId()));
 
         foreach($attributes as $att){
-            $attData = $this->geAttribute($att);
+            $attData = $this->getAttribute($att, $entity->getType());
             $sql[] = 'UPDATE entity_value_' . $attData['type'] . ' AS ev SET ev.updated_at = ' . $this->escape($ts) . ' WHERE ev.entity_id = ' . $this->escape($entity->getId()) . ' AND ev.attribute_id = ' . $this->escape($attData['attribute_id']);
         }
 
