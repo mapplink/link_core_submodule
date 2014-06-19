@@ -184,7 +184,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 $attributesToDelete[] = $k;
             }else if($d === null && $v !== null){
                 $attributesToCreate[] = $k;
-            }else if($d != $v){
+            }else if($d !== $v){
                 if(is_array($d) && $merge === true){
                     $attributesToMerge[] = $k;
                 }else if(is_array($merge)){
