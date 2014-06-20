@@ -265,11 +265,23 @@ class EntityService implements ServiceLocatorAwareInterface {
      * * all_lt - Same as all_eq but does a less-than search instead of equals
      * * not_eq - Does an exact not equals search, or in the case of an attribute that has multiple values in the DB, checks that none of them are equal to this value.
      * * not_in - Same as not_eq but performs either a check the DB value is not one of the provided values, or if there are multiple values in the DB, that none of them are equal to any of the provided values,
+     * * null - Must be equal to null
+     * * notnull - Must not be equal to null
+     * * impossible - Will never be true (used internally)
 
      * In addition to the above, the options array can contain the following keys:
      * * order - An associative array of attribute codes to sort by, organized with the attribute code as the key and the direction as the value.
-     * * limit - The maximum number of rows to return
-     * * offset - The number of rows to skip
+     * * limit - The maximum number of rows to return (MySQL LIMIT)
+     * * offset - The number of rows to skip (MySQL OFFSET)
+     * * aggregate - The aggregate configuration, see ->aggregateEntity
+     * * select_prefix - A prefix to be defined to all fields in the result (internal use only)
+     * * fkey - An array of fields to join to allow searching on entity fkey resolved attributes. Key should be attribute code (entity type) and value should be entity type of target entity.
+     * * count - A field to perform a COUNT on. Can be * or the name of a static field.
+     * * group - An array of attribute codes to be included in the GROUP BY of the locate select (internal use only)
+     * * linked_to_node - If specified, filters only on entities linked to this node. Field LOCAL_ID is then available for searching on as well.
+     * * no_select - Rarely used internal option, stops all static / searched fields being selected in the locate query (used for nested searches, deprecated)
+     * * static_field - A static field name, which will cause locateEntity to return an array with the keys being entity IDs and the values being the values of this static field. Used to get an array of matching unique IDs, for instance.
+     * * node_id - Generally populated automatically, used to set the loadedNodeId for any loaded entities (for loading of resolved entities and other data later on). Should not be overridden without good cause.
      * 
      * @param int $node_id
      * @param int|string $entity_type
