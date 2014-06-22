@@ -45,7 +45,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                 if(!$res){
                     return false;
                 }
-                fwrite($hdl, date('Y-m-d H:i:s'));
+                fwrite($hdl, $code.', date: '.date('Y-m-d H:i:s'));
                 fflush($hdl);
                 flock($hdl, LOCK_UN);
                 fclose($hdl);
