@@ -29,14 +29,27 @@ class Address extends AbstractWrapper
     public function getAddressFullArray()
     {   
         $addressParts = array();
-        foreach (array (
-            $this->getData('first_name') . ' ' . $this->getData('middle_name') . ' ' . $this->getData('last_name'),
-            $this->getData('company'),
-            $this->getData('street'),
-            $this->getData('region'),
-            $this->getData('city'),
-            $this->getData('country_code') . ' ' . $this->getData('postcode')
-        ) as $part) {
+
+        // Eliminate ambiguous line endings Split street information in multiple lines, if necessary and store it as an array
+        $streetInfo =str_replace("\r\n", "\n", $this->getData('street'));
+        if (strpos($streetInfo, "\n") === FALSE) {
+            $streetArray = array($streetInfo);
+        }else{
+            $streetArray = explode("\n", $streetInfo);
+        }
+
+        $addressArray = array (
+            $this->getData('first_name').' '.$this->getData('middle_name').' '.$this->getData('last_name'),
+            $this->getData('company')
+        );
+        foreach ($streetArray as $streetInfo) {
+            $addressArray[] = $streetInfo;
+        }
+        $addressArray[] = $this->getData('region');
+        $addressArray[] = $this->getData('city');
+        $addressArray[] = $this->getData('country_code') . ' ' . $this->getData('postcode');
+
+        foreach ($addressArray as $part) {
             $part = trim($part);
             if ($part) {
                 $addressParts[] = $part;
