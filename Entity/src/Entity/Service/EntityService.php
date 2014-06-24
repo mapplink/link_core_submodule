@@ -146,25 +146,40 @@ class EntityService implements ServiceLocatorAwareInterface {
     /**
      * Loads the entity with the provided unique key from the database for the given node.
      * 
-     * @param int $node_id
-     * @param int|string $entity_type
-     * @param string $store_id
-     * @param string $unique_id
+     * @param int $nodeId
+     * @param int|string $entityType
+     * @param string $storeId
+     * @param string $uniqueId
      * @return \Entity\Entity|null
      */
-    public function loadEntity ( $node_id, $entity_type, $store_id, $unique_id ) {
-        $this->verifyNodeId($node_id);
-        $this->verifyEntityType($entity_type);
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'loade', 'loadEntity - ' . $node_id . ' - ' . $entity_type . ' - ' . $store_id . ' - ' . $unique_id, array('node_id'=>$node_id, 'entity_type'=>$entity_type, 'store_id'=>$store_id, 'unique_id'=>$unique_id));
+    public function loadEntity($nodeId, $entityType, $storeId, $uniqueId)
+    {
+        $this->verifyNodeId($nodeId);
+        $this->verifyEntityType($entityType);
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'loade',
+                'loadEntity - '.$nodeId.' - '.$entityType.' - '.$storeId.' - '.$uniqueId,
+                array('node_id'=>$nodeId, 'entity_type'=>$entityType, 'store_id'=>$storeId, 'unique_id'=>$uniqueId)
+            );
 
-        $attributes = $this->getServiceLocator()->get('nodeService')->getSubscribedAttributeCodes($node_id, $entity_type);
+        $attributes = $this->getServiceLocator()->get('nodeService')
+            ->getSubscribedAttributeCodes($nodeId, $entityType);
 
-        $result = $this->getLoader()->loadEntities($entity_type, $store_id, array('UNIQUE_ID'=>$unique_id), $attributes, array('UNIQUE_ID'=>'eq'), array('limit'=>1, 'node_id'=>$node_id));
+        $result = $this->getLoader()
+            ->loadEntities(
+                $entityType,
+                $storeId,
+                array('UNIQUE_ID'=>$uniqueId),
+                $attributes,
+                array('UNIQUE_ID'=>'eq'),
+                array('limit'=>1, 'node_id'=>$nodeId)
+            );
 
-        if(!$result || !count($result)){
+        if (!$result || !count($result)) {
             return null;
         }else{
-            foreach($result as $ent){
+            foreach ($result as $ent) {
                 // Return first row
                 return $ent;
             }
@@ -689,47 +704,69 @@ class EntityService implements ServiceLocatorAwareInterface {
      * The $merge parameter represents whether the provided data should replace the existing data or be merged into it. If this is set to true all values that are already arrays will have the new data provided appended to the end, and any multi-type attributes will be run through array_merge with the new data taking precedence where keys are the same.
      * Alternatively, $merge can be provided as an associative array with the key being the attribute code, and the value being a boolean representing whether to merge or replace data. When specified individually this allows turning single values into array values. All non-specified keys default to false (i.e. replace only).
      * 
-     * @param int $node_id
+     * @param int $nodeId
      * @param \Entity\Entity $entity
      * @param array $data
      * @param boolean|array $merge
      * @throws MagelinkException
      */
-    public function updateEntity ( $node_id, \Entity\Entity $entity, $data, $merge = false ) {
-        $this->verifyNodeId($node_id);
+    public function updateEntity($nodeId, \Entity\Entity $entity, $data, $merge = FALSE)
+    {
+        $this->verifyNodeId($nodeId);
+        $allowedAttributes = $this->getServiceLocator()->get('nodeService')
+            ->getSubscribedAttributeCodes($nodeId, $entity->getType(), true);
 
-        $allowedAttributes = $this->getServiceLocator()->get('nodeService')->getSubscribedAttributeCodes($node_id, $entity->getType(), true);
-        foreach($data as $k=>$v){
-            if(strlen(trim($k)) == 0){
-                unset($data[$k]);
+        foreach ($data as $key=>$value) {
+            if (strlen(trim($key)) == 0) {
+                unset($data[$key]);
                 continue;
             }
-            if(!in_array($k, $allowedAttributes)){
-                throw new NodeException('Invalid attribute specified for update ' . $k);
+            if (!in_array($key, $allowedAttributes)) {
+                throw new NodeException('Invalid attribute specified for update ' . $key);
             }
         }
         $preData = $data;
 
-        $transformedData = $this->getServiceLocator()->get('routerService')->processTransforms($entity, $data, $node_id, \Entity\Update::TYPE_UPDATE);
-        foreach($transformedData as $k=>$v){
-            if(is_array($merge) && array_key_exists($k, $merge)){
-                $merge[$k] = false;
+        $transformedData = $this->getServiceLocator()->get('routerService')
+            ->processTransforms($entity, $data, $nodeId, \Entity\Update::TYPE_UPDATE);
+        foreach($transformedData as $key=>$value){
+            if(is_array($merge) && array_key_exists($key, $merge)){
+                $merge[$key] = false;
             }
-            $data[$k] = $v;
+            $data[$key] = $value;
         }
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'update_tf', 'updateEntity - transform gave ' . count($transformedData) . ' updates for - ' . $entity->getId(), array('tfdata'=>$transformedData, 'predata'=>$preData), array('entity'=>$entity, 'node'=>$node_id));
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'update_tf',
+                'updateEntity - transform gave '.count($transformedData).' updates for - '.$entity->getId(),
+                array('tfdata'=>$transformedData, 'predata'=>$preData),
+                array('entity'=>$entity, 'node'=>$nodeId)
+            );
 
         $attributes = $this->getSaver()->saveEntity($entity, $data, $merge);
 
         if(!count($attributes)){
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_WARN, 'update_same', 'updateEntity - All data was the same - ' . $node_id . ' - ' . $entity->getId(), array('data'=>$data), array('entity'=>$entity, 'node'=>$node_id));
+            $this->getServiceLocator()->get('logService')->log(
+                \Log\Service\LogService::LEVEL_WARN,
+                'update_same',
+                'updateEntity - All data was the same - '.$nodeId.' - '.$entity->getId(),
+                array('data'=>$data),
+                array('entity'=>$entity, 'node'=>$nodeId)
+            );
         }else{
             $changedData = array();
             foreach($attributes as $att){
                 $changedData[$att] = $data[$att];
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'update', 'updateEntity - Keys updated - ' . $node_id . ' - ' . $entity->getId(), array('updated'=>$attributes, 'keys'=>array_keys($data), 'tfkeys'=>array_keys($transformedData)), array('entity'=>$entity, 'node'=>$node_id));
-            $this->getServiceLocator()->get('routerService')->distributeUpdate($entity, $changedData, $node_id, \Entity\Update::TYPE_UPDATE);
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_INFO,
+                    'update',
+                    'updateEntity - Keys updated - '.$nodeId.' - '.$entity->getId(),
+                    array('updated'=>$attributes, 'keys'=>array_keys($data), 'tfkeys'=>array_keys($transformedData)),
+                    array('entity'=>$entity, 'node'=>$nodeId)
+                );
+            $this->getServiceLocator()->get('routerService')
+                ->distributeUpdate($entity, $changedData, $nodeId, \Entity\Update::TYPE_UPDATE);
         }
     }
 
@@ -753,9 +790,15 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @param \Entity\Entity $entity
      * @param string $new_unique_id
      */
-    public function updateEntityUnique( $node_id, \Entity\Entity $entity, $new_unique_id ) {
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'update_unique', 'updateEntityUnique - setting ID ' . $new_unique_id . ' for ' . $entity->getId(), array('new_id'=>$new_unique_id), array('entity'=>$entity, 'node'=>$node_id));
-
+    public function updateEntityUnique( $node_id, \Entity\Entity $entity, $new_unique_id )
+    {
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_INFO,
+                'update_unique',
+                'updateEntityUnique - setting ID '.$new_unique_id.' for ' . $entity->getId(),
+                array('new_id'=>$new_unique_id),
+                array('entity'=>$entity, 'node'=>$node_id)
+            );
         $this->getSaver()->setEntityUnique($entity->getId(), $new_unique_id);
         $this->getSaver()->touchEntity($entity);
     }

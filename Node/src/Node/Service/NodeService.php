@@ -15,7 +15,8 @@ use Magelink\Exception\MagelinkException;
  *
  * @package Node\Service
  */
-class NodeService implements ServiceLocatorAwareInterface {
+class NodeService implements ServiceLocatorAwareInterface
+{
 
     /**
      * Return an array of all currently active node entities
