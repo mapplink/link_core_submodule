@@ -722,7 +722,7 @@ class EntityService implements ServiceLocatorAwareInterface {
                 continue;
             }
             if (!in_array($key, $allowedAttributes)) {
-                throw new NodeException('Invalid attribute specified for update ' . $key);
+                throw new NodeException('Invalid attribute ('.$key.') specified for update.');
             }
         }
         $preData = $data;
