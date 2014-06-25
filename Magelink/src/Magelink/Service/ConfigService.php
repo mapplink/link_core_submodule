@@ -14,7 +14,7 @@ use \Zend\ServiceManager\ServiceLocatorAwareInterface;
 /**
  * Provides system configuration services for Magelink modules.
  *
- * @author Matt Johnston <matt@lero9.co.nz>
+ * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  */
 
