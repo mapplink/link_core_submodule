@@ -103,8 +103,14 @@ class RouterService implements ServiceLocatorAwareInterface {
             }
         }
 
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'distup', 'distributeUpdate - from ' . $source_node_id . ' - ' . $entity->getId() . ' - ' . count($affectedNodes) . ' nodes', array('nodes'=>$affectedNodeIds, 'attributes'=>array_keys($attributes)), array('entity'=>$entity, 'node'=>$source_node_id));
-
+        $message = 'distributeUpdate - from '.$source_node_id.' - '.$entity->getId().' ('.$entity->getTypeStr().') - '
+            .count($affectedNodes).' nodes';
+        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
+            'distup',
+            $message,
+            array('nodes'=>$affectedNodeIds, 'attributes'=>array_keys($attributes)),
+            array('entity'=>$entity, 'node'=>$source_node_id)
+        );
 
         $res = $this->getTableGateway('entity_update_log')->insert(array(
             'entity_id'=>$entity->getId(),
