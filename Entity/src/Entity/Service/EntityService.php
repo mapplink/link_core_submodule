@@ -710,7 +710,6 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @param boolean|array $merge
      * @throws MagelinkException
      */
-<<<<<<< Updated upstream
     public function updateEntity($nodeId, \Entity\Entity $entity, $data, $merge = FALSE)
     {
         $this->verifyNodeId($nodeId);
@@ -720,17 +719,6 @@ class EntityService implements ServiceLocatorAwareInterface {
         foreach ($data as $key=>$value) {
             if (strlen(trim($key)) == 0) {
                 unset($data[$key]);
-=======
-    public function updateEntity($nodeId, \Entity\Entity $entity, $data, $merge = false)
-    {
-        $this->verifyNodeId($nodeId);
-
-        $allowedAttributes = $this->getServiceLocator()->get('nodeService')
-            ->getSubscribedAttributeCodes($nodeId, $entity->getType(), true);
-        foreach($data as $k=>$v){
-            if(strlen(trim($k)) == 0){
-                unset($data[$k]);
->>>>>>> Stashed changes
                 continue;
             }
             if (!in_array($key, $allowedAttributes)) {
@@ -741,15 +729,9 @@ class EntityService implements ServiceLocatorAwareInterface {
 
         $transformedData = $this->getServiceLocator()->get('routerService')
             ->processTransforms($entity, $data, $nodeId, \Entity\Update::TYPE_UPDATE);
-<<<<<<< Updated upstream
         foreach($transformedData as $key=>$value){
             if(is_array($merge) && array_key_exists($key, $merge)){
                 $merge[$key] = FLASE;
-=======
-        foreach($transformedData as $k=>$v){
-            if(is_array($merge) && array_key_exists($k, $merge)){
-                $merge[$k] = false;
->>>>>>> Stashed changes
             }
             $data[$key] = $value;
         }
@@ -776,7 +758,6 @@ class EntityService implements ServiceLocatorAwareInterface {
             foreach($attributes as $att){
                 $changedData[$att] = $data[$att];
             }
-<<<<<<< Updated upstream
 
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_INFO,
@@ -787,10 +768,6 @@ class EntityService implements ServiceLocatorAwareInterface {
                 );
             $this->getServiceLocator()->get('routerService')
                 ->distributeUpdate($entity, $changedData, $nodeId, \Entity\Update::TYPE_UPDATE);
-=======
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'update', 'updateEntity - Keys updated - ' . $nodeId . ' - ' . $entity->getId(), array('updated'=>$attributes, 'keys'=>array_keys($data), 'tfkeys'=>array_keys($transformedData)), array('entity'=>$entity, 'node'=>$nodeId));
-            $this->getServiceLocator()->get('routerService')->distributeUpdate($entity, $changedData, $nodeId, \Entity\Update::TYPE_UPDATE);
->>>>>>> Stashed changes
         }
     }
 
