@@ -56,7 +56,7 @@ class EmailTemplateForm extends DoctrineZFBaseForm
             'name' => 'code',
             'type' => 'Text',
             'options' => array(
-                'label' => 'Code',
+                'label' => 'Code (either \'default\' or the shipping method code)',
             ),
         ));
 
