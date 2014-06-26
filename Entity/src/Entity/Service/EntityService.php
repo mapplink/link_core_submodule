@@ -714,7 +714,7 @@ class EntityService implements ServiceLocatorAwareInterface {
     {
         $this->verifyNodeId($nodeId);
         $allowedAttributes = $this->getServiceLocator()->get('nodeService')
-            ->getSubscribedAttributeCodes($nodeId, $entity->getType(), true);
+            ->getSubscribedAttributeCodes($nodeId, $entity->getType(), TRUE);
 
         foreach ($data as $key=>$value) {
             if (strlen(trim($key)) == 0) {
@@ -731,7 +731,7 @@ class EntityService implements ServiceLocatorAwareInterface {
             ->processTransforms($entity, $data, $nodeId, \Entity\Update::TYPE_UPDATE);
         foreach($transformedData as $key=>$value){
             if(is_array($merge) && array_key_exists($key, $merge)){
-                $merge[$key] = false;
+                $merge[$key] = FLASE;
             }
             $data[$key] = $value;
         }
@@ -758,6 +758,7 @@ class EntityService implements ServiceLocatorAwareInterface {
             foreach($attributes as $att){
                 $changedData[$att] = $data[$att];
             }
+
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_INFO,
                     'update',
@@ -1198,6 +1199,5 @@ class EntityService implements ServiceLocatorAwareInterface {
     {
         return $this->_serviceLocator;
     }
-
 
 }
