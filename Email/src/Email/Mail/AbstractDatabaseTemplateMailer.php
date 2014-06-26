@@ -11,6 +11,8 @@
 
 namespace Email\Mail;
 
+use Magelink\Exception\MagelinkException;
+
 /**
  * Mailer abstract class
  */
@@ -86,12 +88,17 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
      * Init before sending
      */
     protected function init()
-    {   
+    {
         $this->setupTemplate();
         $this->setBodyParams();
-        $this->getMessage()->setFrom($this->template->getSenderEmail(), $this->template->getSenderName());
-        $this->loadSubject();
-        $this->loadBody();
+
+        if ($this->template) {
+            $this->getMessage()->setFrom($this->template->getSenderEmail(), $this->template->getSenderName());
+            $this->loadSubject();
+            $this->loadBody();
+        }else{
+            throw new MagelinkException('Template is not assigned.');
+        }
     }
 
     /**
