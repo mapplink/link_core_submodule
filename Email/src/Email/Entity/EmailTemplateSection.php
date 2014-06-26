@@ -12,10 +12,10 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class EmailTemplateSection extends \Magelink\Entity\DoctrineBaseEntity
 {
-    const 
-        SECTION_EXCEPTION_NOTIFICATION = 1,
-        SECTION_SHIPPING_NOTIFICATION  = 2
-    ;
+
+    // Before considering extending this code based approach have a look at the database table email_template_section
+    const SECTION_EXCEPTION_NOTIFICATION = 1;
+    const SECTION_SHIPPING_NOTIFICATION  = 2;
 
     /**
      * @var integer
