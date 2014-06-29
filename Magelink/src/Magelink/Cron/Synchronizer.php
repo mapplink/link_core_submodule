@@ -41,35 +41,45 @@ class Synchronizer implements CronRunnable, ServiceLocatorAwareInterface {
             $nodesToUpdate = array();
 
             $nodes = $this->getServiceLocator()->get('nodeService')->getActiveNodes();
-            foreach($nodes as $nodeEnt){
-                if(!($nodeEnt instanceof \Node\Entity\Node)){
-                    throw new MagelinkException('Invalid node type passed (' . get_class($nodeEnt) . ')!');
-                }
+            foreach ($nodes as $nodeEntity) {
+                if ($nodeEntity->getId()) {
+                    if(!($nodeEntity instanceof \Node\Entity\Node)){
+                        throw new MagelinkException('Invalid node type passed (' . get_class($nodeEntity) . ')!');
+                    }
 
-                if(!isset($typeConfig[$nodeEnt->getType()])){
-                    throw new MagelinkException('Invalid type name, module not installed? ' . $nodeEnt->getType());
-                }
-                $thisTypeConfig = $typeConfig[$nodeEnt->getType()];
+                    if(!isset($typeConfig[$nodeEntity->getType()])){
+                        throw new MagelinkException('Invalid type name, module not installed? ' . $nodeEntity->getType());
+                    }
+                    $thisTypeConfig = $typeConfig[$nodeEntity->getType()];
 
-                $className = '\\'.$thisTypeConfig['module'].'\\Node';
-                if(!class_exists($className)){
-                    throw new MagelinkException('Node class does not exist: ' . $className);
-                }
+                    $className = '\\'.$thisTypeConfig['module'].'\\Node';
+                    if(!class_exists($className)){
+                        throw new MagelinkException('Node class does not exist: ' . $className);
+                    }
 
-                /** @var AbstractNode $node */
-                $node = new $className();
-                if($node instanceof ServiceLocatorAwareInterface){
-                    // DI service locator
-                    $node->setServiceLocator($this->getServiceLocator());
-                }
+                    /** @var AbstractNode $node */
+                    $node = new $className();
+                    if($node instanceof ServiceLocatorAwareInterface){
+                        // DI service locator
+                        $node->setServiceLocator($this->getServiceLocator());
+                    }
 
-                try{
-                    $node->init($nodeEnt);
-                    $node->retrieve();
-                    $nodesToUpdate[] = $node;
-                }catch(NodeException $ne){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'nodeex', 'Uncaught exception while processing node ' . $nodeEnt->getNodeId() . ': ' . $ne->getMessage(), array($ne->getMessage(), $ne->getTraceAsString()), array('exception'=>$ne, 'node'=>$nodeEnt->getNodeId()));
-                    echo PHP_EOL.$ne->getTraceAsString().PHP_EOL;
+                    try{
+                        $node->init($nodeEntity);
+                        $node->retrieve();
+                        $nodesToUpdate[] = $node;
+                    }catch(NodeException $ne){
+                        $message = 'Uncaught exception while processing node '.$nodeEntity->getNodeId().': '
+                            .$ne->getMessage();
+                        $this->getServiceLocator()->get('logService')
+                            ->log(\Log\Service\LogService::LEVEL_ERROR,
+                                'nodeex',
+                                $message,
+                                array($ne->getMessage(), $ne->getTraceAsString()),
+                                array('exception'=>$ne, 'node'=>$nodeEntity->getNodeId())
+                            );
+                        echo PHP_EOL.$ne->getTraceAsString().PHP_EOL;
+                    }
                 }
             }
 
@@ -77,14 +87,14 @@ class Synchronizer implements CronRunnable, ServiceLocatorAwareInterface {
                 try{
                     $node->update();
                 }catch(NodeException $ne){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'nodeex', 'Uncaught exception while updating node ' . $node->getNodeId() . ': ' . $ne->getMessage(), array($ne->getMessage(), $ne->getTraceAsString()), array('exception'=>$ne, 'node'=>$nodeEnt->getNodeId()));
+                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'nodeex', 'Uncaught exception while updating node ' . $node->getNodeId() . ': ' . $ne->getMessage(), array($ne->getMessage(), $ne->getTraceAsString()), array('exception'=>$ne, 'node'=>$nodeEntity->getNodeId()));
                     echo PHP_EOL.$ne->getTraceAsString().PHP_EOL;
                 }
 
                 try{
                     $node->deinit();
                 }catch(NodeException $ne){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'nodeex', 'Uncaught exception while updating node ' . $node->getNodeId() . ': ' . $ne->getMessage(), array($ne->getMessage(), $ne->getTraceAsString()), array('exception'=>$ne, 'node'=>$nodeEnt->getNodeId()));
+                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'nodeex', 'Uncaught exception while updating node ' . $node->getNodeId() . ': ' . $ne->getMessage(), array($ne->getMessage(), $ne->getTraceAsString()), array('exception'=>$ne, 'node'=>$nodeEntity->getNodeId()));
                     echo PHP_EOL.$ne->getTraceAsString().PHP_EOL;
                 }
             }
