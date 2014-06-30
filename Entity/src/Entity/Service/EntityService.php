@@ -753,6 +753,7 @@ class EntityService implements ServiceLocatorAwareInterface {
                 array('data'=>$data),
                 array('entity'=>$entity, 'node'=>$nodeId)
             );
+            $success = FALSE;
         }else{
             $changedData = array();
             foreach($attributes as $att){
@@ -768,7 +769,11 @@ class EntityService implements ServiceLocatorAwareInterface {
                 );
             $this->getServiceLocator()->get('routerService')
                 ->distributeUpdate($entity, $changedData, $nodeId, \Entity\Update::TYPE_UPDATE);
+
+            $success = TRUE;
         }
+
+        return $success;
     }
 
     /**

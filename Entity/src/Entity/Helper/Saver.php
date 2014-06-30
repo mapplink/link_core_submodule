@@ -165,8 +165,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      * @param array $merge
      * @return string[] A list of all attribute codes that were updated
      */
-    public function saveEntity ( \Entity\Entity $entity, $updatedData, $merge=array() ){
-        
+    public function saveEntity(\Entity\Entity $entity, $updatedData, $merge=array())
+    {
         $attributesToUpdate = array();
         $attributesToMerge = array();
         $attributesToCreate = array();
