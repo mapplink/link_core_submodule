@@ -72,8 +72,19 @@ class Orderitem extends AbstractWrapper
      */
     public function getTotalPrice()
     {
-        $singlePrice = $this->getData('item_price');
-        return $singlePrice * (int) $this->getData('quantity');
+        $calculatedTotal = $this->getData('item_price') * (int) $this->getData('quantity');
+        $totalPrice = $this->getData('total_price');
+        return $totalPrice;
+    }
+
+    /**
+     * Get row total = total_price - total_discount
+     * @return float
+     */
+    public function getRowTotal()
+    {
+        $rowTotal = $this->getTotalPrice() - $this->getData('total_discount');
+        return $rowTotal;
     }
 
     /**
