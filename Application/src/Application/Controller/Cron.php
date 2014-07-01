@@ -96,8 +96,13 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         
         $config = $this->getServiceLocator()->get('Config');
 
-        if(!isset($config['magelink_cron'])){
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'cron_err', 'ERROR: No cron jobs configured', array());
+        if (!isset($config['magelink_cron'])) {
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    'cron_err',
+                    'ERROR: No cron jobs configured',
+                    array()
+                );
             die();
         }
 

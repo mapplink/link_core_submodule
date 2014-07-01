@@ -22,10 +22,13 @@ class Console extends AbstractConsole
         'distribute'
     );
 
-    protected function refreshtransformTask($id){
+    protected function refreshtransformTask($id)
+    {
         /** @var \Router\Entity\RouterTransform $tf */
-        $tf = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager')->getRepository('Router\Entity\RouterTransform')->find($id);
-        if(!$tf){
+        $tf = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager')
+            ->getRepository('Router\Entity\RouterTransform')
+            ->find($id);
+        if (!$tf) {
             throw new MagelinkException('Could not find transform ' . $id);
         }
 
@@ -42,29 +45,60 @@ class Console extends AbstractConsole
 
         $tfObj = $transformFactory->getTransform($tf);
         if(!$tfObj){
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'bad_trans', 'processTransforms - invalid transform or error creating', array('tfid'=>$tf->getTransformid(), 'type'=>$tf->getTransformType(), 'attributes'=>$atts));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    'bad_trans',
+                    'processTransforms - invalid transform or error creating',
+                    array('tfid'=>$tf->getTransformid(), 'type'=>$tf->getTransformType(), 'attributes'=>$atts)
+                );
             throw new MagelinkException('Invalid transform type');
         }
 
         $att = $entityConfigService->getAttribute($tf->getSrcAttribute());
 
         /** @var \Entity\Entity[] $items */
-        $items = $entityService->locateEntity(0, $tf->getEntityTypeId(), false, array($att['code']=>null), array($att['code']=>'notnull'), array(), $atts);
+        $items = $entityService->locateEntity(
+            0,
+            $tf->getEntityTypeId(),
+            FALSE,
+            array($att['code']=>null),
+            array($att['code']=>'notnull'),
+            array(),
+            $atts
+        );
 
-        foreach($items as $entity){
+        foreach ($items as $entity) {
+            $skip = !$routerService->checkFiltersTransform(
+                $entity,
+                $tf,
+                \Entity\Update::TYPE_UPDATE,
+                $entity->getAllData()
+            );
 
-            if(!$routerService->checkFiltersTransform($entity, $tf, \Entity\Update::TYPE_UPDATE, $entity->getAllData())){
-                // Some filter blocked, skip
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'rej_transform', 'processTransforms - rejected by filter - from cmdline - ' . $entity->getId() . ' - ' . $tf->getTransformId() . ' (' . get_class($tfObj) . ')', array('tfid'=>$tf->getTransformid(), 'type'=>$tf->getTransformType(), 'attributes'=>$atts), array('entity'=>$entity));
+            if ($skip) {
+                // Some filter blocked
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_INFO,
+                        'rej_transform',
+                        'processTransforms - rejected by filter - from cmdline - ' . $entity->getId() . ' - ' . $tf->getTransformId() . ' (' . get_class($tfObj) . ')',
+                        array('tfid'=>$tf->getTransformid(), 'type'=>$tf->getTransformType(), 'attributes'=>$atts),
+                        array('entity'=>$entity)
+                    );
                 continue;
             }
 
-            if($tfObj->init($entity, false, $tf, $entity->getAllData())){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'app_transform', 'processTransforms - from cmdline - ' . $entity->getId() . ' - ' . $tf->getTransformId() . ' (' . get_class($tfObj) . ')', array('tfid'=>$tf->getTransformid(), 'type'=>$tf->getTransformType(), 'attributes'=>$atts), array('entity'=>$entity));
+            if ($tfObj->init($entity, FALSE, $tf, $entity->getAllData())) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_INFO,
+                        'app_transform',
+                        'processTransforms - from cmdline - ' . $entity->getId() . ' - ' . $tf->getTransformId() . ' (' . get_class($tfObj) . ')',
+                        array('tfid'=>$tf->getTransformid(), 'type'=>$tf->getTransformType(), 'attributes'=>$atts),
+                        array('entity'=>$entity)
+                    );
                 $data = $tfObj->apply();
                 if($data && count($data)){
                     // Silently update the entity with the given data. We can't activate normal update as we don't have a source node.
-                    $entityService->silentUpdateEntity($entity, $data, false);
+                    $entityService->silentUpdateEntity($entity, $data, FALSE);
                 }
             }
         }

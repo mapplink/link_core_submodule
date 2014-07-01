@@ -142,11 +142,16 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
             if($this->_gateway[$entType]){
                 // Combine all updates for one entity into a single update
                 foreach($arr as $upd){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'comb_update', 'Combining updates ' . $upd->getLogId() . ' to ' . $this->getNodeId(), array('attributes'=>$upd->getAttributesSimple()), array('entity'=>$upd->getEntity(), 'node'=>$this));
+                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'comb_update', 'Combining updates '.$upd->getLogId().' to '.$this->getNodeId(), array('attributes'=>$upd->getAttributesSimple()), array('entity'=>$upd->getEntity(), 'node'=>$this));
 
                     $eid = $upd->getEntity()->getId();
                     if(!isset($updates[$eid])){
-                        $updates[$eid] = array('entity'=>$upd->getEntity(), 'attributes'=>array_intersect($upd->getAttributesSimple(), $atts), 'type'=>$upd->getType(), 'combined'=>array($upd->getLogId()));
+                        $updates[$eid] = array(
+                            'entity'=>$upd->getEntity(),
+                            'attributes'=>array_intersect($upd->getAttributesSimple(), $atts),
+                            'type'=>$upd->getType(),
+                            'combined'=>array($upd->getLogId())
+                        );
                     }else{
                         $updAtts = array_intersect($upd->getAttributesSimple(), $atts);
                         $updates[$eid]['attributes'] = array_merge($updAtts, $updates[$eid]['attributes']);
@@ -156,13 +161,25 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                 }
             }
             foreach($updates as $eid=>$upd){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'push_update', 'Pushing update for ' . $eid . ' to ' . $this->getNodeId(), array('attributes'=>$upd['attributes'], 'type'=>$upd['type'], 'combined'=>$upd['combined']), array('entity'=>$eid, 'node'=>$this));
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_INFO,
+                        'push_update',
+                        'Pushing update for '.$eid.' to '.$this->getNodeId(),
+                        array('attributes'=>$upd['attributes'], 'type'=>$upd['type'], 'combined'=>$upd['combined']),
+                        array('entity'=>$eid, 'node'=>$this)
+                    );
 
                 try{
                     $this->_gateway[$entType]->writeUpdates($upd['entity'], $upd['attributes'], $upd['type']);
                 }catch(\Magelink\Exception\MagelinkException $e){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'update_ex', 'Uncaught exception during update processing for ' . $eid . ' to ' . $this->getNodeId() . ': ' . $e->getMessage(), array($e->getMessage(), $e->getTraceAsString()), array('exception'=>$e));
-                    throw new \Magelink\Exception\NodeException('Error applying updates: ' . $e->getMessage(), 0, $e);
+                    $this->getServiceLocator()->get('logService')
+                        ->log(\Log\Service\LogService::LEVEL_ERROR,
+                            'update_ex',
+                            'Uncaught exception during update processing for '.$eid.' to '.$this->getNodeId().': '.$e->getMessage(),
+                            array($e->getMessage(), $e->getTraceAsString()),
+                            array('exception'=>$e)
+                        );
+                    throw new \Magelink\Exception\NodeException('Error applying updates: '.$e->getMessage(), 0, $e);
                 }
             }
 
@@ -181,15 +198,15 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
             try{
                 $result = true;
                 if($this->_gateway[$entType]){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'send_action', 'Sending action ' . $act->getId() . ' to ' . $this->getNodeId() . ' (' . $act->getEntity()->getUniqueId() . ')', array($act->getId()), array('entity'=>$act->getEntity(), 'node'=>$this));
+                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'send_action', 'Sending action '.$act->getId().' to '.$this->getNodeId().' ('.$act->getEntity()->getUniqueId().')', array($act->getId()), array('entity'=>$act->getEntity(), 'node'=>$this));
                     $result = $this->_gateway[$entType]->writeAction($act);
                 }
                 if($result){
                     $nodeService->setActionStatus($this->_entity, $act, 1);
                 }
             }catch(\Magelink\Exception\MagelinkException $e){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'action_ex', 'Uncaught exception during action processing for ' . $act->getId() . ' to ' . $this->getNodeId() . ': ' . $e->getMessage(), array($e->getMessage(), $e->getTraceAsString()), array('exception'=>$e));
-                throw new \Magelink\Exception\NodeException('Error applying actions: ' . $e->getMessage(), 0, $e);
+                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'action_ex', 'Uncaught exception during action processing for '.$act->getId().' to '.$this->getNodeId().': '.$e->getMessage(), array($e->getMessage(), $e->getTraceAsString()), array('exception'=>$e));
+                throw new \Magelink\Exception\NodeException('Error applying actions: '.$e->getMessage(), 0, $e);
             }
         }
     }
