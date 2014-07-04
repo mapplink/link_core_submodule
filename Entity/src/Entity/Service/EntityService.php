@@ -1,18 +1,23 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Entity\Service
+ *
+ * @category Entity
+ * @package Entity\Service
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity\Service;
 
 use \Zend\ServiceManager\ServiceLocatorAwareInterface;
 use \Zend\ServiceManager\ServiceLocatorInterface;
+use \Zend\Db\TableGateway\TableGateway;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
-use \Zend\Db\TableGateway\TableGateway;
+use Entity\Comment;
+
 
 /**
  * The EntityService provides the API to all entity data in the system, and provides search, retrieval, update and delete services.
@@ -729,9 +734,9 @@ class EntityService implements ServiceLocatorAwareInterface {
 
         $transformedData = $this->getServiceLocator()->get('routerService')
             ->processTransforms($entity, $data, $nodeId, \Entity\Update::TYPE_UPDATE);
-        foreach($transformedData as $key=>$value){
-            if(is_array($merge) && array_key_exists($key, $merge)){
-                $merge[$key] = FLASE;
+        foreach ($transformedData as $key=>$value) {
+            if (is_array($merge) && array_key_exists($key, $merge)) {
+                $merge[$key] = FALSE;
             }
             $data[$key] = $value;
         }
@@ -860,16 +865,63 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @param \Entity\Entity $entity
      * @return \Entity\Comment[]
      */
-    public function loadEntityComments ( \Entity\Entity $entity ) {
+    public function loadEntityComments(\Entity\Entity $entity)
+    {
+        $entity_comments = $this->getTableGateway('entity_comment')
+            ->select(array('entity_id'=>$entity->getId()));
 
-        $res = $this->getTableGateway('entity_comment')->select(array('entity_id'=>$entity->getId()));
-
-        $ret = array();
-        foreach($res as $row){
-            $ret[] = new \Entity\Comment($entity, (array)$row);
+        $comments = array();
+        foreach ($entity_comments as $row) {
+            $comments[] = new \Entity\Comment($entity, (array) $row);
         }
 
-        return $ret;
+        return $comments;
+    }
+
+    /**
+     * Loads a specfic entity comments for a given entity, defined prefix and order
+     * @param \Entity\Entity $entity
+     * @param $beginsWith
+     * @param bool $getFirst
+     * @return \Entity\Comment
+     */
+    protected function loadSpecficEntityComment(\Entity\Entity $entity, $beginsWith, $getFirst = TRUE)
+    {
+        $where = "entity_id = ".$entity->getId()." AND body LIKE '".$beginsWith."%'"
+            ." ORDER BY entity_id ".($getFirst ? 'ASC' : 'DESC').";";
+        $entity_comments = $this->getTableGateway('entity_comment')
+            ->select($where);
+
+        if (is_array($entity_comments))  {
+            $entityComment = new \Entity\Comment($entity, (array) array_shift($entity_comments));
+            $comment = $entityComment->getBody();
+        }else{
+            $comment = '';
+        }
+
+        return $comment;
+    }
+
+    /**
+     * Load first customer comments for a given entity
+     * @param \Entity\Entity $entity
+     * @return \Entity\Comment
+     */
+    public function loadEntityCustomerComment(\Entity\Entity $entity)
+    {
+        $customerComment = $this->loadSpecficEntityComment($entity, Comment::CUSTOMER_COMMENT_PREFIX);
+        return $customerComment;
+    }
+
+    /**
+     * Load last admin entity comments for a given entity
+     * @param \Entity\Entity $entity
+     * @return \Entity\Comment
+     */
+    public function loadEntityAdminComment(\Entity\Entity $entity)
+    {
+        $adminComment = $this->loadSpecficEntityComment($entity, Comment::ADMIN_COMMENT_PREFIX, FALSE);
+        return $adminComment;
     }
 
     /**
@@ -885,7 +937,9 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @throws MagelinkException If we fail to create the comment
      * @return \Entity\Comment
      */
-    public function createEntityComment ( \Entity\Entity $entity, $source, $title, $body, $reference_id='', $customer_visible=false, $node_id=false ) {
+    public function createEntityComment(\Entity\Entity $entity, $source, $title, $body,
+        $reference_id = '', $customer_visible = FALSE, $node_id = FALSE)
+    {
         $row = array(
             'entity_id'=>$entity->getId(),
             'reference_id'=>$reference_id,
@@ -904,7 +958,18 @@ class EntityService implements ServiceLocatorAwareInterface {
         }
 
         if($node_id){
-            $this->dispatchAction($node_id, $entity, 'comment', array('source'=>$source, 'title'=>$title, 'body'=>$body, 'customer_visible'=>$customer_visible, 'timestamp'=>date('Y-m-d H:i:s'), 'comment_id'=>$row['comment_id']));
+            $this->dispatchAction(
+                $node_id,
+                $entity, 'comment',
+                array(
+                    'source'=>$source,
+                    'title'=>$title,
+                    'body'=>$body,
+                    'customer_visible'=>$customer_visible,
+                    'timestamp'=>date('Y-m-d H:i:s'),
+                    'comment_id'=>$row['comment_id']
+                )
+            );
         }
 
         return new \Entity\Comment($entity, $row);

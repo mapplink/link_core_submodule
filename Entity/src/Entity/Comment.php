@@ -6,7 +6,11 @@ use \Zend\ServiceManager\ServiceLocatorAwareInterface;
 use \Zend\ServiceManager\ServiceLocatorInterface;
 use \Entity\Service\EntityService;
 
-class Comment implements ServiceLocatorAwareInterface {
+class Comment implements ServiceLocatorAwareInterface
+{
+
+    const ADMIN_COMMENT_PREFIX = 'comment by admin:';
+    const CUSTOMER_COMMENT_PREFIX = 'comment by customer:';
 
     /** @var Entity */
     protected $_entity;
