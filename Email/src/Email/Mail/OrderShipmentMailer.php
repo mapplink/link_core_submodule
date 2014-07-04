@@ -1,4 +1,15 @@
 <?php
+/**
+ * Order exception notification mailer
+ *
+ * @category Email
+ * @package Email\Mail
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
+
 
 namespace Email\Mail;
 
@@ -47,7 +58,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
     {
         $this->template = $this->getTemplate(
             EmailTemplateSection::SECTION_SHIPPING_NOTIFICATION,
-            $this->order->getData('shipping_method')
+            $this->order->getShippingMethod()
         );
 
         if (!$this->template) {
@@ -61,16 +72,16 @@ class OrderShipmentMailer extends AbstractOrderMailer
     protected function setBodyParams()
     {     
         $this->templateParams = array(
-            'userName'        => $this->order->getData('customer_name'),
-            'userEmail'       => $this->order->getData('customer_email'),
-            'date'            => date('d M Y'),
-            'shippingMethod'  => $this->order->getData('shipping_method'),
+            'userName' => $this->order->getData('customer_name'),
+            'userEmail' => $this->order->getData('customer_email'),
+            'date' => date('d M Y'),
+            'shippingMethod' => $this->order->getShippingMethod(),
             'shippingAddress' => $this->getShippingAddress(),
-            'trackingCode'    => $this->order->getData('tracking_code'),
-            'userName'        => $this->order->getData('customer_name'),
-            'orderId'         => $this->order->getUniqueId(),
-            'orderItems'      => $this->renderOrderItems(),
-            'additionalNote'  => $this->additionalNote,
+            'trackingCode' => $this->order->getData('tracking_code'),
+            'userName' => $this->order->getData('customer_name'),
+            'orderId' => $this->order->getUniqueId(),
+            'orderItems' => $this->renderOrderItems(),
+            'additionalNote' => $this->additionalNote,
         );
     }
 
