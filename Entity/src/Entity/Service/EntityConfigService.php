@@ -175,19 +175,19 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
      * @param int|string $entity_type
      * @return string[]
      */
-    public function getAttributes ( $entity_type ){
-        $entity_type = $this->parseEntityType($entity_type);
+    public function getAttributes($entityType)
+    {
+        $entity_type = $this->parseEntityType($entityType);
 
-        $results = $this->getTableGateway('entity_attribute')->select(array(
-            'entity_type_id'=>$entity_type,
-        ));
+        $dbRows = $this->getTableGateway('entity_attribute')
+            ->select(array('entity_type_id'=>$entity_type,));
 
-        $ret = array();
-        foreach($results as $row){
-            $ret[$row['attribute_id']] = $row['code'];
+        $attributes = array();
+        foreach ($dbRows as $row) {
+            $attributes[$row['attribute_id']] = $this->_attributeCache[$row['attribute_id']] =  $row['code'];
         }
 
-        return $ret;
+        return $attributes;
     }
 
     /**
@@ -291,22 +291,21 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
      * @param $attribute_id
      * @return array|null
      */
-    public function getAttribute($attribute_id){
-        if(isset($this->_attributeRevCache[$attribute_id])){
-            return $this->_attributeRevCache[$attribute_id];
+    public function getAttribute($attributeId)
+    {
+        if (!isset($this->_attributeRevCache[$attributeId])) {
+            $this->_attributeCache[$attributeId] = NULL;
+
+            $dbRows = $this->getTableGateway('entity_attribute')
+                ->select(array('attribute_id'=>$attributeId,));
+
+            foreach ($dbRows as $row) {
+                $this->_attributeCache[$attributeId] = $row;
+                break;
+            }
         }
 
-        $res = $this->getTableGateway('entity_attribute')->select(array(
-            'attribute_id'=>$attribute_id,
-        ));
-
-        foreach($res as $row){
-            $this->_attributeCache[$attribute_id] = $row;
-            return $row;
-        }
-
-        $this->_attributeCache[$attribute_id] = null;
-        return null;
+        return $this->_attributeRevCache[$attributeId];
     }
 
     /**
