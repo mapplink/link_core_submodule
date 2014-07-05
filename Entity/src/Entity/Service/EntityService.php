@@ -19,11 +19,6 @@ use Magelink\Exception\NodeException;
 use Entity\Comment;
 
 
-/**
- * The EntityService provides the API to all entity data in the system, and provides search, retrieval, update and delete services.
- *
- * @package Entity\Service
- */
 class EntityService implements ServiceLocatorAwareInterface {
 
     /**
@@ -539,23 +534,31 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @param string $local_id
      * @throws MagelinkException
      */
-    public function linkEntity ( $node_id, \Entity\Entity $entity, $local_id ) {
+    public function linkEntity($node_id, \Entity\Entity $entity, $local_id)
+    {
         $this->verifyNodeId($node_id);
 
-        $existing = $this->getTableGateway('entity_identifier')->select(array('entity_id'=>$entity->getId(), 'node_id'=>$node_id));
+        $existing = $this->getTableGateway('entity_identifier')
+            ->select(array('entity_id'=>$entity->getId(), 'node_id'=>$node_id));
         if($existing && count($existing)){
-            throw new NodeException('Entity is already linked - ' . $entity->getId() . ' with node ' . $node_id);
+            throw new NodeException('Entity is already linked - '.$entity->getId().' with node ' . $node_id);
         }
 
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'link', 'linkEntity - ' . $node_id . ' - ' . $entity->getId() . ': ' . $local_id, array('local'=>$local_id), array('entity'=>$entity, 'node'=>$node_id));
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'link',
+                'linkEntity - '.$node_id.' - '.$entity->getId().': '.$local_id,
+                array('local'=>$local_id),
+                array('entity'=>$entity, 'node'=>$node_id)
+            );
 
-        $res = $this->getTableGateway('entity_identifier')->insert(array(
+        $entityIdentifier = $this->getTableGateway('entity_identifier')->insert(array(
             'entity_id'=>$entity->getId(),
             'node_id'=>$node_id,
             'store_id'=>$entity->getStoreId(),
             'local_id'=>$local_id,
         ));
-        if(!$res){
+        if (!$entityIdentifier) {
             throw new MagelinkException('Unknown error in linkEntity');
         }
     }
@@ -1038,9 +1041,15 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @param \Entity\Entity $order
      * @return array $ccTypes
      */
-    public function getPaymentMethods(array $paymentMethod)
+    public function getPaymentMethods($paymentMethod)
     {
-        return $this->getPaymentData($paymentMethod, 'method');
+        if (is_array($paymentMethod)) {
+           $methods = $this->getPaymentData($paymentMethod, 'method');
+        }else{
+            $methods = array();
+        }
+
+        return $methods;
     }
 
     /**

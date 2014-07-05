@@ -63,21 +63,32 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * @param string $id
      * @throws MagelinkException If an invalid transaction ID is passed
      */
-    public function commitTransaction($id){
+    public function commitTransaction($id)
+    {
         if(!in_array($id, self::$_transactionStack)){
             throw new MagelinkException('Invalid transaction to commit - ' . $id);
         }
         $top = array_pop(self::$_transactionStack);
-        if($top != $id){
+        if ($top != $id) {
             throw new MagelinkException('Transaction not at top of stack (top was ' . $top . ', we were ' . $id . ')!');
         }
-        if(count(self::$_transactionStack) == 0){
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_commit_actual', 'commitTransaction - actual - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
+        if (count(self::$_transactionStack) == 0) {
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'trans_commit_actual',
+                    'commitTransaction - actual - '.$id,
+                    array('id'=>$id, 'stack'=>self::$_transactionStack)
+                );
             // End of stack, commit
             $adapter = $this->getAdapter();
             $adapter->getDriver()->getConnection()->commit();
         }else{
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_commit_fake', 'commitTransaction - fake - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'trans_commit_fake',
+                    'commitTransaction - fake - '.$id,
+                    array('id'=>$id, 'stack'=>self::$_transactionStack)
+                );
         }
     }
 

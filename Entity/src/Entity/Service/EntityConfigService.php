@@ -175,12 +175,12 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
      * @param int|string $entity_type
      * @return string[]
      */
-    public function getAttributes($entityType)
+    public function getAttributes($entityTypeOrId)
     {
-        $entity_type = $this->parseEntityType($entityType);
+        $entityTypeId = $this->parseEntityType($entityTypeOrId);
 
         $dbRows = $this->getTableGateway('entity_attribute')
-            ->select(array('entity_type_id'=>$entity_type,));
+            ->select(array('entity_type_id'=>$entityTypeId,));
 
         $attributes = array();
         foreach ($dbRows as $row) {
@@ -203,7 +203,8 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
      * @throws \Magelink\Exception\MagelinkException
      * @return int
      */
-    public function parseEntityType ( $entity_type ){
+    public function parseEntityType($entity_type)
+    {
         //$this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'pet', 'parseEntityType - ' . $entity_type, array('entity_type'=>$entity_type));
         if(is_object($entity_type)){
             if($entity_type instanceof \Entity\Entity){
@@ -256,7 +257,8 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
      * @param int $entity_type
      * @return array|null
      */
-    public function parseAttribute($attribute_code, $entity_type){
+    public function parseAttribute($attribute_code, $entity_type)
+    {
         $entity_type = $this->parseEntityType($entity_type);
         if(isset($this->_attributeCache[$entity_type])){
             if(isset($this->_attributeCache[$entity_type][$attribute_code])){

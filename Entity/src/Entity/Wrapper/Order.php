@@ -1,11 +1,13 @@
 <?php
 /**
- * HOPS
+ * Entity\Wrapper
  *
- * @category    HOPS
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Entity
+ * @package Entity\Wrapper
+ * @author Seo Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity\Wrapper;
@@ -13,22 +15,9 @@ namespace Entity\Wrapper;
 use Entity\Entity;
 use Magelink\Exception\MagelinkException;
 
-/**
- * Order entity class
- */
+
 class Order extends AbstractWrapper
 {
-
-    public function getShippingMethodText()
-    {
-        $shippingMethodCode = $this->getData('shipping_method');
-
-        $methods = self::getAllShippingMethods();
-
-        if (array_key_exists($shippingMethodCode, $methods)) {
-            return $methods[$shippingMethodCode];
-        }
-    }
 
     /**
      * Retrieve all the order items attached to this order
