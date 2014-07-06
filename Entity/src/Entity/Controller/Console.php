@@ -40,7 +40,7 @@ class Console extends AbstractConsole
         }
 
         $fh = fopen($fname, 'w');
-        $cols = $entityConfigService->getAttributes($entity_type);
+        $cols = $entityConfigService->getAttributesCode($entity_type);
         array_unshift($cols, 'updated_at');
         array_unshift($cols, 'parent_id');
         array_unshift($cols, 'store_id');

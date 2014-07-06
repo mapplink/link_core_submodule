@@ -41,7 +41,7 @@ class Console extends AbstractConsole
         /** @var \Router\Service\RouterService $routerService */
         $routerService = $this->getServiceLocator()->get('routerService');
 
-        $atts = array_values($entityConfigService->getAttributes($tf->getEntityTypeId()));
+        $atts = array_values($entityConfigService->getAttributesCode($tf->getEntityTypeId()));
 
         $tfObj = $transformFactory->getTransform($tf);
         if(!$tfObj){

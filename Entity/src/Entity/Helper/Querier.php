@@ -144,7 +144,7 @@ class Querier extends AbstractHelper implements \Zend\ServiceManager\ServiceLoca
         }
         $joins = array();
         if($attributes === false){
-            $attributes = $this->getEntityConfigService()->getAttributes($entityType);
+            $attributes = $this->getEntityConfigService()->getAttributesCode($entityType);
         }
 
         if(array_key_exists('join', $options)){

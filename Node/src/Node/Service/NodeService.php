@@ -309,7 +309,7 @@ class NodeService implements ServiceLocatorAwareInterface
 
         if($node_id === 0 && $entity_type !== false){
             $entityConfigService = $this->getServiceLocator()->get('entityConfigService');
-            return array_values($entityConfigService->getAttributes($entity_type));
+            return array_values($entityConfigService->getAttributesCode($entity_type));
         }
 
         if($update_only){

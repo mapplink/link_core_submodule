@@ -50,7 +50,7 @@ abstract class AbstractFilter implements ServiceLocatorAwareInterface {
 
         $this->_filterEntity->loadSimpleData();
 
-        $attributes = $this->_entityConfigService->getAttributes($this->_entity->getType());
+        $attributes = $this->_entityConfigService->getAttributesCode($this->_entity->getType());
         $this->_entityService->enhanceEntity(false, $this->_entity, $attributes);
     }
 

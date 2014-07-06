@@ -49,7 +49,7 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface {
 
         $this->_transformEntity->loadSimpleData();
 
-        $attributes = $this->_entityConfigService->getAttributes($this->_entity->getType());
+        $attributes = $this->_entityConfigService->getAttributesCode($this->_entity->getType());
         $this->_entityService->enhanceEntity($source_node_id, $this->_entity, $attributes);
 
         return $this->_init();
