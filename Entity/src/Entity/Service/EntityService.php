@@ -890,16 +890,18 @@ class EntityService implements ServiceLocatorAwareInterface {
      */
     protected function loadSpecficEntityComment(\Entity\Entity $entity, $beginsWith, $getFirst = TRUE)
     {
-        $where = "entity_id = ".$entity->getId()." AND body LIKE '".$beginsWith."%'"
-            ." ORDER BY entity_id ".($getFirst ? 'ASC' : 'DESC').";";
+        $where = "entity_id = ".$entity->getId()." AND LOWER(body) LIKE '".$beginsWith."%'"
+            ." ORDER BY comment_id ".($getFirst ? 'ASC' : 'DESC')." LIMIT 1;";
         $entity_comments = $this->getTableGateway('entity_comment')
             ->select($where);
 
-        if (is_array($entity_comments))  {
-            $entityComment = new \Entity\Comment($entity, (array) array_shift($entity_comments));
-            $comment = $entityComment->getBody();
-        }else{
-            $comment = '';
+        $comment = '';
+        foreach ($entity_comments as $entityComment) {
+            $entityComment = new \Entity\Comment($entity, (array) $entityComment);
+            if (is_object($entityComment)) {
+                $comment = trim(substr($entityComment->getBody(), strlen($beginsWith)));
+            }
+            break;
         }
 
         return $comment;
@@ -924,6 +926,7 @@ class EntityService implements ServiceLocatorAwareInterface {
     public function loadEntityAdminComment(\Entity\Entity $entity)
     {
         $adminComment = $this->loadSpecficEntityComment($entity, Comment::ADMIN_COMMENT_PREFIX, FALSE);
+//var_dump('HI!');die();
         return $adminComment;
     }
 
