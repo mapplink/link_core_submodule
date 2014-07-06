@@ -16,11 +16,7 @@ use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\Db\TableGateway\TableGateway;
 
-/**
- * The EntityConfigService is responsible for managing attributes and entity types, as well as providing name->id translation services for other services & modules.
- *
- * @package Entity\Service
- */
+
 class EntityConfigService implements ServiceLocatorAwareInterface {
 
     /**
@@ -179,7 +175,7 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
      * @param int|string $entity_type
      * @return string[]
      */
-    public function getAttributes($entityTypeOrId)
+    public function getAttributesCode($entityTypeOrId)
     {
         $entityTypeId = $this->parseEntityType($entityTypeOrId);
 
@@ -188,7 +184,7 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
 
         $attributes = array();
         foreach ($dbRows as $row) {
-            $attributes[$row['attribute_id']] = $this->_attributeRevCache[$row['attribute_id']] =  $row['code'];
+            $attributes[$row['attribute_id']] = $row['code'];
         }
 
         return $attributes;
