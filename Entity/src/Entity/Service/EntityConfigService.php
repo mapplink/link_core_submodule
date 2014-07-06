@@ -1,9 +1,13 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Entity\Service
+ *
+ * @category Entity
+ * @package Entity\Service
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity\Service;
@@ -184,7 +188,7 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
 
         $attributes = array();
         foreach ($dbRows as $row) {
-            $attributes[$row['attribute_id']] = $this->_attributeCache[$row['attribute_id']] =  $row['code'];
+            $attributes[$row['attribute_id']] = $this->_attributeRevCache[$row['attribute_id']] =  $row['code'];
         }
 
         return $attributes;
@@ -296,13 +300,13 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
     public function getAttribute($attributeId)
     {
         if (!isset($this->_attributeRevCache[$attributeId])) {
-            $this->_attributeCache[$attributeId] = NULL;
+            $this->_attributeRevCache[$attributeId] = NULL;
 
             $dbRows = $this->getTableGateway('entity_attribute')
                 ->select(array('attribute_id'=>$attributeId,));
 
             foreach ($dbRows as $row) {
-                $this->_attributeCache[$attributeId] = $row;
+                $this->_attributeRevCache[$attributeId] = $row;
                 break;
             }
         }
