@@ -1,6 +1,6 @@
 <?php
 /**
- * Entity\Wrapper
+ * Entity\Wrapper\Order
  *
  * @category Entity
  * @package Entity\Wrapper
@@ -149,6 +149,39 @@ class Order extends AbstractWrapper
         $entityService = $this->getServiceLocator()->get('entityService');
 
         return $entityService->getPaymentCcTypes($this);
+    }
+
+    /**
+     * Get Credit Memo Items Quantities of Order Items
+     * @param array $orderItems
+     * @return array
+     */
+    public function getCashRefunds()
+    {
+        $creditmemos = $this->getChildren('creditmemo');
+        $cashRefundAmount = 0;
+        foreach ($creditmemos as $creditmemo) {
+            $cashRefundAmount += $creditmemo->getCashRefund();
+        }
+
+        return $cashRefundAmount;
+    }
+
+    /**
+     * Get Credit Memo Items Quantities of Order Items
+     * @param array $orderItems
+     * @return array
+     */
+    public function getCreditmemoItemsQuantityGroupedByOrderItemId()
+    {
+        $orderItems = $this->getChildren('orderitem');
+        $quantities = array();
+        foreach ($orderItems as $orderItem) {
+            $alreadyRefundedQuantity = $orderItem->getQuantityRefunded();
+            $quantities[$orderItem->getId()] = (int) $alreadyRefundedQuantity;
+        }
+
+        return $quantities;
     }
 
 }

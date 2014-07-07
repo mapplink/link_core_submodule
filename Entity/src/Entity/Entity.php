@@ -1,10 +1,15 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Represents an instance of a Magelink Entity.
+ *
+ * @category Magelink
+ * @package Entity
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
+
 
 namespace Entity;
 
@@ -12,9 +17,7 @@ use Magelink\Exception\MagelinkException;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
-/**
- * Represents an instance of a Magelink Entity.
- */
+
 class Entity implements ServiceLocatorAwareInterface {
     
     protected $_id;
@@ -299,15 +302,16 @@ class Entity implements ServiceLocatorAwareInterface {
     /**
      * Loads all children of the given type for this Entity.
      *
-     * @param string $entity_type
+     * @param string $entityType
      * @return \Entity\Entity[]
      */
-    public function getChildren($entity_type){
-        if(array_key_exists($entity_type, $this->_childrenCache)){
-            return $this->_childrenCache[$entity_type];
+    public function getChildren($entityType)
+    {
+        if(array_key_exists($entityType, $this->_childrenCache)){
+            return $this->_childrenCache[$entityType];
         }
-        return ($this->_childrenCache[$entity_type] = $this->getServiceLocator()->get('entityService')
-            ->loadChildren($this->_loadedFromNode, $this, $entity_type));
+        return ($this->_childrenCache[$entityType] = $this->getServiceLocator()->get('entityService')
+            ->loadChildren($this->_loadedFromNode, $this, $entityType));
     }
 
     /**

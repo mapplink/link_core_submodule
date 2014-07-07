@@ -113,4 +113,26 @@ class Orderitem extends AbstractWrapper
         return ($stockitem->getData('available', 0) >= $this->getData('quantity', 0));
     }
 
+    /**
+     * Get an accumulated quantity of the associated credit memo items
+     * @return
+     */
+    public function getQuantityRefunded()
+    {
+        $alreadyRefunded = $this->getServiceLocator()->get('entityService')->aggregateEntity(
+            $this->getLoadedNodeId(),
+            'creditmemoitem',
+            $this->getStoreId(),
+            array('qty'=>'SUM'),
+            array('order_item' => $this->getId()),
+            array('order_item' => 'eq')
+        );
+
+        if(!array_key_exists('agg_qty_sum', $alreadyRefunded)){
+            throw new MagelinkException('Invalid response from aggregateEntity');
+        }
+
+        return (int) $alreadyRefunded['agg_qty_sum'];
+    }
+
 }

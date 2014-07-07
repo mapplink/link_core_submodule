@@ -4,6 +4,7 @@
  *
  * @category Entity
  * @package Entity\Service
+ * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
@@ -227,15 +228,28 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @param int|string $entity_type_id
      * @return \Entity\Entity[]
      */
-    public function loadChildren ( $node_id, \Entity\Entity $parent, $entity_type_id ) {
-        $this->verifyNodeId($node_id);
-        $this->verifyEntityType($entity_type_id);
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'loadchildren', 'loadChildren - ' . $node_id . ' - ' . $parent->getId() . ' - ' . $entity_type_id, array('node_id'=>$node_id, 'parent_id'=>$parent->getId(), 'entity_type_id'=>$entity_type_id), array('entity'=>$parent));
+    public function loadChildren($nodeId, \Entity\Entity $parent, $entityTypeId)
+    {
+        $this->verifyNodeId($nodeId);
+        $this->verifyEntityType($entityTypeId);
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'loadchildren',
+                'loadChildren - '.$nodeId.' - '.$parent->getId().' - '.$entityTypeId,
+                array('node_id'=>$nodeId, 'parent_id'=>$parent->getId(), 'entity_type_id'=>$entityTypeId),
+                array('entity'=>$parent)
+            );
 
+        $attributes = $this->getServiceLocator()->get('nodeService')
+            ->getSubscribedAttributeCodes($nodeId, $entityTypeId);
 
-        $attributes = $this->getServiceLocator()->get('nodeService')->getSubscribedAttributeCodes($node_id, $entity_type_id);
-
-        $result = $this->getLoader()->loadEntities($entity_type_id, 0, array('PARENT_ID'=>$parent->getId()), $attributes, array('PARENT_ID'=>'eq'), array('node_id'=>$node_id));
+        $result = $this->getLoader()->loadEntities(
+            $entityTypeId,
+            0,
+            array('PARENT_ID'=>$parent->getId()),
+            $attributes,
+            array('PARENT_ID'=>'eq'), array('node_id'=>$nodeId)
+        );
 
         if(!$result || !count($result)){
             return array();

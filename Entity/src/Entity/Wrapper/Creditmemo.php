@@ -1,11 +1,13 @@
 <?php
 /**
- * HOPS
+ * Entity\Wrapper\Creditmemo
  *
- * @category    HOPS
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Entity
+ * @package Entity\Wrapper
+ * @author Seo Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity\Wrapper;
@@ -13,9 +15,7 @@ namespace Entity\Wrapper;
 use Entity\Entity;
 use Magelink\Exception\MagelinkException;
 
-/**
- * Order entity class
- */
+
 class Creditmemo extends AbstractWrapper
 {
     /**
@@ -34,6 +34,16 @@ class Creditmemo extends AbstractWrapper
     public function getCreditmemoItems()
     {
         return $this->getChildren('creditmemoitem');
+    }
+
+    /**
+     * Get cash refund
+     * @return array|null|string
+     */
+    public function getCashRefund()
+    {
+        $cashRefund = $this->getData('adjustment_positive'); // - $this->getData('adjustment_negative');
+        return (float) $cashRefund;
     }
     
 }
