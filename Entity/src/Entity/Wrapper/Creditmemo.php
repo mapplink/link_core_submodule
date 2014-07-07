@@ -45,5 +45,15 @@ class Creditmemo extends AbstractWrapper
         $cashRefund = $this->getData('adjustment_positive'); // - $this->getData('adjustment_negative');
         return (float) $cashRefund;
     }
-    
+
+    /**
+     * Get cash refund
+     * @return array|null|string
+     */
+    public function getNonCashRefund()
+    {
+        $cashRefund = $this->getData('customer_balance');
+        return (float) $cashRefund;
+    }
+
 }

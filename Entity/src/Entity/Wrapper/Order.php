@@ -172,6 +172,22 @@ class Order extends AbstractWrapper
      * @param array $orderItems
      * @return array
      */
+    public function getNonCashRefunds()
+    {
+        $creditmemos = $this->getChildren('creditmemo');
+        $nonCashRefundAmount = 0;
+        foreach ($creditmemos as $creditmemo) {
+            $nonCashRefundAmount += $creditmemo->getCashRefund();
+        }
+
+        return $nonCashRefundAmount;
+    }
+
+    /**
+     * Get Credit Memo Items Quantities of Order Items
+     * @param array $orderItems
+     * @return array
+     */
     public function getCreditmemoItemsQuantityGroupedByOrderItemId()
     {
         $orderItems = $this->getChildren('orderitem');
