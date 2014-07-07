@@ -47,13 +47,23 @@ class Creditmemo extends AbstractWrapper
     }
 
     /**
-     * Get cash refund
+     * Get non cash refund
      * @return array|null|string
      */
     public function getNonCashRefund()
     {
-        $cashRefund = $this->getData('customer_balance');
-        return (float) $cashRefund;
+        $nonCashRefund = $this->getData('customer_balance');
+        return (float) $nonCashRefund;
+    }
+
+    /**
+     * Get shipping refund
+     * @return array|null|string
+     */
+    public function getShippingRefund()
+    {
+        $shippingRefund = $this->getData('shipping_amount');
+        return (float) $shippingRefund;
     }
 
 }

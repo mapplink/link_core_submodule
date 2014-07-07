@@ -152,7 +152,7 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * Get Credit Memo Items Quantities of Order Items
+     * Get Aggregated Cash Refunds
      * @param array $orderItems
      * @return array
      */
@@ -168,7 +168,7 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * Get Credit Memo Items Quantities of Order Items
+     * Get Aggregated Non Cash Refunds
      * @param array $orderItems
      * @return array
      */
@@ -177,7 +177,23 @@ class Order extends AbstractWrapper
         $creditmemos = $this->getChildren('creditmemo');
         $nonCashRefundAmount = 0;
         foreach ($creditmemos as $creditmemo) {
-            $nonCashRefundAmount += $creditmemo->getCashRefund();
+            $nonCashRefundAmount += $creditmemo->getNonCashRefund();
+        }
+
+        return $nonCashRefundAmount;
+    }
+
+    /**
+     * Get Aggregated Shipping Refunds
+     * @param array $orderItems
+     * @return array
+     */
+    public function getShippingRefunds()
+    {
+        $creditmemos = $this->getChildren('creditmemo');
+        $nonCashRefundAmount = 0;
+        foreach ($creditmemos as $creditmemo) {
+            $nonCashRefundAmount += $creditmemo->getShippingRefund();
         }
 
         return $nonCashRefundAmount;
