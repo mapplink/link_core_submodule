@@ -184,7 +184,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * @return string SQL criteria
      * @throws MagelinkException
      */
-    protected function generateFieldCriteria($field, $value, $searchType, $inverse=false, $escape=true){
+    protected function generateFieldCriteria($field, $value, $searchType, $inverse=false, $escape=true)
+    {
         if(is_null($value)){
             switch($searchType){
                 case 'neq':
@@ -304,7 +305,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                 }
                 return $field . ' LIKE ' . $value;
             default:
-                throw new NodeException('Unknown search type: '.$searchType);
+                throw new NodeException('Unknown search type: `'.$searchType.'`');
         }
     }
     
