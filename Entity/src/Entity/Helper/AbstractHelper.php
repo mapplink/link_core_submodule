@@ -304,7 +304,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                 }
                 return $field . ' LIKE ' . $value;
             default:
-                throw new NodeException('Unknown search type ' . $searchType);
+                throw new NodeException('Unknown search type: '.$searchType);
         }
     }
     
