@@ -1132,19 +1132,32 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @throws MagelinkException If the MLQL is invalid or contains a syntax error
      * @return array
      */
-    public function executeQueryAssoc($mlql){
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql_assoc', 'executeQueryAssoc: ' . $mlql, array('query'=>$mlql));
+    public function executeQueryAssoc($mlql)
+    {
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'execmlql_assoc',
+                'executeQueryAssoc: '.$mlql,
+                array('query'=>$mlql)
+            );
         try{
             $data = $this->getQuerier()->executeQuery($mlql);
-        }catch(\Exception $e){
-            throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $e);
+        }catch(\Exception $exception){
+            throw new MagelinkException('Error executing MLQL: '.$mlql, 0, $exception);
         }
-        $ret = array();
+
+        $returnData = array();
         foreach($data as $row){
-            $ret[$row['k']] = $row['v'];
+            $returnData[$row['k']] = $row['v'];
         }
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql_assoc_r', 'Result: ' . var_export($ret, true), array('ret'=>$ret));
-        return $ret;
+
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'execmlql_assoc_r',
+                'Result: '.var_export($returnData, TRUE),
+                array('result'=>$returnData)
+            );
+        return $returnData;
     }
 
     /**
