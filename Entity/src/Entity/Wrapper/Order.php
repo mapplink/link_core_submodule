@@ -112,13 +112,14 @@ class Order extends AbstractWrapper
      * Returns whether or not this order is fully in stock
      * @return bool
      */
-    public function isInStock(){
-        foreach($this->getOrderItems() as $item){
-            if(!$item->isInStock()){
-                return false;
+    public function isInStock()
+    {
+        foreach ($this->getOrderItems() as $item) {
+            if (!$item->isInStock()) {
+                return FALSE;
             }
         }
-        return true;
+        return TRUE;
     }
 
     /**

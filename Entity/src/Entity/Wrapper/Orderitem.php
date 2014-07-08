@@ -27,7 +27,7 @@ class Orderitem extends AbstractWrapper
      */
     public function getQuantity()
     {
-        return (int) $this->getData('quantity');
+        return (int) $this->getData('quantity', 0);
     }
 
     /**
@@ -101,13 +101,20 @@ class Orderitem extends AbstractWrapper
      * Returns whether this order item is "in stock"
      * @return bool
      */
-    public function isInStock(){
-        if(!$this->getProduct()){
-            return false;
+    public function isInStock()
+    {
+        if (!$this->getProduct()) {
+            return FALSE;
         }
-        $stockitem = $this->getEavService()->loadEntity($this->getLoadedNodeId(), 'stockitem', $this->getProduct()->getStoreId(), $this->getProduct()->getUniqueId());
+        $stockitem = $this->getEavService()->loadEntity(
+            $this->getLoadedNodeId(),
+            'stockitem',
+            $this->getProduct()->getStoreId(),
+            $this->getProduct()->getUniqueId()
+        );
+
         if(!$stockitem){
-            return false;
+            return FALSE;
         }
 
         return ($stockitem->getData('available', 0) >= $this->getData('quantity', 0));
@@ -119,20 +126,32 @@ class Orderitem extends AbstractWrapper
      */
     public function getQuantityRefunded()
     {
-        $alreadyRefunded = $this->getServiceLocator()->get('entityService')->aggregateEntity(
-            $this->getLoadedNodeId(),
-            'creditmemoitem',
-            $this->getStoreId(),
-            array('qty'=>'SUM'),
-            array('order_item' => $this->getId()),
-            array('order_item' => 'eq')
-        );
+        try {
+            $alreadyRefunded = $this->getServiceLocator()->get('entityService')->aggregateEntity(
+                $this->getLoadedNodeId(),
+                'creditmemoitem',
+                $this->getStoreId(),
+                array('qty'=>'SUM'),
+                array('order_item' => $this->getId()),
+                array('order_item' => 'eq')
+            );
+        }catch (\Exception $exception) {}
 
         if(!array_key_exists('agg_qty_sum', $alreadyRefunded)){
-            throw new MagelinkException('Invalid response from aggregateEntity');
+            throw new MagelinkException('Invalid response from aggregateEntity. '.(isset($exception) ? $exception : ''));
         }
 
-        return (int) $alreadyRefunded['agg_qty_sum'];
+        return (int) max(0, $alreadyRefunded['agg_qty_sum']);
+    }
+
+    /**
+     * Get quantity to deliver
+     * @return int
+     */
+    public function getDeliveryQuantity()
+    {
+        $deliveryQuantity = $this->getQuantity() - $this->getQuantityRefunded();
+        return (int) $deliveryQuantity;
     }
 
 }

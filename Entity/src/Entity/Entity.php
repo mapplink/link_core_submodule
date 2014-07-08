@@ -263,22 +263,23 @@ class Entity implements ServiceLocatorAwareInterface {
      * Resolve a foreign-key relationship. Specified attribute must be Entity type.
      * 
      * @param string $attribute_code
-     * @param int|string $entity_type
+     * @param int|string $entityType
      * @return Entity
      */
-    public function resolve($attribute_code, $entity_type=null){
-        if(array_key_exists($attribute_code, $this->_resolveCache)){
-            return $this->_resolveCache[$attribute_code];
-        }
-        $id = $this->getData($attribute_code, false);
-        if(!$id){
-            $this->_resolveCache[$attribute_code] = null;
-            return null;
-        }
-
+    public function resolve($attribute_code, $entityType = NULL)
+    {
         /** @var \Entity\Service\EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
-        $this->_resolveCache[$attribute_code] = $entityService->loadEntityId($this->_loadedFromNode, $id);
+
+        if (!array_key_exists($attribute_code, $this->_resolveCache)) {
+            $id = $this->getData($attribute_code, FALSE);
+            if (!$id) {
+                $this->_resolveCache[$attribute_code] = NULL;
+            }else{
+                $this->_resolveCache[$attribute_code] = $entityService->loadEntityId($this->_loadedFromNode, $id);
+            }
+        }
+
         return $this->_resolveCache[$attribute_code];
     }
 
