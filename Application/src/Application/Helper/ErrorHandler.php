@@ -9,19 +9,19 @@ class ErrorHandler {
     const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
     const ERROR_FROM = 'noreply@lero9.co.nz';
 
-    protected static $allowEx = null;
+    protected static $allowEx = NULL;
 
-    public function __construct($allowEx=null){
-        if(self::$allowEx === null){
+    public function __construct($allowEx=NULL){
+        if(self::$allowEx === NULL){
             register_shutdown_function(array($this, 'shutdownhandler'));
         }
-        if($allowEx === null && self::$allowEx !== null){
+        if($allowEx === NULL && self::$allowEx !== NULL){
             $allowEx = self::$allowEx;
-        }else if($allowEx !== null){
+        }else if($allowEx !== NULL){
             self::$allowEx = $allowEx;
         }else{
-            self::$allowEx = false;
-            $allowEx = false;
+            self::$allowEx = FALSE;
+            $allowEx = FALSE;
         }
         set_error_handler(array($this, 'errorhandler'));
         if($allowEx){
@@ -31,13 +31,13 @@ class ErrorHandler {
 
     function shutdownhandler(){
         $err = error_get_last();
-        if($err == null){
+        if($err == NULL){
             return;
         }
         if($err['type'] === E_NOTICE){
             return; // Don't email shutdown notices
         }
-        $this->errorhandler($err['type'], $err['message'], isset($err['file']) ? $err['file'] : null, isset($err['line']) ? $err['line'] : null);
+        $this->errorhandler($err['type'], $err['message'], isset($err['file']) ? $err['file'] : NULL, isset($err['line']) ? $err['line'] : NULL);
     }
 
     /**
@@ -52,101 +52,96 @@ class ErrorHandler {
             $ex->__toString(),
             'From: '.self::ERROR_FROM
         );
-        if (self::ERROR_TO_CLIENT && strpos(get_class($ex), 'Accredo') !== FALSE) {
-            @mail(
-                self::ERROR_TO_CLIENT,
-                'MageLink Exception Handler: '.get_class($ex),
-                $ex->__toString(),
-                'From: '.self::ERROR_FROM
-            );
-        }
         print $ex->getTraceAsString();
     }
 
-    protected $_lastErr = false;
+    protected $_lastErr = FALSE;
 
     /**
      * Error handler callback
-     * @param int $errno
-     * @param string $errstr
-     * @param string $errfile
-     * @param int $errline
-     * @param array $errcontext
+     * @param int $errorNo
+     * @param string $errorText
+     * @param string $errorFile
+     * @param int $errorLine
+     * @param array $errorContext
      * @return bool
      */
-    public function errorhandler ( $errno, $errstr, $errfile=null, $errline=null, array $errcontext=null ) {
-        if($errfile != null && stripos($errfile, 'ErrorHandler') !== false){
-            return false; // Error occured here!
+    public function errorhandler($errorNo, $errorText, $errorFile = NULL, $errorLine = NULL, array $errorContext = NULL)
+    {
+        if ($errorFile != NULL && stripos($errorFile, 'ErrorHandler') !== FALSE) {
+            return FALSE; // Error occured here!
         }
-        $typestr = 'UNKN';
-        switch($errno){
+
+        switch ($errorNo) {
             case E_ERROR:
-                $typestr = 'ERROR';
+                $errorType = 'ERROR';
                 break;
             case E_WARNING:
-                $typestr = 'WARNING';
+                $errorType = 'WARNING';
                 break;
             case E_PARSE:
-                $typestr = 'PARSE';
+                $errorType = 'PARSE';
                 break;
             case E_NOTICE:
-                $typestr = 'NOTICE';
+                $errorType = 'NOTICE';
                 break;
             case E_CORE_ERROR:
-                $typestr = 'CORE_ERROR';
+                $errorType = 'CORE_ERROR';
                 break;
             case E_CORE_WARNING:
-                $typestr = 'CORE_WARNING';
+                $errorType = 'CORE_WARNING';
                 break;
             case E_COMPILE_ERROR:
-                $typestr = 'COMPILE_ERROR';
+                $errorType = 'COMPILE_ERROR';
                 break;
             case E_COMPILE_WARNING:
-                $typestr = 'COMPILE_WARNING';
+                $errorType = 'COMPILE_WARNING';
                 break;
             case E_USER_ERROR:
-                $typestr = 'USER_ERROR';
+                $errorType = 'USER_ERROR';
                 break;
             case E_USER_WARNING:
-                $typestr = 'USER_WARNING';
+                $errorType = 'USER_WARNING';
                 break;
             case E_USER_NOTICE:
-                $typestr = 'USER_NOTICE';
+                $errorType = 'USER_NOTICE';
                 break;
             case E_STRICT:
-                $typestr = 'STRICT';
+                $errorType = 'STRICT';
                 break;
             case E_RECOVERABLE_ERROR:
-                $typestr = 'RECOVERABLE_ERROR';
+                $errorType = 'RECOVERABLE_ERROR';
                 break;
             case E_DEPRECATED:
-                $typestr = 'DEPRECATED';
+                $errorType = 'DEPRECATED';
                 break;
             case E_USER_DEPRECATED:
-                $typestr = 'USER_DEPRECATED';
+                $errorType = 'USER_DEPRECATED';
                 break;
             default:
-                $typestr = 'UNKN_'.$errno;
+                $errorType = 'UNKNOWN_'.$errorNo;
                 break;
         }
 
         $content = <<<EOF
-[{$typestr}] {$errstr}
+[{$errorType}] {$errorText}
 
-Line {$errline} in file {$errfile}.
+Line {$errorLine} in file {$errorFile}.
 
 EOF;
-;
 
-        if($this->_lastErr == $content){
-            return false; // Already sent
+        if ($this->_lastErr == $content) {
+            return FALSE; // Already sent
         }else{
             $this->_lastErr = $content;
         }
 
-        mail(self::ERROR_TO, 'MageLink Error Handler: ' . $typestr, $content, 'From: ' . self::ERROR_FROM);
+        mail(self::ERROR_TO, 'MageLink Error Handler: '.$errorType, $content, 'From: ' . self::ERROR_FROM);
+        if (self::ERROR_TO_CLIENT && strpos($errorType, 'Accredo') !== FALSE) {
+            mail(self::ERROR_TO_CLIENT, 'MageLink Error Handler: '.$errorType, $content, 'From: ' . self::ERROR_FROM);
+        }
 
-        return false; // Continue PHP handler
+        return FALSE; // Continue PHP handler
     }
 
 }
