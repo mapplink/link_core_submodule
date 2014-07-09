@@ -52,7 +52,7 @@ class ErrorHandler {
             $ex->__toString(),
             'From: '.self::ERROR_FROM
         );
-        if (self::ERROR_TO_CLIENT) {
+        if (self::ERROR_TO_CLIENT && strpos(get_class($ex), 'Accredo') !== FALSE) {
             @mail(
                 self::ERROR_TO_CLIENT,
                 'MageLink Exception Handler: '.get_class($ex),
