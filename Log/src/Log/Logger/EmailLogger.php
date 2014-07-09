@@ -1,12 +1,24 @@
 <?php
+/**
+ * Log\Logger\EmailLogger
+ *
+ * @category Log
+ * @package Log\Logger
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Log\Logger;
 
 use \Log\Service\LogService;
+use Application\Helper\ErrorHandler;
 
-class EmailLogger extends AbstractLogger {
 
-    protected $logsTarget = 'forms@lero9.co.nz';
+class EmailLogger extends AbstractLogger
+{
+
     protected $lastCache = array();
     protected $cacheSize = 20;
 
@@ -16,7 +28,8 @@ class EmailLogger extends AbstractLogger {
      * @param array $config
      * @return boolean Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
-    function init($config=array()) {
+    function init($config=array())
+    {
         $this->lastCache = array();
         // TODO make cacheSize configurable?
 
@@ -33,8 +46,8 @@ class EmailLogger extends AbstractLogger {
      * @param $extraData
      * @param $lastStackFrame
      */
-    function printLog($level, $code, $message, $data, $extraData, $lastStackFrame) {
-
+    function printLog($level, $code, $message, $data, $extraData, $lastStackFrame)
+    {
         $s1 = '['.strtoupper($level).':' . $code . ']';
         if(isset($lastStackFrame['class'])){
             $s2 = $lastStackFrame['class'] . $lastStackFrame['type'] . $lastStackFrame['function'] . ':'.$lastStackFrame['line'];
@@ -88,24 +101,25 @@ class EmailLogger extends AbstractLogger {
         if($level == LogService::LEVEL_ERROR){
             $this->sendAlert($level, $code, $message, $data, $extraData, $lastStackFrame);
         }
-
     }
 
-    protected function sendAlert($level, $code, $message, $data, $extraData, $lastStackFrame){
-
-        $subject = 'MageLink ERROR: [' . $code . '] ' . $message;
+    protected function sendAlert($level, $code, $message, $data, $extraData, $lastStackFrame)
+    {
+        $subject = 'MageLink ERROR: ['.$code.'] '.$message;
         $contents = 'MageLink error thrown! Details:'.PHP_EOL.PHP_EOL;
-
         $contents .= implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
 
-        mail($this->logsTarget, $subject, $contents, 'Content-Type: text/plain');
-
+        mail(ErrorHandler::ERROR_TO, $subject, $contents, 'Content-Type: text/plain');
+        if (ErrorHandler::ERROR_TO_CLIENT && strpos($code, ErrorHandler::ERROR_TO_CLIENT_CODE) !== FALSE) {
+            mail(ErrorHandler::ERROR_TO_CLIENT, $subject, $contents, 'Content-Type: text/plain');
+        }
     }
 
     /**
      * Output any queued messages (if relevant).
      */
-    function flushLog() {
+    function flushLog()
+    {
         $this->lastCache = array();
     }
 

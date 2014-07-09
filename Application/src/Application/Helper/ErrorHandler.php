@@ -1,13 +1,26 @@
 <?php
+/**
+ * Application\Helper\ErrorHandler
+ *
+ * @category Application
+ * @package Application\Helper
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Application\Helper;
+
 
 class ErrorHandler {
 
     const ERROR_TO = 'forms@lero9.co.nz';
-    //*** ERROR_TO_CLIENT should not be here
-    const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
     const ERROR_FROM = 'noreply@lero9.co.nz';
+
+    //*** Client data should not be here
+    const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
+    const ERROR_TO_CLIENT_CODE = 'accsync_';
 
     protected static $allowEx = NULL;
 
@@ -137,8 +150,8 @@ EOF;
         }
 
         mail(self::ERROR_TO, 'MageLink Error Handler: '.$errorType, $content, 'From: ' . self::ERROR_FROM);
-        if (self::ERROR_TO_CLIENT && strpos($errorType, 'Accredo') !== FALSE) {
-            mail(self::ERROR_TO_CLIENT, 'MageLink Error Handler: '.$errorType, $content, 'From: ' . self::ERROR_FROM);
+        if (self::ERROR_TO_CLIENT && strpos($errorText, self::ERROR_TO_CLIENT_CODE) !== FALSE) {
+            mail(self::ERROR_TO_CLIENT, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);
         }
 
         return FALSE; // Continue PHP handler
