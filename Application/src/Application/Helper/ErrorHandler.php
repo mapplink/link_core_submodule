@@ -5,6 +5,8 @@ namespace Application\Helper;
 class ErrorHandler {
 
     const ERROR_TO = 'forms@lero9.co.nz';
+    //*** ERROR_TO_CLIENT should not be here
+    const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
     const ERROR_FROM = 'noreply@lero9.co.nz';
 
     protected static $allowEx = null;
@@ -42,9 +44,23 @@ class ErrorHandler {
      * Exception handler callback
      * @param \Exception $ex
      */
-    public function exceptionhandler ( \Exception $ex ) {
-        @mail(self::ERROR_TO, 'MageLink Exception Handler: ' . get_class($ex), $ex->__toString(), 'From: ' . self::ERROR_FROM);
-        echo $ex->getTraceAsString();
+    public function exceptionhandler (\Exception $ex)
+    {
+        @mail(
+            self::ERROR_TO,
+            'MageLink Exception Handler: '.get_class($ex),
+            $ex->__toString(),
+            'From: '.self::ERROR_FROM
+        );
+        if (self::ERROR_TO_CLIENT) {
+            @mail(
+                self::ERROR_TO_CLIENT,
+                'MageLink Exception Handler: '.get_class($ex),
+                $ex->__toString(),
+                'From: '.self::ERROR_FROM
+            );
+        }
+        print $ex->getTraceAsString();
     }
 
     protected $_lastErr = false;
