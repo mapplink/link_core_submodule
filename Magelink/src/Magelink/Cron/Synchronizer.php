@@ -21,7 +21,7 @@ class Synchronizer implements CronRunnable, ServiceLocatorAwareInterface {
      */
     public function cronCheck($time)
     {
-        if($time % 900 == 0){ // 15 minute interval
+        if($time % 1800 == 0){ // 30 minute interval
             return true;
         }
         return false;
