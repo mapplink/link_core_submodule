@@ -90,13 +90,13 @@ class Order extends AbstractWrapper
 
     /**
      * Returns the sum quantity of all order items
-     * @return float
+     * @return int
      * @throws MagelinkException
      */
     public function getOrderItemsTotalQty()
     {
         $entityService = $this->getServiceLocator()->get('entityService');
-        
+
         $totalItemAggregate = $entityService->aggregateEntity(
             $this->getLoadedNodeId(), 'orderitem', FALSE,
             array('quantity'=>'SUM'),
@@ -106,6 +106,21 @@ class Order extends AbstractWrapper
             throw new MagelinkException('Invalid response from aggregateEntity');
         }
         return (int) $totalItemAggregate['agg_quantity_sum'];
+    }
+
+    /**
+     * Returns the sum delivery quantity of all order items
+     * @return int
+     * @throws MagelinkException
+     */
+    public function getOrderItemsTotalDeliveryQuantity()
+    {
+        $quantity = 0;
+        foreach ($this->getOrderItems() as $orderItem) {
+            $quantity += $orderItem->getDeliveryQuantity();
+        }
+
+        return (int) $quantity;
     }
 
     /**
