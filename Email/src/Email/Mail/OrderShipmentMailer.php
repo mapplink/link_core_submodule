@@ -58,7 +58,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
     {
         $this->template = $this->getTemplate(
             EmailTemplateSection::SECTION_SHIPPING_NOTIFICATION,
-            $this->order->getShippingMethod()
+            $this->order->getData('shipping_method')
         );
 
         if (!$this->template) {
