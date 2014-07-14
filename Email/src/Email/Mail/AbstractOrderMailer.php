@@ -9,10 +9,12 @@
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
  */
+
 namespace Email\Mail;
 
-
 use Doctrine\Tests\Common\Annotations\Ticket\Doctrine\ORM\Entity;
+use Entity\Wrapper\Order;
+
 
 abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
 {
@@ -44,7 +46,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
      * @param \Entity\Wrapper\Order $order
      * @return $this
      */
-    public function setOrder(Entity\Wrapper\Order $order)
+    public function setOrder(Order $order)
     {
         $this->entity = $order;
         $this->subjectParams['orderId'] = $order->getUniqueId();

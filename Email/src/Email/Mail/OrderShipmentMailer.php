@@ -13,6 +13,7 @@
 namespace Email\Mail;
 
 use Email\Entity\EmailTemplateSection;
+use Entity\Wrapper\Order;
 
 
 class OrderShipmentMailer extends AbstractOrderMailer
@@ -24,9 +25,9 @@ class OrderShipmentMailer extends AbstractOrderMailer
 
     /**
      * Set up order
-     * @param Entity\Wrapper\Order $order
+     * @param \Entity\Wrapper\Order $order
      */
-    public function setOrder(Entity\Wrapper\Order $order)
+    public function setOrder(Order $order)
     {
         $this->entity = $order;
         $this->subjectParams['orderId'] = $order->getUniqueId();
