@@ -27,7 +27,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
      * Set up order
      * @param \Entity\Wrapper\Order $order
      */
-    public function setOrder(Order $order)
+    public function setOrder(\Entity\Wrapper\Order $order)
     {
         $this->entity = $order;
         $this->subjectParams['orderId'] = $order->getUniqueId();
