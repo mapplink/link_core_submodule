@@ -27,7 +27,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     /** @var array $templateParams */
     protected $templateParams = array();
 
-    /** @var $entity */
+    /** @var \Entity\Entity $entity */
     protected $entity;
 
     /** @var array $accessibleEntityTypes */
@@ -95,7 +95,6 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     protected function init()
     {
         $this->setupTemplate();
-        $this->setBodyParams();
 
         if ($this->template) {
             $this->getMessage()->setFrom($this->template->getSenderEmail(), $this->template->getSenderName());
@@ -229,7 +228,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
                     $entityChainArray = array_reverse($entityChainArray);
 
                     $newEntity = $entity;
-                    while ($newEntity && ($entityCode = each($entityChainArray))) {
+                    while (is_object($newEntity) && ($entityCode = each($entityChainArray))) {
                         list($entityType, $code) = explode('.', $entityCode['value'], 2);
                         if ($newEntity->getTypeStr() == $entityType) {
                             $newEntity = $this->getServiceLocator()->get('entityService')

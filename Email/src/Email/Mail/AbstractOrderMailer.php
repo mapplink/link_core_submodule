@@ -49,8 +49,10 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     public function setOrder(\Entity\Wrapper\Order $order)
     {
         $this->entity = $order;
-        $this->subjectParams['orderId'] = $order->getUniqueId();
+
         $this->setAllRecipients(array($order->getData('customer_email') => $order->getData('customer_name')));
+        $this->subjectParams['orderId'] = $order->getUniqueId();
+        $this->setBodyParams();
 
         return $this;
     }
