@@ -93,8 +93,8 @@ class EntityService implements ServiceLocatorAwareInterface {
     {
         $this->verifyNodeId($nodeId);
 
-        if(is_string($entityId)){
-            if(is_numeric($entityId)){
+        if (is_string($entityId) || is_numeric($entityId)) {
+            if ((string) $entityId == (string) (int) $entityId || (string) $entityId == (string) (float) $entityId) {
                 $entityId = intval($entityId);
             }else{
                 throw new NodeException('Invalid entity ID passed to loadEntityId - '.$entityId);
@@ -111,7 +111,7 @@ class EntityService implements ServiceLocatorAwareInterface {
 
         $attributes = $this->getServiceLocator()->get('nodeService')
             ->getSubscribedAttributeCodes($nodeId, $entityTypeId);
-        $result = $this->getLoader()->loadEntities(
+        $entities = $this->getLoader()->loadEntities(
             $entityTypeId,
             0,
             array('ENTITY_ID'=>$entityId),
@@ -120,14 +120,13 @@ class EntityService implements ServiceLocatorAwareInterface {
             array('limit'=>1, 'node_id'=>$nodeId)
         );
 
-        if(!$result || !count($result)){
-            return null;
+        if (!$entities || !count($entities)) {
+            $entity = NULL;
         }else{
-            foreach($result as $entity){
-                // Return first row
-                return $entity;
-            }
+            $entity = array_shift($entities);
         }
+
+        return $entity;
     }
 
     /**
