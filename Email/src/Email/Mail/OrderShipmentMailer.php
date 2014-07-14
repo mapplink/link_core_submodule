@@ -35,7 +35,6 @@ class OrderShipmentMailer extends AbstractOrderMailer
         $this->subjectParams['orderId'] = $order->getUniqueId();
         $this->setBodyParams();
 
-
         return $this;
     }
 
@@ -71,7 +70,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
     protected function setBodyParams()
     {     
         $this->templateParams = array_merge(
-            $this->getAllEntityReplacementValues($this->entity),
+            $this->getAllEntityReplacementValues(),
             array('additionalNote' => $this->additionalNote)
         );
     }

@@ -204,31 +204,31 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 
     /**
      * Get all (allowed) entity replacement values/params
-     * @param Entity $entity
      * @return array $params
      */
-    protected function getAllEntityReplacementValues(Entity $entity)
+    protected function getAllEntityReplacementValues()
     {
         $allParams = array();
-        foreach ($this->getAllEntityReplacementCodes() as $entity=>$paramsInfo) {
+        foreach ($this->getAllEntityReplacementCodes() as $entityType=>$paramsInfo) {
             $alias = key($paramsInfo);
             $pathOrMethod = current($paramsInfo);
 
             if (substr($alias, -1) == '.' && substr($pathOrMethod, -2) !== '()') {
 
-                if ($pathOrMethod === NULL) {
+                if ($this->entity->getTypeStr() == $entityType && $pathOrMethod === NULL) {
                     // Base entity
-                    $newParams = $this->getSpecficEntityReplacementValues($entity, $alias);
-                }else{
+                    $newParams = $this->getSpecficEntityReplacementValues($this->entity, $alias);
+                }elseif ($this->entity->getTypeStr() != $entityType) {
                     // Linked entity
                     $entityChainArray = explode('@', $pathOrMethod);
                     if ($entityChainArray[0] !== '') {
                         array_shift($entityChainArray);
                     }
+                    // Reverse chain order to start from right to left (see definition of $this->accessibleEntityTypes)
                     $entityChainArray = array_reverse($entityChainArray);
 
-                    $newEntity = $entity;
-                    while (is_object($newEntity) && ($entityCode = each($entityChainArray))) {
+                    $newEntity = $this->entity;
+                    while ($newEntity && ($entityCode = each($entityChainArray))) {
                         list($entityType, $code) = explode('.', $entityCode['value'], 2);
                         if ($newEntity->getTypeStr() == $entityType) {
                             $newEntity = $this->getServiceLocator()->get('entityService')
@@ -238,7 +238,11 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
                         }
                     }
 
-                    $newParams = $this->getSpecficEntityReplacementValues($newEntity, $alias);
+                    if ($newEntity !== NULL) {
+                        $newParams = $this->getSpecficEntityReplacementValues($newEntity, $alias);
+                    }
+                }else{
+                    $newParams = array();
                 }
             }elseif (substr($pathOrMethod, -2) == '()' && method_exists($this, $pathOrMethod)) {
                 // Method
@@ -257,11 +261,11 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 
     /**
      * Get specific entity replacement values/params
-     * @param Entity $entity
+     * @param \Entity\Entity $entity
      * @param string $alias
      * @return array $params
      */
-    protected function getSpecficEntityReplacementValues(Entity $entity, $alias)
+    protected function getSpecficEntityReplacementValues(\Entity\Entity $entity, $alias)
     {
         $params = array();
         foreach ($entity->getAllData() as $code=>$value) {
