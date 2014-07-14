@@ -261,6 +261,10 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     {
         $params = array();
         foreach ($entity->getAllData() as $code=>$value) {
+            $method = 'get'.str_replace('_', '', ucfirst($code));
+            if (method_exists($entity, $method)) {
+                $value = $entity->$method();
+            }
             $params[$alias.$code] = $value;
         }
 
