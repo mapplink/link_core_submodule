@@ -51,6 +51,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
 
         $this->setAllRecipients(array($order->getData('customer_email') => $order->getData('customer_name')));
         $this->subjectParams['orderId'] = $order->getUniqueId();
+        $this->templateParams['order.shippingAddress'] = $this->getShippingAddress();
         $this->setBodyParams();
 
         return $this;
@@ -113,7 +114,6 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         $items = $this->entity->getOrderItems();
 
         $content = '';
-
         foreach ($items as $item) {
             $content .= 'item : SKU#' . $item->getSku().' '.$item->getProductName()
                 .' x '.((int) $item->getData('quantity'))."\n\n";

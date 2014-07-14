@@ -217,7 +217,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 
             if (substr($alias, -1) == '.' && substr($pathOrMethod, -2) !== '()') {
 
-                if ($this->entity->getTypeStr() == $entityType && $pathOrMethod === NULL) {
+                if ($this->entity->getTypeStr() == $entityType && !$pathOrMethod) {
                     // Base entity
                     $newParams = $this->getSpecficEntityReplacementValues($this->entity, $alias);
 
@@ -246,9 +246,9 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
                     }
                 }
 
-            }elseif (substr($pathOrMethod, -2) == '()' && method_exists($this, $pathOrMethod)) {
-                // Method
-                $newParams = array($alias=>$this->$pathOrMethod());
+            }elseif (substr($pathOrMethod, -2) == '()' && method_exists($this, substr($pathOrMethod, 0, -2))) {
+                $method = substr($pathOrMethod, 0, -2);
+                $newParams = array($alias=>$this->$method());
             }
 
             $allParams = array_merge($allParams, $newParams);
