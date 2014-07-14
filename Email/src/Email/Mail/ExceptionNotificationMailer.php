@@ -40,15 +40,4 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
         return $this;
     }
 
-     /**
-     * Set up body parameters
-     */
-    protected function setBodyParams()
-    {     
-        $this->templateParams = array_merge(
-            $this->params,
-            $this->getAllEntityReplacementValues()
-        );
-    }
-
 }

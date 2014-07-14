@@ -67,11 +67,9 @@ class OrderShipmentMailer extends AbstractOrderMailer
      * Set up body parameters
      */
     protected function setBodyParams()
-    {     
-        $this->templateParams = array_merge(
-            $this->getAllEntityReplacementValues(),
-            array('additionalNote' => $this->additionalNote)
-        );
+    {
+        parent::setBodyParams();
+        $this->templateParams['additionalNote'] = $this->additionalNote;
     }
 
     /**

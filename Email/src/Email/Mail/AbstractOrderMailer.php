@@ -57,7 +57,18 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         return $this;
     }
 
-     /**
+    /**
+     * Set up body parameters
+     */
+    protected function setBodyParams()
+    {
+        $this->templateParams = array_merge(
+            $this->templateParams,
+            $this->getAllEntityReplacementValues()
+        );
+    }
+
+    /**
      * Get full shipping address
      * @return string
      */
