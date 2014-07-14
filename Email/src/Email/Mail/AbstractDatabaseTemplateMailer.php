@@ -227,7 +227,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 
                     $newEntity = $entity;
                     while ($entityCode = each($entityChainArray)) {
-                        list($entityType, $code) = explode('.', $entityCode, 2);
+                        list($entityType, $code) = explode('.', $entityCode['value'], 2);
                         if ($newEntity->getTypeStr() == $entityType) {
                             $newEntity = $this->getServiceLocator()->get('entityService')
                                 ->loadEntityId(0, $newEntity->getData($code));
