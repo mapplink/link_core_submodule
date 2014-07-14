@@ -192,32 +192,46 @@ class EntityService implements ServiceLocatorAwareInterface {
     /**
      * Loads the entity identified by the given local_id from the database for the given node.
      * 
-     * @param int $node_id
-     * @param int|string $entity_type
-     * @param string $store_id
-     * @param string $local_id
+     * @param int $nodeId
+     * @param int|string $entityType
+     * @param string $storeId
+     * @param string $localId
      * @return \Entity\Entity|null
      */
-    public function loadEntityLocal ( $node_id, $entity_type, $store_id, $local_id ) {
-        $this->verifyNodeId($node_id);
-        $this->verifyEntityType($entity_type);
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'loadeloc', 'loadEntityLocal - ' . $node_id . ' - ' . $entity_type . ' - ' . $store_id . ' - ' . $local_id, array('node_id'=>$node_id, 'entity_type'=>$entity_type, 'store_id'=>$store_id, 'local_id'=>$local_id));
+    public function loadEntityLocal($nodeId, $entityType, $storeId, $localId)
+    {
+        $this->verifyNodeId($nodeId);
+        $this->verifyEntityType($entityType);
 
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'loadeloc',
+                'loadEntityLocal - '.$nodeId.' - '.$entityType.' - '.$storeId.' - '.$localId,
+                array('node_id'=>$nodeId, 'entity_type'=>$entityType, 'store_id'=>$storeId, 'local_id'=>$localId)
+            );
 
-        $attributes = $this->getServiceLocator()->get('entityService')->getAttributesCode($node_id, $entity_type);
+        $attributes = $this->getServiceLocator()->get('entityConfigService')->getAttributesCode($entityType);
 
-        $result = $this->getLoader()->loadEntities($entity_type, $store_id, array('LOCAL_ID'=>$local_id), $attributes, array('LOCAL_ID'=>'eq'), array('linked_to_node'=>$node_id, 'limit'=>1, 'node_id'=>$node_id));
+        $result = $this->getLoader()
+            ->loadEntities(
+                $entityType,
+                $storeId,
+                array('LOCAL_ID'=>$localId),
+                $attributes,
+                array('LOCAL_ID'=>'eq'),
+                array('linked_to_node'=>$nodeId, 'limit'=>1, 'node_id'=>$nodeId)
+            );
 
         if(!$result || !count($result)){
-            return null;
+            return NULL;
         }else{
-            foreach($result as $ent){
+            foreach($result as $entity){
                 // Return first row
-                return $ent;
+                return $entity;
             }
         }
 
-        return null;
+        return NULL;
     }
     
     /**
