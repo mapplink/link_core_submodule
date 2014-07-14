@@ -291,7 +291,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
             if (is_array($replace)) {
                 $replace = array_shift($replace);
             }
-            $content = str_replace('{{'.$search.'}}', $replace, $content);
+            $content = preg_replace('#\{\{\s*'.$search.'\s*\}\}#ism', $replace, $content);
         }
         //$content = preg_replace('#\{\{.*?\}\}#ism', '', $content);
 
