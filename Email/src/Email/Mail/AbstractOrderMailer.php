@@ -12,7 +12,9 @@
 namespace Email\Mail;
 
 
-abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer 
+use Doctrine\Tests\Common\Annotations\Ticket\Doctrine\ORM\Entity;
+
+abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
 {
     /**
      * @var array $accessibleEntityTypes
@@ -36,19 +38,16 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         )
     );
 
-    /** @var \Entity\Wrapper\Order $order */
-    protected $order;
 
     /**
      * Set Order
      * @param \Entity\Wrapper\Order $order
      * @return $this
      */
-    public function setOrder($order)
+    public function setOrder(Entity\Wrapper\Order $order)
     {
-        $this->order = $order;
+        $this->entity = $order;
         $this->subjectParams['orderId'] = $order->getUniqueId();
-
         $this->setAllRecipients(array($order->getData('customer_email') => $order->getData('customer_name')));
 
         return $this;

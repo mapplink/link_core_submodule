@@ -28,7 +28,6 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
     public function setTemplate($template)
     {
         $this->template = $template;
-
         return $this;
     }
 
@@ -38,7 +37,6 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
     public function setParams($params)
     {
         $this->params = $params;
-
         return $this;
     }
 
@@ -49,7 +47,7 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
     {     
         $this->templateParams = array_merge(
             $this->params,
-            $this->getAllEntityReplacementValues($this->order)
+            $this->getAllEntityReplacementValues($this->entity)
         );
     }
 

@@ -4,7 +4,7 @@
  *
  * @category    Email
  * @package     Email\Service
- * @author      Sean Yao <sean@lero9.com>
+ * @author      Seo Yao
  * @copyright   Copyright (c) 2014 LERO9 Ltd.
  * @license     Commercial - All Rights Reserved
  */
@@ -16,9 +16,7 @@ use Zend\View\Resolver\TemplateMapResolver;
 use Zend\View\Model\ViewModel;
 use Zend\Filter\Word\CamelCaseToDash;
 
-/**
- * Mailer abstract class for using file based template
- */
+
 abstract class AbstractFileTemplateMailer extends BaseMailer
 {   
 

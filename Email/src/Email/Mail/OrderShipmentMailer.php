@@ -18,7 +18,9 @@ use Email\Entity\EmailTemplateSection;
 class OrderShipmentMailer extends AbstractOrderMailer
 {
 
+    /** @var $additionalNote */
     protected $additionalNote;
+
 
     /**
      * Set up order
@@ -26,7 +28,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
      */
     public function setOrder($order)
     {
-        $this->order = $order;
+        $this->entity = $order;
         $this->subjectParams['orderId'] = $order->getUniqueId();
         $this->setAllRecipients(
             array($order->getData('customer_email') => $order->getData('customer_name'))
@@ -35,16 +37,19 @@ class OrderShipmentMailer extends AbstractOrderMailer
         return $this;
     }
 
+    /**
+     * Set additional note
+     * @param $note
+     * @return $this
+     */
     public function setAdditionalNote($note)
     {
         $this->additionalNote = $note;
-
         return $this;
     }
 
     /**
      * Set up template
-     * @return
      */
     public function setupTemplate()
     {
@@ -64,7 +69,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
     protected function setBodyParams()
     {     
         $this->templateParams = array_merge(
-            $this->getAllEntityReplacementValues($this->order),
+            $this->getAllEntityReplacementValues($this->entity),
             array('additionalNote' => $this->additionalNote)
         );
     }

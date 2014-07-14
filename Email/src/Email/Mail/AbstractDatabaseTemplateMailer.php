@@ -27,6 +27,9 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     /** @var array $templateParams */
     protected $templateParams = array();
 
+    /** @var $entity */
+    protected $entity;
+
     /** @var array $accessibleEntityTypes */
     protected $accessibleEntityTypes = array();
 
@@ -226,14 +229,13 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
                     $entityChainArray = array_reverse($entityChainArray);
 
                     $newEntity = $entity;
-                    while ($entityCode = each($entityChainArray)) {
+                    while ($newEntity && ($entityCode = each($entityChainArray))) {
                         list($entityType, $code) = explode('.', $entityCode['value'], 2);
                         if ($newEntity->getTypeStr() == $entityType) {
                             $newEntity = $this->getServiceLocator()->get('entityService')
                                 ->loadEntityId(0, $newEntity->getData($code));
                         }else{
                             $newEntity = NULL;
-                            break;
                         }
                     }
 
