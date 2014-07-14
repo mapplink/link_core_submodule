@@ -131,7 +131,8 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     protected function getAllRawEntityReplacementCodes()
     {
         $replacementParamsCodes = array();
-        $entityTypes = $this->getServiceLocator()->get('entityService')->getEntityTypes();
+        $entityTypes = $this->getServiceLocator()->get('entityConfigService')
+            ->getEntityTypesCode();
 
         foreach ($entityTypes as $entityTypeId=>$entityType) {
             $replacementParamsCodes[$entityType] =
