@@ -135,8 +135,8 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
             ->getEntityTypesCode();
 
         foreach ($entityTypes as $entityTypeId=>$entityType) {
-            $replacementParamsCodes[$entityType] =
-                $this->getServiceLocator()->get('entityService')->getAttributesCode($entityType);
+            $replacementParamsCodes[$entityType] = $this->getServiceLocator()->get('entityConfigService')
+                ->getAttributesCode($entityType);
         }
 
         return $replacementParamsCodes;
