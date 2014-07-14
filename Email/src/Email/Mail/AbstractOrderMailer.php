@@ -59,7 +59,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
      */
     protected function getShippingAddress()
     {
-        $address = $this->order->getShippingAddressEntity();
+        $address = $this->entity->getShippingAddressEntity();
 
         if ($address) {
             $addressArray = $address->getAddressFullArray();
@@ -92,7 +92,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         $authService = $this->getServiceLocator()->get('zfcuser_auth_service');
 
         $entityService->createEntityComment(
-            $this->order,
+            $this->entity,
             $authService->getIdentity()->getDisplayName(),
             $this->getMessage()->getSubject(),
             $this->getMessage()->getBodyText(),
@@ -107,7 +107,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
      */
     protected function renderOrderItems()
     {
-        $items = $this->order->getOrderItems();
+        $items = $this->entity->getOrderItems();
 
         $content = '';
 

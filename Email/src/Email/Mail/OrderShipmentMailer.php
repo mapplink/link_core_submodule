@@ -24,9 +24,9 @@ class OrderShipmentMailer extends AbstractOrderMailer
 
     /**
      * Set up order
-     * @param \HOPS\Order $order
+     * @param Entity\Wrapper\Order $order
      */
-    public function setOrder($order)
+    public function setOrder(Entity\Wrapper\Order $order)
     {
         $this->entity = $order;
         $this->subjectParams['orderId'] = $order->getUniqueId();
@@ -55,7 +55,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
     {
         $this->template = $this->getTemplate(
             EmailTemplateSection::SECTION_SHIPPING_NOTIFICATION,
-            $this->order->getData('shipping_method')
+            $this->entity->getData('shipping_method')
         );
 
         if (!$this->template) {
@@ -80,7 +80,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
      */
     protected function getShippingAddress()
     {
-        $address = $this->order->getShippingAddressEntity();
+        $address = $this->entity->getShippingAddressEntity();
         if ($address) {
             $addressArray = $address->getAddressFullArray();
 
@@ -88,12 +88,12 @@ class OrderShipmentMailer extends AbstractOrderMailer
                 $this->getServiceLocator()->get('logService')
                     ->log(\Log\Service\LogService::LEVEL_INFO,
                         'email_no_template',
-                        'No template is set for shipping address on order '.$this->order->getUniqueId(),
+                        'No template is set for shipping address on order '.$this->entity->getUniqueId(),
                         array(
-                            'order id'=>$this->order->getId(), 'order unique id'=>$this->order->getUniqueId(),
+                            'order id'=>$this->entity->getId(), 'order unique id'=>$this->entity->getUniqueId(),
                             'address id'=>$address->getId(), 'address unique id'=>$address->getUniqueId()
                         ),
-                        array('order'=>$this->order, 'address'=>$address)
+                        array('order'=>$this->entity, 'address'=>$address)
                     );
 
                 return implode("\n", $addressArray);
