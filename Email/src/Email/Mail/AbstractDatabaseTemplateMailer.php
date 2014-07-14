@@ -288,6 +288,9 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     protected static function applyParams($content, array $params) 
     {
         foreach ($params as $search => $replace) {
+            if (is_array($replace)) {
+                $replace = array_shift($replace);
+            }
             $content = str_replace('{{'.$search.'}}', $replace, $content);
         }
         //$content = preg_replace('#\{\{.*?\}\}#ism', '', $content);
