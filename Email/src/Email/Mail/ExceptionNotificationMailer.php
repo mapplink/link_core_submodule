@@ -4,6 +4,7 @@
  *
  * @category Email
  * @package Email\Mail
+ * @author Seo Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
@@ -46,7 +47,12 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
      */
     protected function setBodyParams()
     {     
-        $this->templateParams = array_merge($this->params, array(
+        $this->templateParams = array_merge(
+            $this->params,
+            $this-getAllEntityReplacementValues($this->order)
+        );
+/*
+        array(
             'userName' => $this->order->getData('customer_name'),
             'userEmail' => $this->order->getData('customer_email'),
             'date' => date('d M Y'),
@@ -56,8 +62,7 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
             'orderId' => $this->order->getUniqueId(),
             'orderItems' => $this->renderOrderItems()
         ));
+*/
     }
-
-  
 
 }

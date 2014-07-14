@@ -2,32 +2,34 @@
 /**
  * Email\Mail
  *
- * @category    Email
- * @package     Email\Service
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Email
+ * @package Email\Service
+ * @author Seo Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Email\Mail;
 
+use Entity\Entity;
 use Magelink\Exception\MagelinkException;
 
-/**
- * Mailer abstract class
- */
+
 abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 {
+    /** @var \Email\Entity\EmailTemplate */
+    protected $template = NULL;
 
-    /**
-     * @var \Email\Entity\EmailTemplate
-     */
-    protected $template = null;
+    /** @var array $subjectParams */
+    protected $subjectParams = array();
 
-    protected
-        $subjectParams   = array(),
-        $templateParams  = array()
-    ;
+    /** @var array $templateParams */
+    protected $templateParams = array();
+
+    /** @var array $accessibleEntityTypes */
+    protected $accessibleEntityTypes = array();
+
 
     /**
      * Get EmailTemplate Repository
@@ -42,10 +44,10 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
      * @param  string $EntityNmae 
      * @return mixed
      */
-    protected function getRepo($entityNmae)
+    protected function getRepo($entityName)
     {
         return $this->getEntityManager()
-            ->getRepository($entityNmae);
+            ->getRepository($entityName);
     }
 
     /**
@@ -102,23 +104,167 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     }
 
     /**
+     * Get replacement code
+     * @param $entityType
+     * @param $attributeCode
+     * @return string
+     */
+    protected function getReplacementCode($entityType, $attributeCode)
+    {
+        return $entityType.'.'.$attributeCode;
+    }
+
+    /**
+     * Get entity type and attribute code in an array
+     * @param $replacementCode
+     * @return array
+     */
+    protected function getEntityTypeAndAttributeCodeArray($replacementCode)
+    {
+        return explode('.', $replacementCode, 2);
+    }
+
+    /**
+     * Get all entity replacement codes
+     * @return array $replacementParamsCodes
+     */
+    protected function getAllRawEntityReplacementCodes()
+    {
+        $replacementParamsCodes = array();
+        $entityTypes = $this->getServiceLocator()->get('entityService')->getEntityTypes();
+
+        foreach ($entityTypes as $entityTypeId=>$entityType) {
+            $replacementParamsCodes[$entityType] =
+                $this->getServiceLocator()->get('entityService')->getAttributesCode($entityType);
+        }
+
+        return $replacementParamsCodes;
+    }
+
+    /**
      * Load email subject
+     * @return string
      */
     protected function loadSubject()
     {   
         $subject = $this->template->getTitle();
         $subject = self::applyParams($subject, $this->subjectParams);
         $this->setTitle($subject);
+
+        return $subject;
     }
 
     /**
      * Load email body
+     * @return string
      */
     protected function loadBody()
     {   
         $body = $this->template->getBody();
         $body = self::applyParams($body, $this->templateParams);
         $this->setBody($body, $this->template->getMimeTypeForEmail());
+
+        return $body;
+    }
+
+    /**
+     * Get all entity replacement codes
+     * @return array $replacementParamsCodes
+     */
+    protected function getAllEntityReplacementCodes()
+    {
+        $rawCodes = $this->getAllRawEntityReplacementCodes();
+        $replacementParamsCodes = array();
+        foreach ($rawCodes as $entityType=>$attributes) {
+            if (in_array($entityType, array_keys($this->accessibleEntityTypes))) {
+                $accessInformation = $this->accessibleEntityTypes[$entityType];
+
+                if ($accessInformation === NULL) {
+                    $alias = $entityType.'.';
+                    $pathOrMethod = '';
+                }elseif (is_array($accessInformation)) {
+                    $alias = key($accessInformation);
+                    $pathOrMethod = current($accessInformation);
+
+                }else{
+                    $alias = FALSE;
+                }
+
+                if ($alias !== FALSE) {
+                    $replacementParamsCodes[$entityType][$alias] = $pathOrMethod;
+                }
+            }
+        }
+
+        return $replacementParamsCodes;
+    }
+
+    /**
+     * Get all (allowed) entity replacement values/params
+     * @param Entity $entity
+     * @return array $params
+     */
+    protected function getAllEntityReplacementValues(Entity $entity)
+    {
+        $allParams = array();
+        foreach ($this->getAllEntityReplacementCodes() as $entity=>$paramsInfo) {
+            $alias = key($paramsInfo);
+            $pathOrMethod = current($paramsInfo);
+
+            if (substr($alias, -1) == '.' && substr($pathOrMethod, -2) !== '()') {
+
+                if ($pathOrMethod === NULL) {
+                    // Base entity
+                    $newParams = $this->getSpecficEntityReplacementValues($entity, $alias);
+                }else{
+                    // Linked entity
+                    $entityChainArray = explode('@', $pathOrMethod);
+                    if ($entityChainArray[0] !== '') {
+                        array_shift($entityChainArray);
+                    }
+                    $entityChainArray = array_reverse($entityChainArray);
+
+                    $newEntity = $entity;
+                    while ($entityCode = each($entityChainArray)) {
+                        list($entityType, $code) = explode('.', $entityCode, 2);
+                        if ($newEntity->getTypeStr() == $entityType) {
+                            $newEntity = $this->getServiceLocator()->get('entityService')
+                                ->loadEntityId(0, $newEntity->getData($code));
+                        }else{
+                            $newEntity = NULL;
+                            break;
+                        }
+                    }
+
+                    $newParams = $this->getSpecficEntityReplacementValues($newEntity, $alias);
+                }
+            }elseif (substr($pathOrMethod, -2) == '()' && method_exists($this, $pathOrMethod)) {
+                // Method
+                $newParams = array($alias=>$this->$pathOrMethod());
+            }else{
+                $newParams = array();
+            }
+
+            $allParams = array_merge($allParams, $newParams);
+        }
+
+        return $allParams;
+    }
+
+    /**
+     * Get specific entity replacement values/params
+     * @param Entity $entity
+     * @param string $alias
+     * @return array $params
+     */
+    protected function getSpecficEntityReplacementValues(Entity $entity, $alias)
+    {
+        $params = array();
+        foreach ($entity->getAllData() as $code=>$value) {
+            $params[$alias.$code] = $value;
+        }
+
+        return $params;
     }
 
     /**
@@ -130,8 +276,9 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     protected static function applyParams($content, array $params) 
     {
         foreach ($params as $search => $replace) {
-            $content = str_replace('{{' . $search . '}}', $replace, $content);
+            $content = str_replace('{{'.$search.'}}', $replace, $content);
         }
+        //$content = preg_replace('#\{\{.*?\}\}#ism', '', $content);
 
         return $content;
     }

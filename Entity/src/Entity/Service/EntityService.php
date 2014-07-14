@@ -204,7 +204,7 @@ class EntityService implements ServiceLocatorAwareInterface {
         $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'loadeloc', 'loadEntityLocal - ' . $node_id . ' - ' . $entity_type . ' - ' . $store_id . ' - ' . $local_id, array('node_id'=>$node_id, 'entity_type'=>$entity_type, 'store_id'=>$store_id, 'local_id'=>$local_id));
 
 
-        $attributes = $this->getServiceLocator()->get('nodeService')->getSubscribedAttributeCodes($node_id, $entity_type);
+        $attributes = $this->getServiceLocator()->get('entityService')->getAttributesCode($node_id, $entity_type);
 
         $result = $this->getLoader()->loadEntities($entity_type, $store_id, array('LOCAL_ID'=>$local_id), $attributes, array('LOCAL_ID'=>'eq'), array('linked_to_node'=>$node_id, 'limit'=>1, 'node_id'=>$node_id));
 
@@ -1218,17 +1218,18 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @throws MagelinkException If the passed node ID is invalid
      * @return int The processed node ID
      */
-    protected function verifyNodeId(&$node_id){
-        if($node_id === 0){
+    protected function verifyNodeId(&$node_id)
+    {
+        if ($node_id === 0) {
             return 0;
         }
-        if($node_id instanceof \Node\Entity\Node){
+        if ($node_id instanceof \Node\Entity\Node) {
             $node_id = $node_id->getId();
         }
-        if($node_id instanceof \Node\AbstractNode){
+        if ($node_id instanceof \Node\AbstractNode) {
             $node_id = $node_id->getNodeId();
         }
-        if($node_id <= 0 || !is_int($node_id)){
+        if ($node_id <= 0 || !is_int($node_id)) {
             throw new \Magelink\Exception\NodeException('Invalid node ID passed to EntityService');
         }
 

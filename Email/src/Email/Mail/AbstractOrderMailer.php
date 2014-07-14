@@ -2,20 +2,39 @@
 /**
  * Email\Mail
  *
- * @category    Email
- * @package     Email\Service
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Email
+ * @package Email\Service
+ * @author Seo Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
-
 namespace Email\Mail;
 
-/**
- * Order mailer abstract class
- */
+
 abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer 
 {
+    /**
+     * @var array $accessibleEntityTypes
+     *
+     * <entity type> => NULL|FALSE|array(<entity type> => NULL|FALSE|array)
+     *    NULL : no linking necessary
+     *    array : array('<alias>.' => <path: @entityType.attributeCode[@entityType.attributeCode ...]>)
+     *            || array(<alias> => '<method name>()')
+     */
+    protected $accessibleEntityTypes = array(
+        'order'=>NULL,
+        'orderitem'=>array(
+            'orderitems'=>'renderOrderItems()'
+        ),
+        'customer'=>array(
+            'customer.'=>'@order.customer'
+        ),
+        'address'=>array(
+            'shipping_address.'=>'@customer.shipping_address@order.customer',
+            'billing_address.'=>'@customer.billing_address@order.customer'
+        )
+    );
 
     /** @var \Entity\Wrapper\Order $order */
     protected $order;
@@ -28,7 +47,6 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     public function setOrder($order)
     {
         $this->order = $order;
-
         $this->subjectParams['orderId'] = $order->getUniqueId();
 
         $this->setAllRecipients(array($order->getData('customer_email') => $order->getData('customer_name')));
@@ -74,7 +92,14 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         /** @var \Zend\Authentication\AuthenticationService $authService */
         $authService = $this->getServiceLocator()->get('zfcuser_auth_service');
 
-        $entityService->createEntityComment($this->order, $authService->getIdentity()->getDisplayName(), $this->getMessage()->getSubject(), $this->getMessage()->getBodyText(), '', false);
+        $entityService->createEntityComment(
+            $this->order,
+            $authService->getIdentity()->getDisplayName(),
+            $this->getMessage()->getSubject(),
+            $this->getMessage()->getBodyText(),
+            '',
+            FALSE
+        );
 
     }
 
@@ -88,7 +113,8 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         $content = '';
 
         foreach ($items as $item) {
-            $content .= 'item : SKU#' . $item->getSku() . ' ' . $item->getProductName() . ' x ' . (int) $item->getData('quantity') . "\n\n";
+            $content .= 'item : SKU#' . $item->getSku().' '.$item->getProductName()
+                .' x '.((int) $item->getData('quantity'))."\n\n";
         }
 
         if ($this->template && $this->template->isHTML()) {
@@ -97,4 +123,5 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
 
         return $content;
     }
+
 }

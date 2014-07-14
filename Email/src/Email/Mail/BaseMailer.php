@@ -2,11 +2,12 @@
 /**
  * Email\Mail
  *
- * @category    Email
- * @package     Email\Service
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Email
+ * @package Email\Service
+ * @author Seo Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Email\Mail;
@@ -18,9 +19,7 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\Mime\Message as MimeMessage;
 use Zend\Mime\Part as MimePart;
 
-/**
- * Mailer abstract class
- */
+
 abstract class BaseMailer implements ServiceLocatorAwareInterface
 {
     /** @var \Zend\Mail\Message $message */
@@ -114,13 +113,12 @@ abstract class BaseMailer implements ServiceLocatorAwareInterface
     public function setAllRecipients(array $recipients)
     {
         $this->allRecipients = $recipients;
-
         return $this;
     }
 
-   /**
+    /**
      * Get Recipients
-    * @return array
+     * @return array
      */
     public function getAllRecipients()
     {
@@ -129,10 +127,8 @@ abstract class BaseMailer implements ServiceLocatorAwareInterface
             $recipients[$recipient->getEmail()] = $recipient->getDisplayName();
         }
 
-
         return $recipients;
     }
-
 
     /**
      * Set User
@@ -142,7 +138,6 @@ abstract class BaseMailer implements ServiceLocatorAwareInterface
     public function setUserRecipient(\Magelink\Entity\User $user)
     {
         $this->userRecipient = $user;
-
         return $this;
     }
 
@@ -179,4 +174,5 @@ abstract class BaseMailer implements ServiceLocatorAwareInterface
     {
         return $this->_serviceLocator;
     }
+
 }

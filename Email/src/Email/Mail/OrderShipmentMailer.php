@@ -1,6 +1,6 @@
 <?php
 /**
- * Order exception notification mailer
+ * Order shipment notification mailer
  *
  * @category Email
  * @package Email\Mail
@@ -10,23 +10,15 @@
  * @license Commercial - All Rights Reserved
  */
 
-
 namespace Email\Mail;
 
 use Email\Entity\EmailTemplateSection;
 
-/**
- * Order shipment notification mailer
- */
+
 class OrderShipmentMailer extends AbstractOrderMailer
-{   
-    /**
-     * order entity
-     */
-    protected 
-        $order,
-        $additionalNote
-    ;
+{
+
+    protected $additionalNote;
 
     /**
      * Set up order
@@ -71,7 +63,10 @@ class OrderShipmentMailer extends AbstractOrderMailer
      */
     protected function setBodyParams()
     {     
-        $this->templateParams = array(
+        $this->templateParams = $this->getAllEntityReplacementValues($this->order);
+
+/*
+            array(
             'userName' => $this->order->getData('customer_name'),
             'userEmail' => $this->order->getData('customer_email'),
             'date' => date('d M Y'),
@@ -83,6 +78,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
             'orderItems' => $this->renderOrderItems(),
             'additionalNote' => $this->additionalNote,
         );
+*/
     }
 
     /**
