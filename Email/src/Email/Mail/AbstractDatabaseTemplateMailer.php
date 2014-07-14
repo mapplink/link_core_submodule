@@ -248,6 +248,8 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
             $allParams = array_merge($allParams, $newParams);
         }
 
+        $allParams['today'] = date('d M Y');
+
         return $allParams;
     }
 

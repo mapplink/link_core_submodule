@@ -63,22 +63,10 @@ class OrderShipmentMailer extends AbstractOrderMailer
      */
     protected function setBodyParams()
     {     
-        $this->templateParams = $this->getAllEntityReplacementValues($this->order);
-
-/*
-            array(
-            'userName' => $this->order->getData('customer_name'),
-            'userEmail' => $this->order->getData('customer_email'),
-            'date' => date('d M Y'),
-            'shippingMethod' => $this->order->getShippingMethod(),
-            'shippingAddress' => $this->getShippingAddress(),
-            'trackingCode' => $this->order->getData('tracking_code'),
-            'userName' => $this->order->getData('customer_name'),
-            'orderId' => $this->order->getUniqueId(),
-            'orderItems' => $this->renderOrderItems(),
-            'additionalNote' => $this->additionalNote,
+        $this->templateParams = array_merge(
+            $this->getAllEntityReplacementValues($this->order),
+            array('additionalNote' => $this->additionalNote)
         );
-*/
     }
 
     /**
