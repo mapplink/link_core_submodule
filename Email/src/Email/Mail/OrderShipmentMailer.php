@@ -13,7 +13,6 @@
 namespace Email\Mail;
 
 use Email\Entity\EmailTemplateSection;
-use Entity\Wrapper\Order;
 
 
 class OrderShipmentMailer extends AbstractOrderMailer

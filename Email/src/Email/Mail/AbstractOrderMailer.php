@@ -13,7 +13,6 @@
 namespace Email\Mail;
 
 use Doctrine\Tests\Common\Annotations\Ticket\Doctrine\ORM\Entity;
-use Entity\Wrapper\Order;
 
 
 abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer

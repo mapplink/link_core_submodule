@@ -210,6 +210,8 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     {
         $allParams = array();
         foreach ($this->getAllEntityReplacementCodes() as $entityType=>$paramsInfo) {
+            $newParams = array();
+
             $alias = key($paramsInfo);
             $pathOrMethod = current($paramsInfo);
 
@@ -218,10 +220,11 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
                 if ($this->entity->getTypeStr() == $entityType && $pathOrMethod === NULL) {
                     // Base entity
                     $newParams = $this->getSpecficEntityReplacementValues($this->entity, $alias);
+
                 }elseif ($this->entity->getTypeStr() != $entityType) {
                     // Linked entity
                     $entityChainArray = explode('@', $pathOrMethod);
-                    if ($entityChainArray[0] !== '') {
+                    if ($entityChainArray[0] == '') {
                         array_shift($entityChainArray);
                     }
                     // Reverse chain order to start from right to left (see definition of $this->accessibleEntityTypes)
@@ -238,17 +241,14 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
                         }
                     }
 
-                    if ($newEntity !== NULL) {
+                    if (is_object($newEntity)) {
                         $newParams = $this->getSpecficEntityReplacementValues($newEntity, $alias);
                     }
-                }else{
-                    $newParams = array();
                 }
+
             }elseif (substr($pathOrMethod, -2) == '()' && method_exists($this, $pathOrMethod)) {
                 // Method
                 $newParams = array($alias=>$this->$pathOrMethod());
-            }else{
-                $newParams = array();
             }
 
             $allParams = array_merge($allParams, $newParams);
