@@ -146,7 +146,7 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * @return mixed
+     * @return array
      */
     public function getPaymentMethods()
     {
@@ -154,6 +154,15 @@ class Order extends AbstractWrapper
         $entityService = $this->getServiceLocator()->get('entityService');
 
         return $entityService->getPaymentMethods($this);
+    }
+
+    /**
+     * @return string $methodsString
+     */
+    public function getPaymentMethod()
+    {
+        $methodsString = trim(implode(', ', $this->getPaymentMethods()));
+        return $methodsString;
     }
 
     /**
