@@ -34,8 +34,8 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
             'customer.'=>'@order.customer'
         ),
         'address'=>array(
-            'shipping_address.'=>'@customer.shipping_address@order.customer',
-            'billing_address.'=>'@customer.billing_address@order.customer'
+            'shipping_address.'=>'@order.shipping_address',
+            'billing_address.'=>'@order.billing_address'
         )
     );
 
