@@ -1069,7 +1069,7 @@ class EntityService implements ServiceLocatorAwareInterface {
 
     /**
      * @param \Entity\Entity $order
-     * @return array $ccTypes
+     * @return array $methods
      */
     public function getPaymentMethods($paymentMethod)
     {
@@ -1084,7 +1084,7 @@ class EntityService implements ServiceLocatorAwareInterface {
 
     /**
      * @param \Entity\Entity $order
-     * @return array $ccTypes
+     * @return array
      */
     public function getPaymentAmounts(array $paymentMethod)
     {
