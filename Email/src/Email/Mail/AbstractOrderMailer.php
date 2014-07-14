@@ -28,7 +28,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     protected $accessibleEntityTypes = array(
         'order'=>NULL,
         'orderitem'=>array(
-            'orderitems'=>'renderOrderItems()'
+            'OrderItems'=>'renderOrderItems()'
         ),
         'customer'=>array(
             'customer.'=>'@order.customer'
@@ -50,8 +50,8 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         $this->entity = $order;
 
         $this->setAllRecipients(array($order->getData('customer_email') => $order->getData('customer_name')));
-        $this->subjectParams['orderId'] = $order->getUniqueId();
-        $this->templateParams['order.shippingAddress'] = $this->getShippingAddress();
+        $this->subjectParams['OrderId'] =
+        $this->templateParams['OrderId'] = $order->getUniqueId();
         $this->setBodyParams();
 
         return $this;
@@ -64,7 +64,10 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     {
         $this->templateParams = array_merge(
             $this->templateParams,
-            $this->getAllEntityReplacementValues()
+            $this->getAllEntityReplacementValues(),
+            array(
+                'ShippingAddress'=>$this->getShippingAddress()
+            )
         );
     }
 

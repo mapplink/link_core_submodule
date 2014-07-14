@@ -23,21 +23,6 @@ class OrderShipmentMailer extends AbstractOrderMailer
 
 
     /**
-     * Set up order
-     * @param \Entity\Wrapper\Order $order
-     */
-    public function setOrder(\Entity\Wrapper\Order $order)
-    {
-        $this->entity = $order;
-
-        $this->setAllRecipients(array($order->getData('customer_email')=>$order->getData('customer_name')));
-        $this->subjectParams['orderId'] = $order->getUniqueId();
-        $this->setBodyParams();
-
-        return $this;
-    }
-
-    /**
      * Set additional note
      * @param $note
      * @return $this
@@ -69,7 +54,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
     protected function setBodyParams()
     {
         parent::setBodyParams();
-        $this->templateParams['additionalNote'] = $this->additionalNote;
+        $this->templateParams['AdditionalNote'] = $this->additionalNote;
     }
 
     /**
