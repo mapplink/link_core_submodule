@@ -147,6 +147,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
             $content .= 'item : SKU#'.$item->getSku().' '.$item->getProductName()
                 .' x '.((int) $item->getData('quantity'))."\n\n";
         }
+        $content = trim($content);
 
         if (!is_object($this->template)) {
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
