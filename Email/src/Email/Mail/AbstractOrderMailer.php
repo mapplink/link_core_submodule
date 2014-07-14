@@ -66,30 +66,14 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
             $this->templateParams,
             $this->getAllEntityReplacementValues(),
             array(
-                'ShippingAddress'=>$this->getShippingAddress()
+                'ShippingAddress'=>$this->renderShippingAddress()
             )
         );
     }
 
     /**
-     * Get full shipping address
-     * @return string
+     * Send order emails
      */
-    protected function getShippingAddress()
-    {
-        $address = $this->entity->getShippingAddressEntity();
-
-        if ($address) {
-            $addressArray = $address->getAddressFullArray();
-
-            if ($this->template->isHTML()) {
-                return implode('<br/>', $addressArray);
-            } else {
-                return implode("\n", $addressArray);
-            }
-        }
-    }
-
     public function send()
     {
         parent::send();
@@ -121,6 +105,37 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     }
 
     /**
+     * Get full shipping address
+     * @return string
+     */
+    protected function renderShippingAddress()
+    {
+        $address = $this->entity->getShippingAddressEntity();
+
+        if ($address) {
+            $addressArray = $address->getAddressFullArray();
+
+            $glue = "\n";
+            if (!is_object($this->template)) {
+                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
+                    'email_no_template',
+                    'No template is set for shipping address on order '.$this->entity->getUniqueId(),
+                    array(
+                        'order id'=>$this->entity->getId(), 'order unique id'=>$this->entity->getUniqueId(),
+                        'address id'=>$address->getId(), 'address unique id'=>$address->getUniqueId()
+                    ),
+                    array('order'=>$this->entity, 'address'=>$address)
+                );
+            }elseif ($this->template->isHTML()) {
+                $glue = '<br/>';
+            }
+            $renderedAddress = implode($glue, $addressArray);
+
+            return $renderedAddress;
+        }
+    }
+
+    /**
      * Render items info
      */
     protected function renderOrderItems()
@@ -129,11 +144,20 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
 
         $content = '';
         foreach ($items as $item) {
-            $content .= 'item : SKU#' . $item->getSku().' '.$item->getProductName()
+            $content .= 'item : SKU#'.$item->getSku().' '.$item->getProductName()
                 .' x '.((int) $item->getData('quantity'))."\n\n";
         }
 
-        if ($this->template && $this->template->isHTML()) {
+        if (!is_object($this->template)) {
+            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
+                'email_no_template',
+                'No template is set for order items on order '.$this->entity->getUniqueId(),
+                array(
+                    'order id'=>$this->entity->getId(), 'order unique id'=>$this->entity->getUniqueId(),
+                ),
+                array('order'=>$this->entity, 'orderitems'=>$items)
+            );
+        }elseif ($this->template->isHTML()) {
             $content = nl2br($content);
         }
 

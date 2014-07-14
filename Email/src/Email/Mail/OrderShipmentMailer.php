@@ -57,35 +57,4 @@ class OrderShipmentMailer extends AbstractOrderMailer
         $this->templateParams['AdditionalNote'] = $this->additionalNote;
     }
 
-    /**
-     * Get full shipping address
-     * @return string
-     */
-    protected function getShippingAddress()
-    {
-        $address = $this->entity->getShippingAddressEntity();
-        if ($address) {
-            $addressArray = $address->getAddressFullArray();
-
-            if (!is_object($this->template)) {
-                $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_INFO,
-                        'email_no_template',
-                        'No template is set for shipping address on order '.$this->entity->getUniqueId(),
-                        array(
-                            'order id'=>$this->entity->getId(), 'order unique id'=>$this->entity->getUniqueId(),
-                            'address id'=>$address->getId(), 'address unique id'=>$address->getUniqueId()
-                        ),
-                        array('order'=>$this->entity, 'address'=>$address)
-                    );
-
-                return implode("\n", $addressArray);
-            }elseif ($this->template->isHTML()) {
-                return implode('<br/>', $addressArray);
-            }else{
-                return implode("\n", $addressArray);
-            }
-        }
-    }
-
 }
