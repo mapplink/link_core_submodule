@@ -191,6 +191,23 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
     }
 
     /**
+     * Return all entity types
+     * @return array
+     */
+    public function getEntityTypesCode()
+    {
+        $dbRows = $this->getTableGateway('entity_type')
+            ->select();
+
+        $entityTypes = array();
+        foreach ($dbRows as $row) {
+            $entityTypes[$row['entity_type_id']] = $row['name'];
+        }
+
+        return $entityTypes;
+    }
+
+    /**
      * Local cache of entity type lookups, key is name and value is ID
      * @see EntityConfigService::parseEntityType()
      * @var array
