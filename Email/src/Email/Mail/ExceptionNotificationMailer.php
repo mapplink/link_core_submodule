@@ -49,7 +49,7 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
     {     
         $this->templateParams = array_merge(
             $this->params,
-            $this-getAllEntityReplacementValues($this->order)
+            $this->getAllEntityReplacementValues($this->order)
         );
     }
 
