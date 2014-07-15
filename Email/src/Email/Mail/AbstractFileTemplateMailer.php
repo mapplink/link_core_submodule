@@ -39,7 +39,7 @@ abstract class AbstractFileTemplateMailer extends BaseMailer
      * 
      * @return string
      */
-    public function renderTemplate($params = array())
+    public function renderTemplate($parameters = array())
     {   
         $this->setupTemplate();
         
@@ -54,7 +54,7 @@ abstract class AbstractFileTemplateMailer extends BaseMailer
 
         $viewModel = new ViewModel();
         $viewModel->setTemplate('mailTemplate')
-            ->setVariables($params);     
+            ->setVariables($parameters);
 
         $content = $view->render($viewModel);
 

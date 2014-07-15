@@ -21,11 +21,11 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     /** @var \Email\Entity\EmailTemplate */
     protected $template = NULL;
 
-    /** @var array $subjectParams */
-    protected $subjectParams = array();
+    /** @var array $subjectParameters */
+    protected $subjectParameters = array();
 
-    /** @var array $templateParams */
-    protected $templateParams = array();
+    /** @var array $bodyParameters */
+    protected $bodyParameters = array();
 
     /** @var \Entity\Entity $entity */
     protected $entity;
@@ -36,6 +36,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 
     /**
      * Get EmailTemplate Repository
+     * @return
      */
     protected function getEmailTemplateRepo()
     {
@@ -128,20 +129,20 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 
     /**
      * Get all entity replacement codes
-     * @return array $replacementParamsCodes
+     * @return array $replacementParametersCodes
      */
     protected function getAllRawEntityReplacementCodes()
     {
-        $replacementParamsCodes = array();
+        $replacementParametersCodes = array();
         $entityTypes = $this->getServiceLocator()->get('entityConfigService')
             ->getEntityTypesCode();
 
         foreach ($entityTypes as $entityTypeId=>$entityType) {
-            $replacementParamsCodes[$entityType] = $this->getServiceLocator()->get('entityConfigService')
+            $replacementParametersCodes[$entityType] = $this->getServiceLocator()->get('entityConfigService')
                 ->getAttributesCode($entityType);
         }
 
-        return $replacementParamsCodes;
+        return $replacementParametersCodes;
     }
 
     /**
@@ -151,7 +152,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     protected function loadSubject()
     {   
         $subject = $this->template->getTitle();
-        $subject = self::applyParams($subject, $this->subjectParams);
+        $subject = self::applyParameters($subject, $this->subjectParameters);
         $this->setTitle($subject);
 
         return $subject;
@@ -164,7 +165,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     protected function loadBody()
     {   
         $body = $this->template->getBody();
-        $body = self::applyParams($body, $this->templateParams);
+        $body = self::applyParameters($body, $this->bodyParameters);
         $this->setBody($body, $this->template->getMimeTypeForEmail());
 
         return $body;
@@ -172,12 +173,12 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 
     /**
      * Get all entity replacement codes
-     * @return array $replacementParamsCodes
+     * @return array $replacementParametersCodes
      */
     protected function getAllEntityReplacementCodes()
     {
         $rawCodes = $this->getAllRawEntityReplacementCodes();
-        $replacementParamsCodes = array();
+        $replacementParametersCodes = array();
         foreach ($rawCodes as $entityType=>$attributes) {
             if (in_array($entityType, array_keys($this->accessibleEntityTypes))) {
                 $accessInformation = $this->accessibleEntityTypes[$entityType];
@@ -194,32 +195,32 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
                 }
 
                 if ($alias !== FALSE) {
-                    $replacementParamsCodes[$entityType][$alias] = $pathOrMethod;
+                    $replacementParametersCodes[$entityType][$alias] = $pathOrMethod;
                 }
             }
         }
 
-        return $replacementParamsCodes;
+        return $replacementParametersCodes;
     }
 
     /**
-     * Get all (allowed) entity replacement values/params
-     * @return array $params
+     * Get all (allowed) entity replacement values/parameters
+     * @return array $parameters
      */
     protected function getAllEntityReplacementValues()
     {
-        $allParams = array();
-        foreach ($this->getAllEntityReplacementCodes() as $entityType=>$paramsInfo) {
-            $newParams = array();
+        $allParameters = array();
+        foreach ($this->getAllEntityReplacementCodes() as $entityType=>$parametersInfo) {
+            $newParameters = array();
 
-            $alias = key($paramsInfo);
-            $pathOrMethod = current($paramsInfo);
+            $alias = key($parametersInfo);
+            $pathOrMethod = current($parametersInfo);
 
             if (substr($alias, -1) == '.' && substr($pathOrMethod, -2) !== '()') {
 
                 if ($this->entity->getTypeStr() == $entityType && !$pathOrMethod) {
                     // Base entity
-                    $newParams = $this->getSpecficEntityReplacementValues($this->entity, $alias);
+                    $newParameters = $this->getSpecficEntityReplacementValues($this->entity, $alias);
 
                 }elseif ($this->entity->getTypeStr() != $entityType) {
                     // Linked entity
@@ -242,52 +243,52 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
                     }
 
                     if (is_object($newEntity)) {
-                        $newParams = $this->getSpecficEntityReplacementValues($newEntity, $alias);
+                        $newParameters = $this->getSpecficEntityReplacementValues($newEntity, $alias);
                     }
                 }
 
             }elseif (substr($pathOrMethod, -2) == '()' && method_exists($this, substr($pathOrMethod, 0, -2))) {
                 $method = substr($pathOrMethod, 0, -2);
-                $newParams = array($alias=>$this->$method());
+                $newParameters = array($alias=>$this->$method());
             }
 
-            $allParams = array_merge($allParams, $newParams);
+            $allParameters = array_merge($allParameters, $newParameters);
         }
 
-        $allParams['Today'] = date('d M Y');
+        $allParameters['Today'] = date('d M Y');
 
-        return $allParams;
+        return $allParameters;
     }
 
     /**
-     * Get specific entity replacement values/params
+     * Get specific entity replacement values/parameters
      * @param \Entity\Entity $entity
      * @param string $alias
-     * @return array $params
+     * @return array $parameters
      */
     protected function getSpecficEntityReplacementValues(\Entity\Entity $entity, $alias)
     {
-        $params = array();
+        $parameters = array();
         foreach ($entity->getAllData() as $code=>$value) {
             $method = 'get'.str_replace('_', '', ucfirst($code));
             if (method_exists($entity, $method)) {
                 $value = $entity->$method();
             }
-            $params[$alias.$code] = $value;
+            $parameters[$alias.$code] = $value;
         }
 
-        return $params;
+        return $parameters;
     }
 
     /**
-     * Apply params to content
+     * Apply parameters to content
      * @param string $content
-     * @param array $params
+     * @param array $parameters
      * @return string
      */
-    protected static function applyParams($content, array $params) 
+    protected static function applyParameters($content, array $parameters)
     {
-        foreach ($params as $search => $replace) {
+        foreach ($parameters as $search => $replace) {
             if (is_array($replace)) {
                 $replace = array_shift($replace);
             }

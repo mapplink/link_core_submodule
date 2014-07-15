@@ -50,26 +50,57 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         $this->entity = $order;
 
         $this->setAllRecipients(array($order->getData('customer_email') => $order->getData('customer_name')));
-        $this->subjectParams['OrderId'] =
-        $this->templateParams['OrderId'] = $order->getUniqueId();
-        $this->setBodyParams();
+        $this->setParameters();
 
         return $this;
     }
 
     /**
+     * Set up subject parameters
+     */
+    protected function setSubjectParameters(array $sharedParameters)
+    {
+        $this->subjectParameters = array_merge(
+            $this->subjectParameters,
+            $sharedParameters
+        );
+
+        return $this->subjectParameters;
+    }
+
+
+    /**
      * Set up body parameters
      */
-    protected function setBodyParams()
+    protected function setBodyParameters(array $sharedParameters)
     {
-        $this->templateParams = array_merge(
-            $this->templateParams,
+        $this->bodyParameters = array_merge(
+            $this->bodyParameters,
             $this->getAllEntityReplacementValues(),
             array(
                 'ShippingAddress'=>$this->renderShippingAddress()
             )
         );
+
+        return $this->bodyParameters;
     }
+
+    /**
+     * Set up all parameters
+     */
+    protected function setParameters(array $sharedParameters = array())
+    {
+        $parameters = array();
+        $sharedParameters = array(
+            'OrderId'=>$this->entity->getUniqueId()
+        );
+
+        $parameters['subject'] = $this->setSubjectParameters($sharedParameters);
+        $parameters['body'] = $this->setBodyParameters($sharedParameters);
+
+        return $parameters;
+    }
+
 
     /**
      * Send order emails

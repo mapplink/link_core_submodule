@@ -17,8 +17,8 @@ use Email\Entity\EmailTemplateSection;
 
 class ExceptionNotificationMailer extends AbstractOrderMailer
 {
-    /** @var array $params */
-    protected $params = array();
+    /** @var array $parameters */
+    protected $parameters = array();
 
     
     /**
@@ -28,15 +28,6 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
     public function setTemplate($template)
     {
         $this->template = $template;
-        return $this;
-    }
-
-    /**
-     * Set params
-     */
-    public function setParams($params)
-    {
-        $this->params = $params;
         return $this;
     }
 

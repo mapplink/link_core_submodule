@@ -51,10 +51,10 @@ class OrderShipmentMailer extends AbstractOrderMailer
     /**
      * Set up body parameters
      */
-    protected function setBodyParams()
+    protected function setBodyParameters()
     {
-        parent::setBodyParams();
-        $this->templateParams['AdditionalNote'] = $this->additionalNote;
+        parent::setBodyParameters();
+        $this->bodyParameters['AdditionalNote'] = $this->additionalNote;
     }
 
 }
