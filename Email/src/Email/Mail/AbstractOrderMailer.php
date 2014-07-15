@@ -91,6 +91,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     protected function setParameters(array $sharedParameters = array())
     {
         $parameters = array();
+        $sharedParameters = (array) $sharedParameters;
         $sharedParameters['OrderId'] = $this->entity->getUniqueId();
 
         $parameters['subject'] = $this->setSubjectParameters($sharedParameters);
