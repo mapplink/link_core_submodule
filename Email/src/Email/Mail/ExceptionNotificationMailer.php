@@ -31,4 +31,15 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
         return $this;
     }
 
+    /**
+     * Set up all parameters
+     */
+    public function setParameters(array $sharedParameters = array())
+    {
+        $parameters = parent::setParameters($sharedParameters);
+        $this->parameters = array_merge($parameters['subject'], $parameters['body']);
+
+        return $parameters;
+    }
+
 }
