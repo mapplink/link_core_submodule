@@ -255,8 +255,6 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
             $allParameters = array_merge($allParameters, $newParameters);
         }
 
-        $allParameters['Today'] = date('d M Y');
-
         return $allParameters;
     }
 
