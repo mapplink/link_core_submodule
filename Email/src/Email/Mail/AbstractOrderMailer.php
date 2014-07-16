@@ -77,6 +77,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         $this->bodyParameters = array_merge(
             $this->bodyParameters,
             $this->getAllEntityReplacementValues(),
+            $sharedParameters,
             array(
                 'ShippingAddress'=>$this->renderShippingAddress()
             )
@@ -108,9 +109,9 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     {
         parent::send();
          
-        $fromAddrs = array();
+        $fromAddress = array();
         foreach ($this->getMessage()->getFrom() as $from) {
-            $fromAddrs[$from->getEmail()] = $from->getName();
+            $fromAddress[$from->getEmail()] = $from->getName();
         }
 
         $toAddrs = array();

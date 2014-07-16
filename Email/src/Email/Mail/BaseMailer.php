@@ -52,8 +52,7 @@ abstract class BaseMailer implements ServiceLocatorAwareInterface
     public function send()
     {
         $this->init();
-
-        foreach ($this->getAllRecipients() as $email => $name) {
+        foreach ($this->getAllRecipients() as $email=>$name) {
             $this->addTo($email, $name);
         }
 
