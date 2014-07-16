@@ -1,7 +1,6 @@
 <?php
 /**
  * Represents an instance of a Magelink Entity.
- *
  * @category Magelink
  * @package Entity
  * @author Matt Johnston
@@ -10,7 +9,6 @@
  * @license Commercial - All Rights Reserved
  */
 
-
 namespace Entity;
 
 use Magelink\Exception\MagelinkException;
@@ -18,8 +16,9 @@ use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
 
-class Entity implements ServiceLocatorAwareInterface {
-    
+class Entity implements ServiceLocatorAwareInterface
+{
+    /** Static entity attributes */
     protected $_id;
     protected $_type;
     protected $_store_id;
@@ -27,67 +26,67 @@ class Entity implements ServiceLocatorAwareInterface {
     protected $_updated_at;
     protected $_parent_id;
     
-    /**
-     * @var array An array of all attribute data arrays that are applicable to this Entity - note will likely only contain those for the Node it was loaded for
+    /** @var array An array of all attribute data arrays that are applicable to this Entity
+     *     - note will likely only contain those for the Node it was loaded for
      */
     protected $_attributes = array();
-    /**
-     * @var array An array of each attributes fetch data, indexed by attribute code
-     */
+
+    /** @var array An array of each attributes fetch data, indexed by attribute code */
     protected $_attributesFetchData = array();
-    /**
-     *
-     * @var array Map where key is attribute code and value is attribute ID
-     */
+
+    /** @var array Map where key is attribute code and value is attribute ID */
     protected $_attributesMap = array();
 
-    /**
-     * @var int The node that this entity was loaded for
-     */
+    /** @var int The node that this entity was loaded for */
     protected $_loadedFromNode = false;
     
-    /**
-     *
-     * @var array All loaded data for this Entity
-     */
+    /** @var array All loaded data for this Entity */
     protected $_data = array();
 
-    /**
-     * @var array All extended data for this Entity (fkey data, etc)
-     */
+    /** @var array All extended data for this Entity (fkey data, etc) */
     protected $_extendedData = array();
+
+    /** @var \Entity\Wrapper\Order $order */
+    protected $_entityService;
+
     
     /**
      * Creates a new Entity instance based on the provided row of data from the entity table.
      * @param array $row
      * @param array $attributes
      * @param int $loadedFromNode
+     * @param array $extendedAttributes
      */
-    public function __construct($row, $attributes, $loadedFromNode, $extendedAtts=array()){
+    public function __construct($row, $attributes, $loadedFromNode, $extendedAttributes = array())
+    {
         $this->_id = $row['entity_id'];
         $this->_type = $row['type_id'];
         $this->_store_id = $row['store_id'];
         $this->_unique_id = $row['unique_id'];
         $this->_updated_at = $row['updated_at'];
         $this->_parent_id = $row['parent_id'];
+
         $this->_attributes = $attributes;
         foreach($attributes as $att){
             $this->_attributesMap[$att['code']] = $att['attribute_id'];
         }
-        foreach($extendedAtts as $k=>$v){
+
+        foreach ($extendedAttributes as $k=>$v) {
             $matches = array();
-            if(preg_match('/([a-zA-Z_-]*)\.([a-zA-Z_-]*)/', $k, $matches)){
-                if(!isset($this->_extendedData[$matches[1]])){
+            if (preg_match('/([a-zA-Z_-]*)\.([a-zA-Z_-]*)/', $k, $matches)) {
+                if (!isset($this->_extendedData[$matches[1]])) {
                     $this->_extendedData[$matches[1]] = array();
                 }
                 $this->_extendedData[$matches[1]][$matches[2]] =
-                    $row['a_fkey_' . strtolower($matches[1]) . '_' . strtolower($matches[2]) . '_v'];
+                    $row['a_fkey_'.strtolower($matches[1]).'_'.strtolower($matches[2]).'_v'];
             }else{
                 // TODO load as regular data?
             }
 
         }
+
         $this->_loadedFromNode = $loadedFromNode;
+        $this->_entityService = $this->getServiceLocator()->get('entityService');
     }
 
     /**
