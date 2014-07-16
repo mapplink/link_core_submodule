@@ -294,7 +294,8 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
             }
             $content = preg_replace('#\{\{\s*'.$search.'\s*\}\}#ism', $replace, $content);
         }
-        //$content = preg_replace('#\{\{.*?\}\}#ism', '', $content);
+        $findRemainingPlaceholders = '#\{\{.*?\}\}#ism';
+        $content = preg_replace($findRemainingPlaceholders, '', $content);
 
         return $content;
     }
