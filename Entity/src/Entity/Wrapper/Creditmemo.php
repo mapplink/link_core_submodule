@@ -76,7 +76,7 @@ class Creditmemo extends AbstractWrapper
         $order = $this->getServiceLocator()->get('entityService')
             ->loadEntityId($this->getLoadedNodeId(), $this->getParentId());
 
-        return $order->getRootOriginalOrder();
+        return $order->getRootOriginal();
     }
 
     /**
