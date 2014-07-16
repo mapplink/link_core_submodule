@@ -216,7 +216,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                 }
             }
 
-            foreach($updates as $update){
+            foreach($entityTypeUpdates as $update){
                 $nodeService->setUpdateStatus($this->_entity, $update, 1);
             }
         }
