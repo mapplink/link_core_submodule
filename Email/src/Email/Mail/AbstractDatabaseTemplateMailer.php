@@ -272,7 +272,9 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
             if (method_exists($entity, $method)) {
                 $value = $entity->$method();
             }
-            $parameters[$alias.$code] = $value;
+            if (!is_array($value) && !is_object($value)) {
+                $parameters[$alias.$code] = $value;
+            }
         }
 
         return $parameters;
