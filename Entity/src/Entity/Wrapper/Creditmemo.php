@@ -70,7 +70,7 @@ class Creditmemo extends AbstractWrapper
      * Get the uppermost original order
      * @return \Entity\Wrapper\Order|NULL $order
      */
-    protected function getRootOriginalOrder()
+    public function getRootOriginalOrder()
     {
         /** @var \Entity\Wrapper\Order $order */
         $order = $this->_entityService->loadEntityId($this->_nodeEntity->getNodeId(), $this->getParentId());
@@ -78,5 +78,12 @@ class Creditmemo extends AbstractWrapper
         return $order->getRootOriginalOrder();
     }
 
+    /**
+     * Alias of getRootOriginalOrder()
+     */
+    public function getRootParent()
+    {
+        return $this->getRootOriginalOrder();
+    }
 
 }
