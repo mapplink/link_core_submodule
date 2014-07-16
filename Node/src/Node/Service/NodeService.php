@@ -1,4 +1,14 @@
 <?php
+/**
+ * Node\Service
+ *
+ * @category Node
+ * @package Node\Service
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Node\Service;
 
@@ -142,22 +152,22 @@ class NodeService implements ServiceLocatorAwareInterface
 
     /**
      * Returns the timestamp entry from node_status, or 0 if none exists.
-     * @param int $node_id
-     * @param int|string $entity_type
+     * @param int $nodeId
+     * @param int|string $entityType
      * @param string $action Normally one of retrieve or update
      * @return int
      */
-    public function getTimestamp($node_id, $entity_type, $action){
-        if(is_int($entity_type)){
-            $entity_type_id = $entity_type;
+    public function getTimestamp($nodeId, $entityType, $action){
+        if(is_int($entityType)){
+            $entity_type_id = $entityType;
         }else{
-            $entity_type_id = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entity_type);
+            $entity_type_id = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
         }
         /** @var \Node\Entity\NodeStatus $ts */
         $ts = $this->getServiceLocator()
             ->get('Doctrine\ORM\EntityManager')
             ->getRepository('Node\Entity\NodeStatus')
-            ->getStatusForNode($node_id, $entity_type_id, $action);
+            ->getStatusForNode($nodeId, $entity_type_id, $action);
 
         if($ts == null){
             return 0;
@@ -170,27 +180,27 @@ class NodeService implements ServiceLocatorAwareInterface
 
     /**
      * Updates the timestamp entry in node_status
-     * @param int $node_id
-     * @param int|string $entity_type
+     * @param int $nodeId
+     * @param int|string $entityType
      * @param string $action Normally one of retrieve or update
      * @param int|null $timestamp The timestamp to update to - if not specified/null, uses the current time
      * @throws MagelinkException
      */
-    public function setTimestamp($node_id, $entity_type, $action, $timestamp=null){
+    public function setTimestamp($nodeId, $entityType, $action, $timestamp=null){
         if($timestamp == null){
             $timestamp = time();
         }
-        if(is_int($entity_type)){
-            $entity_type_id = $entity_type;
+        if(is_int($entityType)){
+            $entity_type_id = $entityType;
         }else{
-            $entity_type_id = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entity_type);
+            $entity_type_id = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
         }
         /** @var \Doctrine\ORM\EntityManager $es */
         $es = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager');
         /** @var \Node\Entity\NodeStatus $ts */
         $ts = $es
             ->getRepository('Node\Entity\NodeStatus')
-            ->getStatusForNode($node_id, $entity_type_id, $action);
+            ->getStatusForNode($nodeId, $entity_type_id, $action);
 
         if(!$ts){
             // We need to manually generate the ID as Doctrine doesn't like composite primary keys with auto increment (although MySQL does it fine)
@@ -206,7 +216,7 @@ class NodeService implements ServiceLocatorAwareInterface
                 throw new MagelinkException('Unable to locate node_status ID!');
             }
             $ts = new \Node\Entity\NodeStatus();
-            $ts->setNode($es->getRepository('Node\Entity\Node')->find($node_id));
+            $ts->setNode($es->getRepository('Node\Entity\Node')->find($nodeId));
             $ts->setAction($action);
             $ts->setEntityTypeId($entity_type_id);
             $ts->setId($id);
@@ -218,19 +228,19 @@ class NodeService implements ServiceLocatorAwareInterface
 
     /**
      * Associates the given attribute with the given node
-     * @param int $node_id
+     * @param int $nodeId
      * @param string $attribute_code
-     * @param string|int $entity_type
+     * @param string|int $entityType
      * @param bool $can_update Whether this node desires to update the given attribute. Defaults true.
      */
-    public function subscribeAttribute($node_id, $attribute_code, $entity_type, $can_update = true){
-        unset($this->_subscribedAttributeCodeCache[$node_id]);
+    public function subscribeAttribute($nodeId, $attribute_code, $entityType, $can_update = true){
+        unset($this->_subscribedAttributeCodeCache[$nodeId]);
 
-        $entity_type = $this->verifyEntityType($entity_type);
-        $attribute_id = $this->verifyAttribute($attribute_code, $entity_type);
+        $entityType = $this->verifyEntityType($entityType);
+        $attribute_id = $this->verifyAttribute($attribute_code, $entityType);
 
         $this->getTableGateway('node_attribute')->insert(array(
-            'node_id'=>$node_id,
+            'node_id'=>$nodeId,
             'attribute_id'=>$attribute_id,
             'can_update'=>($can_update ? 1 : 0),
         ));
@@ -238,18 +248,18 @@ class NodeService implements ServiceLocatorAwareInterface
 
     /**
      * Unassociates the given attribute with the given node. No data is removed and the attribute is left in place.
-     * @param int $node_id
+     * @param int $nodeId
      * @param string $attribute_code
-     * @param string $entity_type
+     * @param string $entityType
      */
-    public function unsubscribeAttribute($node_id, $attribute_code, $entity_type){
-        unset($this->_subscribedAttributeCodeCache[$node_id]);
+    public function unsubscribeAttribute($nodeId, $attribute_code, $entityType){
+        unset($this->_subscribedAttributeCodeCache[$nodeId]);
 
-        $entity_type = $this->verifyEntityType($entity_type);
-        $attribute_id = $this->verifyAttribute($attribute_code, $entity_type);
+        $entityType = $this->verifyEntityType($entityType);
+        $attribute_id = $this->verifyAttribute($attribute_code, $entityType);
 
         $this->getTableGateway('node_attribute')->delete(array(
-            'node_id'=>$node_id,
+            'node_id'=>$nodeId,
             'attribute_id'=>$attribute_id,
         ));
     }
@@ -257,35 +267,35 @@ class NodeService implements ServiceLocatorAwareInterface
     /**
      * Associates a number of attributes with the given node.
      * @see subscribeAttribute()
-     * @param int $node_id
+     * @param int $nodeId
      * @param string[] $attribute_codes
-     * @param string|int $entity_type
+     * @param string|int $entityType
      * @param bool $can_update Whether this node desires to update the given attributes. Defaults true.
      */
-    public function bulkSubscribeAttribute($node_id, $attribute_codes, $entity_type, $can_update = true){
-        unset($this->_subscribedAttributeCodeCache[$node_id]);
+    public function bulkSubscribeAttribute($nodeId, $attribute_codes, $entityType, $can_update = true){
+        unset($this->_subscribedAttributeCodeCache[$nodeId]);
         // TODO optimize
 
-        $entity_type = $this->verifyEntityType($entity_type);
+        $entityType = $this->verifyEntityType($entityType);
         foreach($attribute_codes as $code){
-            $this->subscribeAttribute($node_id, $code, $entity_type, $can_update);
+            $this->subscribeAttribute($nodeId, $code, $entityType, $can_update);
         }
     }
 
     /**
      * Unassociates a number of attributes with the given node.
      * @see unsubscribeAttribute()
-     * @param int $node_id
+     * @param int $nodeId
      * @param string[] $attribute_codes
-     * @param string|int $entity_type
+     * @param string|int $entityType
      */
-    public function bulkUnsubscribeAttribute($node_id, $attribute_codes, $entity_type){
-        unset($this->_subscribedAttributeCodeCache[$node_id]);
+    public function bulkUnsubscribeAttribute($nodeId, $attribute_codes, $entityType){
+        unset($this->_subscribedAttributeCodeCache[$nodeId]);
         // TODO optimize
 
-        $entity_type = $this->verifyEntityType($entity_type);
+        $entityType = $this->verifyEntityType($entityType);
         foreach($attribute_codes as $code){
-            $this->unsubscribeAttribute($node_id, $code, $entity_type);
+            $this->unsubscribeAttribute($nodeId, $code, $entityType);
         }
     }
 
@@ -295,38 +305,39 @@ class NodeService implements ServiceLocatorAwareInterface
     /**
      * Return all attributes a given node is subscribed to, optionally filtered by entity type
      *
-     * @param int $node_id
-     * @param bool|int|string $entity_type
-     * @param bool $update_only Whether to only return attributes with can_update set. Note: expensive, not cached.
+     * @param int $nodeId
+     * @param bool|int|string $entityType
+     * @param bool $updateOnly Whether to only return attributes with can_update set. Note: expensive, not cached.
      * @return array
      */
-    public function getSubscribedAttributeCodes($node_id, $entity_type = false, $update_only = false){
-        if($entity_type === false){
-            $entity_type = 0;
+    public function getSubscribedAttributeCodes($nodeId, $entityType = FALSE, $updateOnly = FALSE)
+    {
+        if($entityType === false){
+            $entityType = 0;
         }else{
-            $entity_type = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entity_type);
+            $entityType = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
         }
 
-        if($node_id === 0 && $entity_type !== false){
+        if($nodeId === 0 && $entityType !== false){
             $entityConfigService = $this->getServiceLocator()->get('entityConfigService');
-            return array_values($entityConfigService->getAttributesCode($entity_type));
+            return array_values($entityConfigService->getAttributesCode($entityType));
         }
 
-        if($update_only){
-            if(isset($this->_subscribedUpdateAttributeCodeCache[$node_id])){
-                if(isset($this->_subscribedUpdateAttributeCodeCache[$node_id][$entity_type])){
-                    return $this->_subscribedUpdateAttributeCodeCache[$node_id][$entity_type];
+        if($updateOnly){
+            if(isset($this->_subscribedUpdateAttributeCodeCache[$nodeId])){
+                if(isset($this->_subscribedUpdateAttributeCodeCache[$nodeId][$entityType])){
+                    return $this->_subscribedUpdateAttributeCodeCache[$nodeId][$entityType];
                 }
             }else{
-                $this->_subscribedUpdateAttributeCodeCache[$node_id] = array();
+                $this->_subscribedUpdateAttributeCodeCache[$nodeId] = array();
             }
         }else{
-            if(isset($this->_subscribedAttributeCodeCache[$node_id])){
-                if(isset($this->_subscribedAttributeCodeCache[$node_id][$entity_type])){
-                    return $this->_subscribedAttributeCodeCache[$node_id][$entity_type];
+            if(isset($this->_subscribedAttributeCodeCache[$nodeId])){
+                if(isset($this->_subscribedAttributeCodeCache[$nodeId][$entityType])){
+                    return $this->_subscribedAttributeCodeCache[$nodeId][$entityType];
                 }
             }else{
-                $this->_subscribedAttributeCodeCache[$node_id] = array();
+                $this->_subscribedAttributeCodeCache[$nodeId] = array();
             }
         }
 
@@ -336,17 +347,17 @@ class NodeService implements ServiceLocatorAwareInterface
         /* @var $select \Zend\Db\Sql\Select */
         $select->from(array('na'=>'node_attribute'));
         $select->columns(array('attribute_id'=>'attribute_id'));
-        if($node_id > 0){
-            $select->where(array('na.node_id'=>$node_id));
+        if($nodeId > 0){
+            $select->where(array('na.node_id'=>$nodeId));
         }
-        if($entity_type){
-            $select->where(array('att.entity_type_id'=>$entity_type));
+        if($entityType){
+            $select->where(array('att.entity_type_id'=>$entityType));
         }
-        if($update_only){
+        if($updateOnly){
             $select->where(array('na.can_update'=>1));
         }
-        $select->join(array('att'=>'entity_attribute'), new \Zend\Db\Sql\Expression('att.attribute_id = na.attribute_id'.($entity_type != 0 ? ' AND att.entity_type_id = ' . $entity_type : '')), array('attribute_code'=>'code'), $select::JOIN_INNER);
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'getsubattr', 'getSubscribedAttributeCodes - ' . $node_id . '_' . $entity_type.': '.$select->getSqlString($this->getAdapter()->getPlatform()), array('node_id'=>$node_id, 'sql'=>$select->getSqlString($this->getAdapter()->getPlatform())), array('node'=>$node_id));
+        $select->join(array('att'=>'entity_attribute'), new \Zend\Db\Sql\Expression('att.attribute_id = na.attribute_id'.($entityType != 0 ? ' AND att.entity_type_id = ' . $entityType : '')), array('attribute_code'=>'code'), $select::JOIN_INNER);
+        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'getsubattr', 'getSubscribedAttributeCodes - ' . $nodeId . '_' . $entityType.': '.$select->getSqlString($this->getAdapter()->getPlatform()), array('node_id'=>$nodeId, 'sql'=>$select->getSqlString($this->getAdapter()->getPlatform())), array('node'=>$nodeId));
 
         $res = $this->getAdapter()->query($select->getSqlString($this->getAdapter()->getPlatform()), \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
 
@@ -358,10 +369,10 @@ class NodeService implements ServiceLocatorAwareInterface
             $retArr[] = $row['attribute_code'];
         }
 
-        if($update_only){
-            $this->_subscribedUpdateAttributeCodeCache[$node_id][$entity_type] = $retArr;
+        if($updateOnly){
+            $this->_subscribedUpdateAttributeCodeCache[$nodeId][$entityType] = $retArr;
         }else{
-            $this->_subscribedAttributeCodeCache[$node_id][$entity_type] = $retArr;
+            $this->_subscribedAttributeCodeCache[$nodeId][$entityType] = $retArr;
         }
 
         return $retArr;
@@ -370,43 +381,43 @@ class NodeService implements ServiceLocatorAwareInterface
     /**
      * Verify that given entity type is valid (and transform as needed)
      *
-     * @param int|string $entity_type The entity type to process (by-reference)
+     * @param int|string $entityType The entity type to process (by-reference)
      * @throws MagelinkException If the passed entity type is invalid
      * @return int Processed entity type
      */
-    protected function verifyEntityType(&$entity_type){
-        $entity_type_in = $entity_type;
-        //if($entity_type instanceof Entity\Model\Type){
-        //    $entity_type = $entity_type->getId();
+    protected function verifyEntityType(&$entityType){
+        $entity_type_in = $entityType;
+        //if($entityType instanceof Entity\Model\Type){
+        //    $entityType = $entityType->getId();
         //}
-        if(is_string($entity_type)){
-            $entity_type = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entity_type);
+        if(is_string($entityType)){
+            $entityType = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
         }
-        if($entity_type <= 0 || !is_int($entity_type)){
-            throw new \Magelink\Exception\MagelinkException('Invalid entity type passed to EntityService - ' . $entity_type_in . ' - ' . $entity_type);
+        if($entityType <= 0 || !is_int($entityType)){
+            throw new \Magelink\Exception\MagelinkException('Invalid entity type passed to EntityService - ' . $entity_type_in . ' - ' . $entityType);
         }
 
-        return $entity_type;
+        return $entityType;
     }
 
     /**
      * Verify that given attribute is valid (and return it's ID)
      *
      * @param string $attribute_code
-     * @param int|string $entity_type The entity type
+     * @param int|string $entityType The entity type
      * @throws MagelinkException If the passed attribute is invalid
      * @return int Processed entity type
      */
-    protected function verifyAttribute($attribute_code, $entity_type){
-        $entity_type = $this->verifyEntityType($entity_type);
+    protected function verifyAttribute($attribute_code, $entityType){
+        $entityType = $this->verifyEntityType($entityType);
         if(is_string($attribute_code)){
-            $attribute_code = $this->getServiceLocator()->get('entityConfigService')->parseAttribute($attribute_code, $entity_type);
+            $attribute_code = $this->getServiceLocator()->get('entityConfigService')->parseAttribute($attribute_code, $entityType);
         }
         if(is_numeric($attribute_code)){
             return intval($attribute_code);
         }
         if($attribute_code <= 0 || !is_int($attribute_code)){
-            throw new \Magelink\Exception\MagelinkException('Invalid attribute passed to NodeService - ' . $entity_type . ' - ' . $attribute_code);
+            throw new \Magelink\Exception\MagelinkException('Invalid attribute passed to NodeService - ' . $entityType . ' - ' . $attribute_code);
         }
 
         return $attribute_code;
