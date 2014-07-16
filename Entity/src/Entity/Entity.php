@@ -46,9 +46,6 @@ class Entity implements ServiceLocatorAwareInterface
     /** @var array All extended data for this Entity (fkey data, etc) */
     protected $_extendedData = array();
 
-    /** @var \Entity\Wrapper\Order $order */
-    protected $_entityService;
-
     
     /**
      * Creates a new Entity instance based on the provided row of data from the entity table.
@@ -86,7 +83,6 @@ class Entity implements ServiceLocatorAwareInterface
         }
 
         $this->_loadedFromNode = $loadedFromNode;
-        $this->_entityService = $this->getServiceLocator()->get('entityService');
     }
 
     /**

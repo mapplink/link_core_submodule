@@ -96,8 +96,8 @@ class Order extends AbstractWrapper
     {
         $order = $this;
         while ($order->getData('original_order', FALSE)) {
-            $order = $this->_entityService->loadEntityId(
-                $this->_nodeEntity->getNodeId(), $order->getData('original_order'));
+            $order = $this->getServiceLocator()->get('entityService')
+                ->loadEntityId($this->_nodeEntity->getNodeId(), $order->getData('original_order'));
         }
 
         return $order;
