@@ -152,7 +152,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
             }
         }
 
-        foreach ($updatesByType as $entityType=>$updates) {
+        foreach ($updatesByType as $entityType=>$entityTypeUpdates) {
 
             if (!isset($this->_gateway[$entityType])) {
                 $this->_gateway[$entityType] = $this->_lazyLoad($entityType);
@@ -163,7 +163,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
             $updates = array();
             if($this->_gateway[$entityType]){
                 // Combine all updates for one entity into a single update
-                foreach($updates as $update){
+                foreach($entityTypeUpdates as $update){
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_INFO,
                             'comb_update',
@@ -173,7 +173,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                         );
 
                     $entityId = $update->getEntity()->getId();
-                    if(!isset($updates[$entityId])){
+                    if (!isset($updates[$entityId])) {
                         $updates[$entityId] = array(
                             'entity'=>$update->getEntity(),
                             'attributes'=>array_intersect($update->getAttributesSimple(), $attributes),
