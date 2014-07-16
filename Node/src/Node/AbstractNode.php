@@ -135,9 +135,9 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
         $this->getServiceLocator()->get('logService')
             ->log(\Log\Service\LogService::LEVEL_INFO,
                 'update',
-                'AbstractNode update: '.count($updates).' updates, '.count($action).' actions.',
-                array('updates'=>count($updates), 'actions'=>count($actions)),
-                array('node'=>$this)
+                'AbstractNode update: '.count($updates).' updates, '.count($actions).' actions.',
+                array(),
+                array('node'=>$this,'updates'=>$updates, 'actions'=>$actions)
             );
 
         // Separate all updates into an array for each entity type
