@@ -66,4 +66,17 @@ class Creditmemo extends AbstractWrapper
         return (float) $shippingRefund;
     }
 
+    /**
+     * Get the uppermost original order
+     * @return \Entity\Wrapper\Order|NULL $order
+     */
+    protected function getRootOriginalOrder()
+    {
+        /** @var \Entity\Wrapper\Order $order */
+        $order = $this->_entityService->loadEntityId($this->_nodeEntity->getNodeId(), $this->getParentId());
+
+        return $order->getRootOriginalOrder();
+    }
+
+
 }

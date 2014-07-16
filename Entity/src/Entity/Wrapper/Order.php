@@ -89,6 +89,21 @@ class Order extends AbstractWrapper
     }
 
     /**
+     * Get the uppermost original order
+     * @return \Entity\Wrapper\Order|NULL $order
+     */
+    public function getRootOriginal()
+    {
+        $order = $this;
+        while ($order->getData('original_order', FALSE)) {
+            $order = $this->_entityService->loadEntityId(
+                $this->_nodeEntity->getNodeId(), $order->getData('original_order'));
+        }
+
+        return $order;
+    }
+
+    /**
      * Returns the sum quantity of all order items
      * @return int
      * @throws MagelinkException
