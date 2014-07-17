@@ -214,7 +214,7 @@ class Order extends AbstractWrapper
      */
     public function getOrderItemsTotalQty()
     {
-        /** @var \Entity\Service\Entity\Service $entityService */
+        /** @var \Entity\Service\EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
 
         $totalItemAggregate = $entityService->aggregateEntity(
@@ -345,13 +345,29 @@ class Order extends AbstractWrapper
     }
 
     /**
+     * Get Aggregated Items Refunds
+     * @return float
+     */
+    public function getItemsRefunds()
+    {
+        $creditmemoitems = $this->getAllCreditmemoItems();
+
+        $itemsRefundAmount = 0;
+        foreach ($creditmemoitems as $item) {
+            $itemsRefundAmount += $item->getRowTotal();
+        }
+
+        return $itemsRefundAmount;
+    }
+
+    /**
      * Get Aggregated Cash Refunds
-     * @param array $orderItems
-     * @return array
+     * @return float
      */
     public function getCashRefunds()
     {
-        $creditmemos = $this->getChildren('creditmemo');
+        $creditmemos = $this->getAllCreditemos();
+
         $cashRefundAmount = 0;
         foreach ($creditmemos as $creditmemo) {
             $cashRefundAmount += $creditmemo->getCashRefund();
@@ -362,12 +378,12 @@ class Order extends AbstractWrapper
 
     /**
      * Get Aggregated Non Cash Refunds
-     * @param array $orderItems
-     * @return array
+     * @return float
      */
     public function getNonCashRefunds()
     {
-        $creditmemos = $this->getChildren('creditmemo');
+        $creditmemos = $this->getAllCreditemos();
+
         $nonCashRefundAmount = 0;
         foreach ($creditmemos as $creditmemo) {
             $nonCashRefundAmount += $creditmemo->getNonCashRefund();
@@ -378,12 +394,12 @@ class Order extends AbstractWrapper
 
     /**
      * Get Aggregated Shipping Refunds
-     * @param array $orderItems
-     * @return array
+     * @return float
      */
     public function getShippingRefunds()
     {
-        $creditmemos = $this->getChildren('creditmemo');
+        $creditmemos = $this->getAllCreditemos();
+
         $nonCashRefundAmount = 0;
         foreach ($creditmemos as $creditmemo) {
             $nonCashRefundAmount += $creditmemo->getShippingRefund();
