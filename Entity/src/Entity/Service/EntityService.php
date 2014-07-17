@@ -232,10 +232,9 @@ class EntityService implements ServiceLocatorAwareInterface {
 
         return NULL;
     }
-    
+
     /**
      * Loads all the child entities of the provided Entity, for the given node. Empty array if none exist.
-     * 
      * @param int $node_id
      * @param \Entity\Entity $parent
      * @param int|string $entity_type_id

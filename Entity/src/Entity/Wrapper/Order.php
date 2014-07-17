@@ -18,7 +18,6 @@ use Magelink\Exception\MagelinkException;
 
 class Order extends AbstractWrapper
 {
-
     /**
      * Retrieve all the order items attached to this order
      * @return \Entity\Wrapper\Orderitem[]
@@ -35,6 +34,111 @@ class Order extends AbstractWrapper
     public function getOrderItems()
     {
         return $this->getChildren('orderitem');
+    }
+
+    /**
+     * Retrieve all direct assigned credit memos
+     * @return \Entity\Wrapper\Creditmemo[]
+     */
+    public function getCreditmemos()
+    {
+        return $this->getChildren('creditmemo');
+    }
+
+    /**
+     * Retrieve all direct assigned credit memo items
+     * @return \Entity\Wrapper\Creditmemoitems[]
+     */
+    public function getCreditmemoItems()
+    {
+        $items = array();
+        foreach ($this->getCreditmemos() as $creditmemo) {
+            $items = array_merge($items, $creditmemo->getCreditmemoItems());
+        }
+
+        return $items;
+    }
+
+    /**
+     * Determine if this is a root original order
+     * @return (bool) $isRootOriginal
+     */
+    public function isRootOriginalOrder()
+    {
+        if ($this->getData('original_order', FALSE)) {
+            $isRootOriginal = FALSE;
+        }else{
+            $isRootOriginal = TRUE;
+        }
+        return $isRootOriginal;
+    }
+
+    /**
+     * Retrieve all orders, if this is an original order
+     * @return \Entity\Wrapper\Order[]
+     */
+    public function getOnlyOriginalChildOrders()
+    {
+        $childOrders = array();
+        if ($this->isRootOriginalOrder()) {
+            $childOrders = $this->getAndAddChildOrders($this->getId());
+        }
+
+        return $childOrders;
+    }
+
+    /**
+     * Retrieve all child orders recursively
+     * @param $orderId
+     * @param \Entity\Wrapper\Order[] $childOrders
+     * @return \Entity\Wrapper\Order[] $childOrders
+     */
+    protected function getAndAddChildOrders($orderId, $childOrders = array())
+    {
+        /** @var \Entity\Service\EntityService $entityService */
+        $entityService = $this->getServiceLocator()->get('entityService');
+
+        do {
+            $sql = 'SELECT * FROM {order:o:original_order:original_order = '.$orderId().'}';
+            $childOrdersDataArray = $entityService->executeQueryAssoc($sql);
+            if ($childOrdersDataArray) {
+                foreach ($childOrdersDataArray as $orderDataArray) {
+                    $order = $entityService->loadEntityId($this->getLoadedNodeId(), $orderDataArray['entity_id']);
+                    $childOrders = $this->getAndAddChildOrders($order->getId(), $childOrders);
+                    $childOrders[$order->getId()] = $order;
+                }
+            }
+        }while ($childOrdersDataArray);
+
+        return $childOrders;
+    }
+
+    /**
+     * Retrieve all credit memo assigned to the order
+     * @return \Entity\Wrapper\Creditmemo[]
+     */
+    public function getAllCreditemos()
+    {
+        $creditmemos = $this->getCreditmemos();
+        foreach ($this->getOnlyOriginalChildOrders() as $order) {
+            $creditmemos = array_merge($creditmemos, $order->getCreditmemos());
+        }
+
+        return $creditmemos;
+    }
+
+    /**
+     * Retrieve all credit memo items assigned to the order
+     * @return array
+     */
+    public function getAllCreditmemoItems()
+    {
+        $creditmemoitems = array();
+        foreach ($this->getAllCreditemos() as $creditmemo) {
+            $creditmemoitems = array_merge($creditmemoitems, $this->getCreditmemoItems());
+        }
+
+        return $creditmemoitems;
     }
 
     /**
@@ -110,6 +214,7 @@ class Order extends AbstractWrapper
      */
     public function getOrderItemsTotalQty()
     {
+        /** @var \Entity\Service\Entity\Service $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
 
         $totalItemAggregate = $entityService->aggregateEntity(
@@ -130,12 +235,60 @@ class Order extends AbstractWrapper
      */
     public function getOrderItemsTotalDeliveryQuantity()
     {
-        $quantity = 0;
-        foreach ($this->getOrderItems() as $orderItem) {
-            $quantity += $orderItem->getDeliveryQuantity();
-        }
+        $quantities = $this->getQuantities($this->getOrderItems());
+        $quantity = array_sum($quantities);
 
         return (int) $quantity;
+    }
+
+    /**
+     * Get Credit Memo Items Quantities of Order Items
+     * @param array $orderItems
+     * @return array
+     */
+    public function getCreditmemoItemsQuantityGroupedByOrderItemId()
+    {
+        $orderItems = $this->getChildren('orderitem');
+        $quantities = array();
+        foreach ($orderItems as $orderItem) {
+            $alreadyRefundedQuantity = $orderItem->getQuantityRefunded();
+            $quantities[$orderItem->getId()] = (int) $alreadyRefundedQuantity;
+        }
+
+        return $quantities;
+    }
+
+    /**
+     * Get quantities in an array[<item id>] = <quantity>
+     * @param $items
+     * @return int[]
+     */
+    protected function getQuantities($items)
+    {
+        $quantities = array();
+        foreach ($items() as $item) {
+            $quantities[$item->getId()] = $item->getQuantity();
+        }
+
+        return $quantities;
+    }
+
+    /**
+     * Get quantities of direct assigned credit memo items
+     * @return int[]
+     */
+    public function getCreditmemoItemsQuantityGroupedByItemId()
+    {
+        return $this->getQuantities($this->getAllCreditmemoItems());
+    }
+
+    /**
+     * Get quantities of all credit memo items assigned to the order
+     * @return int[]
+     */
+    public function getAllCreditmemoItemsQuantityGroupedByItemId()
+    {
+        return $this->getQuantities($this->getAllCreditmemoItems());
     }
 
     /**
@@ -237,23 +390,6 @@ class Order extends AbstractWrapper
         }
 
         return $nonCashRefundAmount;
-    }
-
-    /**
-     * Get Credit Memo Items Quantities of Order Items
-     * @param array $orderItems
-     * @return array
-     */
-    public function getCreditmemoItemsQuantityGroupedByOrderItemId()
-    {
-        $orderItems = $this->getChildren('orderitem');
-        $quantities = array();
-        foreach ($orderItems as $orderItem) {
-            $alreadyRefundedQuantity = $orderItem->getQuantityRefunded();
-            $quantities[$orderItem->getId()] = (int) $alreadyRefundedQuantity;
-        }
-
-        return $quantities;
     }
 
 }
