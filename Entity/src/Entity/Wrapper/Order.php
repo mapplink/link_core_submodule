@@ -99,7 +99,7 @@ class Order extends AbstractWrapper
         $entityService = $this->getServiceLocator()->get('entityService');
 
         do {
-            $sql = 'SELECT * FROM {order:o:original_order:original_order = '.$orderId().'}';
+            $sql = 'SELECT * FROM {order:o:original_order:original_order = '.$orderId.'}';
             $childOrdersDataArray = $entityService->executeQueryAssoc($sql);
             if ($childOrdersDataArray) {
                 foreach ($childOrdersDataArray as $orderDataArray) {
