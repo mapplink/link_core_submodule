@@ -65,7 +65,7 @@ class Order extends AbstractWrapper
      * Determine if this is a root original order
      * @return (bool) $isRootOriginal
      */
-    public function isRootOriginalOrder()
+    protected function isRootOriginalOrder()
     {
         if ($this->getData('original_order', FALSE)) {
             $isRootOriginal = FALSE;
@@ -79,7 +79,7 @@ class Order extends AbstractWrapper
      * Retrieve all orders, if this is an original order
      * @return \Entity\Wrapper\Order[]
      */
-    public function getChildOrders()
+    public function getOriginalChildOrders()
     {
         if ($this->isRootOriginalOrder() && !count($this->_cachedSegregatedOrders)) {
             /** @var \Entity\Service\EntityService $entityService */
@@ -98,7 +98,7 @@ class Order extends AbstractWrapper
     public function getAllCreditemos()
     {
         $creditmemos = $this->getCreditmemos();
-        foreach ($this->getOnlyOriginalChildOrders() as $order) {
+        foreach ($this->getOriginalChildOrders() as $order) {
             $creditmemos = array_merge($creditmemos, $order->getCreditmemos());
         }
 
