@@ -332,7 +332,7 @@ class Order extends AbstractWrapper
 
         $itemsRefundAmount = 0;
         foreach ($creditmemoitems as $item) {
-            $itemsRefundAmount += $item->getRowTotal();
+            $itemsRefundAmount += $item->getDiscountedRowTotal();
         }
 
         return $itemsRefundAmount;

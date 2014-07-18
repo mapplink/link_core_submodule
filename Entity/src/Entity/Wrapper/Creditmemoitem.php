@@ -47,6 +47,11 @@ class Creditmemoitem extends AbstractWrapper
         return $this->resolve('product', 'product');
     }
 
+    public function getOrderItem()
+    {
+        return $this->resolve('order_item', 'orderitem');
+    }
+
     /**
      * Get sku for the orderitem
      */
@@ -75,13 +80,17 @@ class Creditmemoitem extends AbstractWrapper
     }
 
     /**
-     * Get row total
+     * Get discounted row total
      * @return float
      */
-    public function getRowTotal()
+    public function getDiscountedRowTotal()
     {
-        $rowTotal = $this->getData('row_total');
-        return $rowTotal;
+        if (!($discountedTotal = $this->getData('row_total', FALSE))) {
+            $orderItem = $this->getOrderItem();
+            $discountedTotal = $this->getQuantity() * $orderItem->getDiscountedPrice();
+        }
+
+        return $discountedTotal;
     }
 
 }
