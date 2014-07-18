@@ -275,7 +275,7 @@ class Order extends AbstractWrapper
     protected function getQuantities($items)
     {
         $quantities = array();
-        foreach ($items() as $item) {
+        foreach ($items as $item) {
             $quantities[$item->getId()] = $item->getQuantity();
         }
 
