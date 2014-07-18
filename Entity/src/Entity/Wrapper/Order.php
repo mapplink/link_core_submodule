@@ -113,7 +113,7 @@ class Order extends AbstractWrapper
     {
         $creditmemoitems = array();
         foreach ($this->getAllCreditmemos() as $creditmemo) {
-            $creditmemoitems = array_merge($creditmemoitems, $this->getCreditmemoItems());
+            $creditmemoitems = array_merge($creditmemoitems, $creditmemo->getCreditmemoItems());
         }
 
         return $creditmemoitems;
