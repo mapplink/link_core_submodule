@@ -1160,15 +1160,30 @@ class EntityService implements ServiceLocatorAwareInterface {
 
         $returnData = array();
         foreach ($data as $row) {
-            $returnData[$row['k']] = $row['v'];
+            if (array_key_exists('k', $row) && array_key_exists('v', $row)) {
+                $returnData[$row['k']] = $row['v'];
+            }else{
+                $message = 'Error during the data assignment. Row does not have k and/or v  as keys: '
+                    .var_export(array_keys($row), TRUE).'.';
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'execmlql_assoc_r',
+                        $message,
+                        array('results so far'=>$returnData)
+                    );
+                break;
+            }
         }
 
-        $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
-                'execmlql_assoc_r',
-                'Result: '.var_export($returnData, TRUE),
-                array('result'=>$returnData)
-            );
+        if (count($returnData)) {
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                    'execmlql_assoc_r',
+                    'Result: '.var_export($returnData, TRUE),
+                    array('result'=>$returnData)
+                );
+        }
+
         return $returnData;
     }
 
