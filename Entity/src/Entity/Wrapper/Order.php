@@ -18,6 +18,8 @@ use Magelink\Exception\MagelinkException;
 
 class Order extends AbstractWrapper
 {
+    var $_cachedChildOrders = array();
+
     /**
      * Retrieve all the order items attached to this order
      * @return \Entity\Wrapper\Orderitem[]
@@ -99,18 +101,21 @@ class Order extends AbstractWrapper
         $entityService = $this->getServiceLocator()->get('entityService');
 
         do {
+            $dataAdded = FALSE;
             $mlql = 'SELECT * FROM {order:o:original_order:original_order = '.$orderId.'}';
-            $childOrdersDataArray = $entityService->executeQuery($mlql);
-            if ($childOrdersDataArray) {
-                foreach ($childOrdersDataArray as $orderDataArray) {
-                    if ($orderDataArray) {
-                        $order = $entityService->loadEntityId($this->getLoadedNodeId(), $orderDataArray['entity_id']);
+            $childOrdersQueryArray = $entityService->executeQuery($mlql);
+
+            if ($childOrdersQueryArray) {
+                foreach ($childOrdersQueryArray as $orderQueryData) {
+                    if ($orderQueryData) {
+                        $dataAdded = TRUE;
+                        $order = $entityService->loadEntityId($this->getLoadedNodeId(), $orderQueryData['entity_id']);
                         $childOrders = $this->getAndAddChildOrders($order->getId(), $childOrders);
                         $childOrders[$order->getId()] = $order;
                     }
                 }
             }
-        }while ($childOrdersDataArray);
+        }while ($dataAdded);
 
         return $childOrders;
     }
