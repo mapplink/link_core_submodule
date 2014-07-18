@@ -108,10 +108,12 @@ class Order extends AbstractWrapper
             if ($childOrdersQueryArray) {
                 foreach ($childOrdersQueryArray as $orderQueryData) {
                     if ($orderQueryData) {
-                        $dataAdded = TRUE;
                         $order = $entityService->loadEntityId($this->getLoadedNodeId(), $orderQueryData['entity_id']);
-                        $childOrders = $this->getAndAddChildOrders($order->getId(), $childOrders);
-                        $childOrders[$order->getId()] = $order;
+                        if ($order) {
+                            $dataAdded = TRUE;
+                            $childOrders = $this->getAndAddChildOrders($order->getId(), $childOrders);
+                            $childOrders[$order->getId()] = $order;
+                        }
                     }
                 }
             }
