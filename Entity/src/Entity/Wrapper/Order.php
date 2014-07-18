@@ -99,13 +99,15 @@ class Order extends AbstractWrapper
         $entityService = $this->getServiceLocator()->get('entityService');
 
         do {
-            $sql = 'SELECT * FROM {order:o:original_order:original_order = '.$orderId.'}';
-            $childOrdersDataArray = $entityService->executeQueryAssoc($sql);
+            $mlql = 'SELECT * FROM {order:o:original_order:original_order = '.$orderId.'}';
+            $childOrdersDataArray = $entityService->executeQueryAssoc($mlql);
             if ($childOrdersDataArray) {
                 foreach ($childOrdersDataArray as $orderDataArray) {
-                    $order = $entityService->loadEntityId($this->getLoadedNodeId(), $orderDataArray['entity_id']);
-                    $childOrders = $this->getAndAddChildOrders($order->getId(), $childOrders);
-                    $childOrders[$order->getId()] = $order;
+                    if ($orderDataArray) {
+                        $order = $entityService->loadEntityId($this->getLoadedNodeId(), $orderDataArray['entity_id']);
+                        $childOrders = $this->getAndAddChildOrders($order->getId(), $childOrders);
+                        $childOrders[$order->getId()] = $order;
+                    }
                 }
             }
         }while ($childOrdersDataArray);

@@ -1159,7 +1159,7 @@ class EntityService implements ServiceLocatorAwareInterface {
         }
 
         $returnData = array();
-        foreach($data as $row){
+        foreach ($data as $row) {
             $returnData[$row['k']] = $row['v'];
         }
 
