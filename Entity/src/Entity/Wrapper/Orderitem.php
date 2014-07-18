@@ -19,14 +19,17 @@ class Orderitem extends AbstractWrapper
 
     /**
      * Get product name
-     * @return string
+     * @return string|NULL
      */
     public function getProductName()
     {
         if ($product = $this->getProduct()) {
             $productName = $product->getData('name');
-            return $productName;
+        }else{
+            $productName = $this->getData('product_name', NULL);
         }
+
+        return $productName;
     }
 
     /**
@@ -49,6 +52,7 @@ class Orderitem extends AbstractWrapper
 
     /**
      * Get sku for the orderitem
+     * @return string|NULL $sku
      */
     public function getSku()
     {   
@@ -63,6 +67,16 @@ class Orderitem extends AbstractWrapper
         }
 
         return $sku;
+    }
+
+    /**
+     * Get discounted item price
+     * @return float|NULL
+     */
+    public function getDiscountedPrice()
+    {
+        $price = $this->getData('item_price') - $this->getData('item_discount');
+        return $price;
     }
 
     /**

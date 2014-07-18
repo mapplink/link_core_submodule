@@ -18,7 +18,7 @@ use Magelink\Exception\MagelinkException;
 
 class Order extends AbstractWrapper
 {
-    var $_cachedChildOrders = array();
+    protected $_cachedChildOrders = array();
 
     /**
      * Retrieve all the order items attached to this order
@@ -81,12 +81,11 @@ class Order extends AbstractWrapper
      */
     public function getOnlyOriginalChildOrders()
     {
-        $childOrders = array();
-        if ($this->isRootOriginalOrder()) {
-            $childOrders = $this->getAndAddChildOrders($this->getId());
+        if ($this->isRootOriginalOrder() && !count($this->_cachedChildOrders)) {
+            $this->_cachedChildOrders = $this->getAndAddChildOrders($this->getId());
         }
 
-        return $childOrders;
+        return $this->_cachedChildOrders;
     }
 
     /**
@@ -102,17 +101,20 @@ class Order extends AbstractWrapper
 
         do {
             $dataAdded = FALSE;
-            $mlql = 'SELECT * FROM {order:o:original_order:original_order = '.$orderId.'}';
+
+            $mlql = 'SELECT entity_id FROM {order:o:original_order:original_order = '.$orderId.'}';
             $childOrdersQueryArray = $entityService->executeQuery($mlql);
 
             if ($childOrdersQueryArray) {
                 foreach ($childOrdersQueryArray as $orderQueryData) {
-                    if ($orderQueryData) {
+
+                    if ($orderQueryData && $childOrders[$orderQueryData['entity_id']]) {
                         $order = $entityService->loadEntityId($this->getLoadedNodeId(), $orderQueryData['entity_id']);
+
                         if ($order) {
                             $dataAdded = TRUE;
-                            $childOrders = $this->getAndAddChildOrders($order->getId(), $childOrders);
                             $childOrders[$order->getId()] = $order;
+                            $childOrders = $this->getAndAddChildOrders($order->getId(), $childOrders);
                         }
                     }
                 }
