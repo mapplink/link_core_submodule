@@ -18,7 +18,7 @@ use Magelink\Exception\MagelinkException;
 
 class Order extends AbstractWrapper
 {
-    protected $_cachedChildOrders = array();
+    protected $_cachedSegregatedOrders = array();
 
     /**
      * Retrieve all the order items attached to this order
@@ -79,49 +79,16 @@ class Order extends AbstractWrapper
      * Retrieve all orders, if this is an original order
      * @return \Entity\Wrapper\Order[]
      */
-    public function getOnlyOriginalChildOrders()
+    public function getChildOrders()
     {
-        if ($this->isRootOriginalOrder() && !count($this->_cachedChildOrders)) {
-            $this->_cachedChildOrders = $this->getAndAddChildOrders($this->getId());
+        if ($this->isRootOriginalOrder() && !count($this->_cachedSegregatedOrders)) {
+            /** @var \Entity\Service\EntityService $entityService */
+            $entityService = $this->getServiceLocator()->get('entityService');
+
+            $this->_cachedSegregatedOrders = $entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
         }
 
-        return $this->_cachedChildOrders;
-    }
-
-    /**
-     * Retrieve all child orders recursively
-     * @param $orderId
-     * @param \Entity\Wrapper\Order[] $childOrders
-     * @return \Entity\Wrapper\Order[] $childOrders
-     */
-    protected function getAndAddChildOrders($orderId, $childOrders = array())
-    {
-        /** @var \Entity\Service\EntityService $entityService */
-        $entityService = $this->getServiceLocator()->get('entityService');
-
-        do {
-            $dataAdded = FALSE;
-
-            $mlql = 'SELECT entity_id FROM {order:o:original_order:original_order = '.$orderId.'}';
-            $childOrdersQueryArray = $entityService->executeQuery($mlql);
-
-            if ($childOrdersQueryArray) {
-                foreach ($childOrdersQueryArray as $orderQueryData) {
-
-                    if ($orderQueryData && $childOrders[$orderQueryData['entity_id']]) {
-                        $order = $entityService->loadEntityId($this->getLoadedNodeId(), $orderQueryData['entity_id']);
-
-                        if ($order) {
-                            $dataAdded = TRUE;
-                            $childOrders[$order->getId()] = $order;
-                            $childOrders = $this->getAndAddChildOrders($order->getId(), $childOrders);
-                        }
-                    }
-                }
-            }
-        }while ($dataAdded);
-
-        return $childOrders;
+        return $this->_cachedSegregatedOrders;
     }
 
     /**

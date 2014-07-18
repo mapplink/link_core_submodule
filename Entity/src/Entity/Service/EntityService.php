@@ -129,6 +129,40 @@ class EntityService implements ServiceLocatorAwareInterface {
         return $entity;
     }
 
+    public function loadSegregatedOrders($nodeId, \Entity\Entity $entity)
+    {
+        $this->verifyNodeId($nodeId);
+
+        if ($entity->getTypeStr() == 'order') {
+            throw new NodeException('Invalid entity passed to loadSegregatedOrders: '.$entity->getTypeStr().'.');
+        }
+
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'loadeid',
+                'loadEntityId - '.$nodeId.' - '.$entity->getId().' ('.$entity->getTypeStr().')',
+                array('node_id'=>$nodeId, 'entity_id'=>$entity->getId()),
+                array('entity'=>$entity)
+            );
+
+        $attributes = $this->getServiceLocator()->get('nodeService')
+            ->getSubscribedAttributeCodes($nodeId, $entity->getType());
+        $entities = $this->getLoader()->loadEntities(
+            $entity->getType(),
+            0,
+            array('original_order'=>$entity->getId()),
+            $attributes,
+            array('original_order'=>'eq'),
+            array('node_id'=>$nodeId)
+        );
+
+        if (!$entities || !count($entities)) {
+            $entities = array();
+        }
+
+        return $entities;
+    }
+
     /**
      * Reloads the provided entity from the database to capture any freshly updated data.
      * @param \Entity\Entity $entity The entity to reload (passed by reference)
