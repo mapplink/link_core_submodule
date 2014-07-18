@@ -95,7 +95,7 @@ class Order extends AbstractWrapper
      * Retrieve all credit memo assigned to the order
      * @return \Entity\Wrapper\Creditmemo[]
      */
-    public function getAllCreditemos()
+    public function getAllCreditmemos()
     {
         $creditmemos = $this->getCreditmemos();
         foreach ($this->getOriginalChildOrders() as $order) {
@@ -112,7 +112,7 @@ class Order extends AbstractWrapper
     public function getAllCreditmemoItems()
     {
         $creditmemoitems = array();
-        foreach ($this->getAllCreditemos() as $creditmemo) {
+        foreach ($this->getAllCreditmemos() as $creditmemo) {
             $creditmemoitems = array_merge($creditmemoitems, $this->getCreditmemoItems());
         }
 
@@ -344,7 +344,7 @@ class Order extends AbstractWrapper
      */
     public function getCashRefunds()
     {
-        $creditmemos = $this->getAllCreditemos();
+        $creditmemos = $this->getAllCreditmemos();
 
         $cashRefundAmount = 0;
         foreach ($creditmemos as $creditmemo) {
@@ -360,7 +360,7 @@ class Order extends AbstractWrapper
      */
     public function getNonCashRefunds()
     {
-        $creditmemos = $this->getAllCreditemos();
+        $creditmemos = $this->getAllCreditmemos();
 
         $nonCashRefundAmount = 0;
         foreach ($creditmemos as $creditmemo) {
@@ -376,7 +376,7 @@ class Order extends AbstractWrapper
      */
     public function getShippingRefunds()
     {
-        $creditmemos = $this->getAllCreditemos();
+        $creditmemos = $this->getAllCreditmemos();
 
         $nonCashRefundAmount = 0;
         foreach ($creditmemos as $creditmemo) {
