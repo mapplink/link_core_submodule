@@ -100,7 +100,7 @@ class Order extends AbstractWrapper
 
         do {
             $mlql = 'SELECT * FROM {order:o:original_order:original_order = '.$orderId.'}';
-            $childOrdersDataArray = $entityService->executeQueryAssoc($mlql);
+            $childOrdersDataArray = $entityService->executeQuery($mlql);
             if ($childOrdersDataArray) {
                 foreach ($childOrdersDataArray as $orderDataArray) {
                     if ($orderDataArray) {
