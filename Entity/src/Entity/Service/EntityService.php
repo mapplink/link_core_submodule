@@ -133,7 +133,7 @@ class EntityService implements ServiceLocatorAwareInterface {
     {
         $this->verifyNodeId($nodeId);
 
-        if ($entity->getTypeStr() == 'order') {
+        if ($entity->getTypeStr() != 'order') {
             throw new NodeException('Invalid entity passed to loadSegregatedOrders: '.$entity->getTypeStr().'.');
         }
 
