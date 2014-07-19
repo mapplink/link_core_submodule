@@ -65,24 +65,65 @@ class Order extends AbstractWrapper
      * Determine if this is a root original order
      * @return (bool) $isRootOriginal
      */
-    protected function isRootOriginalOrder()
+    protected function isOriginalOrder()
     {
         if ($this->getData('original_order', FALSE)) {
-            $isRootOriginal = FALSE;
+            $isOriginal = FALSE;
         }else{
             /** @var \Entity\Service\EntityService $entityService */
             $entityService = $this->getServiceLocator()->get('entityService');
             $this->_cachedSegregatedOrders = $entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
-            $isRootOriginal = (bool) $entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
+            $isOriginal = TRUE;
         }
-        return $isRootOriginal;
+        return $isOriginal;
+    }
+
+    /**
+     * Is this an segregated order?
+     * @return bool
+     */
+    public function isSegregated()
+    {
+        return !$this->isOriginalOrder();
+    }
+
+    /**
+     * Get original order id
+     * @return int|string
+     */
+    public function getOriginalOrderId()
+    {
+        if ($this->isOriginalOrder()) {
+            $originalOrderId = $this->getId();
+        }else{
+            $originalOrderId = $this->getData('original_order');
+        }
+
+        return $originalOrderId;
+    }
+
+    /**
+     * Get original order entity
+     * @return Entity|Order|null
+     */
+    public function getOriginalOrder()
+    {
+        if ($this->isOriginalOrder()) {
+            $originalOrder = $this;
+        }else{
+            /** @var \Entity\Service\EntityService $entityService */
+            $entityService = $this->getServiceLocator()->get('entityService');
+            $originalOrder = $entityService->loadEntityId($this->getLoadedNodeId(), $this->getOriginalOrderId());
+        }
+
+        return $originalOrder;
     }
 
     /**
      * Retrieve all orders, if this is an original order
      * @return \Entity\Wrapper\Order[]
      */
-    public function getOriginalChildOrders()
+    public function getSegregatedOrders()
     {
         if (!count($this->_cachedSegregatedOrders)) {
             /** @var \Entity\Service\EntityService $entityService */
@@ -101,7 +142,7 @@ class Order extends AbstractWrapper
     public function getAllCreditmemos()
     {
         $creditmemos = $this->getCreditmemos();
-        foreach ($this->getOriginalChildOrders() as $order) {
+        foreach ($this->getSegregatedOrders() as $order) {
             $creditmemos = array_merge($creditmemos, $order->getCreditmemos());
         }
 
