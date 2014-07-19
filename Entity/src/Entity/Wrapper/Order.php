@@ -413,10 +413,19 @@ class Order extends AbstractWrapper
 
         $orderItems = $this->getOrderItems();
         foreach ($orderItems as $orderItem) {
-            $totalItemsDiscount += $orderItem->getData('total_discount', 0);
+            $totalItemsDiscount += $orderItem->getTotalDiscount();
         }
 
         return $totalItemsDiscount;
+    }
+
+    /**
+     * Get discount total as a positive number
+     * @return float
+     */
+    public function getDiscountTotal()
+    {
+        return abs($this->getData('discount_total', 0));
     }
 
     /**
@@ -424,7 +433,7 @@ class Order extends AbstractWrapper
      */
     public function getShippingDiscount()
     {
-        $shippingDiscount = $this->getData('discount_total', 0) - $this->getTotalItemsDiscount();
+        $shippingDiscount = $this->getDiscountTotal() - $this->getTotalItemsDiscount();
         return $shippingDiscount;
     }
 

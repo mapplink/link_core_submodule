@@ -102,6 +102,15 @@ class Orderitem extends AbstractWrapper
     }
 
     /**
+     * Get total discount as positive number
+     * @return float
+     */
+    public function getTotalDiscount()
+    {
+        return abs($this->getData('total_discount', 0));
+    }
+
+    /**
      * Get total discounted price
      * @return float
      */
