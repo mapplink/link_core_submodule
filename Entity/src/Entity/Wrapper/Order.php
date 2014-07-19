@@ -70,7 +70,10 @@ class Order extends AbstractWrapper
         if ($this->getData('original_order', FALSE)) {
             $isRootOriginal = FALSE;
         }else{
-            $isRootOriginal = TRUE;
+            /** @var \Entity\Service\EntityService $entityService */
+            $entityService = $this->getServiceLocator()->get('entityService');
+            $this->_cachedSegregatedOrders = $entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
+            $isRootOriginal = (bool) $entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
         }
         return $isRootOriginal;
     }
@@ -81,7 +84,7 @@ class Order extends AbstractWrapper
      */
     public function getOriginalChildOrders()
     {
-        if ($this->isRootOriginalOrder() && !count($this->_cachedSegregatedOrders)) {
+        if (!count($this->_cachedSegregatedOrders)) {
             /** @var \Entity\Service\EntityService $entityService */
             $entityService = $this->getServiceLocator()->get('entityService');
 
@@ -190,7 +193,7 @@ class Order extends AbstractWrapper
      * @return int
      * @throws MagelinkException
      */
-    public function getOrderItemsTotalQty()
+    public function getOrderItemsTotalQuantity()
     {
         /** @var \Entity\Service\EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
@@ -213,9 +216,20 @@ class Order extends AbstractWrapper
      */
     public function getOrderItemsTotalDeliveryQuantity()
     {
-        $quantities = $this->getQuantities($this->getOrderItems());
+        $quantities = $this->getOrderItemsDeliveryQuantities();
         $quantity = array_sum($quantities);
 
+        return (int) $quantity;
+    }
+
+    /**
+     * Returns the sum refunded quantity of all order items
+     * @return int
+     * @throws MagelinkException
+     */
+    public function getOrderItemsTotalRefundedQuantity()
+    {
+        $quantity = $this->getOrderItemsTotalQuantity() - $this->getOrderItemsTotalDeliveryQuantity();
         return (int) $quantity;
     }
 
@@ -231,6 +245,23 @@ class Order extends AbstractWrapper
         foreach ($orderItems as $orderItem) {
             $alreadyRefundedQuantity = $orderItem->getQuantityRefunded();
             $quantities[$orderItem->getId()] = (int) $alreadyRefundedQuantity;
+        }
+
+        return $quantities;
+    }
+
+    /**
+     * Get delivery quantities in an array[<item id>] = <quantity>
+     * @return int[]
+     */
+    protected function getOrderItemsDeliveryQuantities()
+    {
+        $quantities = array();
+
+        $orderItems = $this->getOrderItems();
+        /** @var \Entity\Wrapper\Orderitem $orderItem */
+        foreach ($orderItems as $orderItem) {
+            $quantities[$orderItem->getId()] = $orderItem->getDeliveryQuantity();
         }
 
         return $quantities;
@@ -281,6 +312,89 @@ class Order extends AbstractWrapper
             }
         }
         return TRUE;
+    }
+
+    /**
+     * Get non-cash payments total
+     * @return float
+     */
+    public function getNonCashPayments()
+    {
+        $nonCash = $this->getData('giftcard_total', 0) + $this->getData('reward_total', 0)
+            + $this->getData('storecredit_total', 0);
+        return $nonCash;
+
+    }
+
+    /**
+     * Get order total excl. shipping
+     * @return float
+     */
+    public function getOrderTotal()
+    {
+        $orderTotal = 0;
+
+        $orderItems = $this->getOrderItems();
+        foreach ($orderItems as $item) {
+            $orderTotal = $item->getDiscountedPrice() * $item->getQuantity();
+        }
+
+        return $orderTotal;
+    }
+
+    /**
+     * Get order total excl. shipping
+     * @return float
+     */
+    public function getOriginalOrderTotal()
+    {
+        $orderTotal = $this->getData('grand_total', 0) + $this->getNonCashPayments();
+        return $orderTotal;
+    }
+
+    /**
+     * Get order total incl. shipping
+     * @return float
+     */
+    public function getOrderTotalInclShipping()
+    {
+        $orderTotalInclShipping = $this->getOrderTotal() + $this->getDiscountedShippingTotal();
+        return $orderTotalInclShipping;
+    }
+
+    /**
+     * Get total order discount excl. shipping
+     * @return float $totalItemsDiscount
+     */
+    public function getTotalItemsDiscount()
+    {
+        $totalItemsDiscount = 0;
+
+        $orderItems = $this->getOrderItems();
+        foreach ($orderItems as $orderItem) {
+            $totalItemsDiscount += $orderItem->getData('total_discount', 0);
+        }
+
+        return $totalItemsDiscount;
+    }
+
+    /**
+     * @return float
+     */
+    public function getShippingDiscount()
+    {
+        $shippingDiscount = $this->getData('discount_total', 0) - $this->getTotalItemsDiscount();
+        return $shippingDiscount;
+    }
+
+    /**
+     * Get discounted shipping amount
+     * @return float
+     */
+    public function getDiscountedShippingTotal()
+    {
+        $discountedShipping = $this->getData('shipping_total', 0) - $this->getShippingDiscount();
+        return $discountedShipping;
     }
 
     /**

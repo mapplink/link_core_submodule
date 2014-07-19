@@ -24,9 +24,9 @@ class Orderitem extends AbstractWrapper
     public function getProductName()
     {
         if ($product = $this->getProduct()) {
-            $productName = $product->getData('name');
+            $productName = $product->getData('name', '');
         }else{
-            $productName = $this->getData('product_name', NULL);
+            $productName = $this->getData('product_name', '');
         }
 
         return $productName;
@@ -75,7 +75,7 @@ class Orderitem extends AbstractWrapper
      */
     public function getDiscountedPrice()
     {
-        $price = $this->getData('item_price') - $this->getData('item_discount');
+        $price = $this->getData('item_price', 0) - $this->getData('item_discount', 0);
         return $price;
     }
 
@@ -94,19 +94,21 @@ class Orderitem extends AbstractWrapper
      */
     public function getTotalPrice()
     {
-        $calculatedTotal = $this->getData('item_price') * (int) $this->getData('quantity');
-        $totalPrice = $this->getData('total_price');
+        if (!($totalPrice = $this->getData('total_price', 0))) {
+            $totalPrice = $this->getData('item_price', 0) * (int) $this->getQuantity();
+        }
+
         return $totalPrice;
     }
 
     /**
-     * Get row total = total_price - total_discount
+     * Get total discounted price
      * @return float
      */
-    public function getRowTotal()
+    public function getTotalDiscountedPrice()
     {
-        $rowTotal = $this->getTotalPrice() - $this->getData('total_discount');
-        return $rowTotal;
+        $discountedTotal = $this->getTotalPrice() - $this->getData('total_discount', 0);
+        return $discountedTotal;
     }
 
     /**
