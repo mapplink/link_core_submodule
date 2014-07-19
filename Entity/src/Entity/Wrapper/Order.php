@@ -232,7 +232,7 @@ class Order extends AbstractWrapper
      * Get the uppermost original order
      * @return \Entity\Wrapper\Order|NULL $order
      */
-    public function getRootOriginal()
+    public function getOriginalOrderRecursive()
     {
         $order = $this;
         while ($order->getData('original_order', FALSE)) {
