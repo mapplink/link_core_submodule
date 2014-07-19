@@ -70,7 +70,7 @@ class Creditmemo extends AbstractWrapper
      * Get the uppermost original order
      * @return \Entity\Wrapper\Order|NULL $order
      */
-    public function getRootOriginalOrder()
+    public function getOriginalOrder()
     {
         /** @var \Entity\Wrapper\Order $order */
         $order = $this->getServiceLocator()->get('entityService')
@@ -80,11 +80,11 @@ class Creditmemo extends AbstractWrapper
     }
 
     /**
-     * Alias of getRootOriginalOrder()
+     * Alias of getOriginalOrder()
      */
-    public function getRootParent()
+    public function getOriginalParent()
     {
-        return $this->getRootOriginalOrder();
+        return $this->getOriginalOrder();
     }
 
 }

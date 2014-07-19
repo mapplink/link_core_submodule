@@ -129,6 +129,13 @@ class EntityService implements ServiceLocatorAwareInterface {
         return $entity;
     }
 
+    /**
+     * Load segregated orders
+     * @param $nodeId
+     * @param \Entity\Entity $entity
+     * @return array|\Entity\Entity[]
+     * @throws \Magelink\Exception\NodeException
+     */
     public function loadSegregatedOrders($nodeId, \Entity\Entity $entity)
     {
         $this->verifyNodeId($nodeId);
