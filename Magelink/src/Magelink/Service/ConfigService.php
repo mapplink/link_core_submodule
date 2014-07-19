@@ -1,6 +1,14 @@
 <?php
-
 /*
+ * Provides system configuration services for Magelink modules.
+ *
+ * @category Magelink
+ * @package Magelink\Service
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ *
  * Copyright (c) 2014 Lero9 Limited
  * All Rights Reserved
  * This software is subject to our terms of trade and any applicable licensing agreements.
@@ -11,12 +19,6 @@ namespace Magelink\Service;
 use \Zend\ServiceManager\ServiceLocatorInterface;
 use \Zend\ServiceManager\ServiceLocatorAwareInterface;
 
-/**
- * Provides system configuration services for Magelink modules.
- *
- * @author Matt Johnston
- * @author Andreas Gerhards <andreas@lero9.co.nz>
- */
 
 class ConfigService implements ServiceLocatorAwareInterface {
 

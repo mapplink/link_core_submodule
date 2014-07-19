@@ -2,11 +2,12 @@
 /**
  * Magelink\Form
  *
- * @category    Magelink
- * @package     Magelink\Form
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Magelink
+ * @package Magelink\Form
+ * @author Seo Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Email\Form;
@@ -77,4 +78,5 @@ class EmailTemplateParamForm extends DoctrineZFBaseForm
     protected function initFilters()
     {
     }
+
 }

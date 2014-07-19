@@ -4,7 +4,7 @@
  *
  * @category    Magelink
  * @package     Magelink\Entity
- * @author      Sean Yao <sean@lero9.com>
+ * @author      Seo Yao
  * @copyright   Copyright (c) 2014 LERO9 Ltd.
  * @license     Commercial - All Rights Reserved
  */
