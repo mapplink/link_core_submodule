@@ -336,7 +336,7 @@ class Order extends AbstractWrapper
 
         $orderItems = $this->getOrderItems();
         foreach ($orderItems as $item) {
-            $orderTotal = $item->getDiscountedPrice() * $item->getQuantity();
+            $orderTotal += $item->getDiscountedPrice() * $item->getQuantity();
         }
 
         return $orderTotal;
