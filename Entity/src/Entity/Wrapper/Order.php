@@ -65,7 +65,7 @@ class Order extends AbstractWrapper
      * Determine if this is a root original order
      * @return (bool) $isRootOriginal
      */
-    protected function isOriginalOrder()
+    public function isOriginalOrder()
     {
         if ($this->getData('original_order', FALSE)) {
             $isOriginal = FALSE;
