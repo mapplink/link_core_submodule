@@ -139,6 +139,20 @@ class Order extends AbstractWrapper
      * Retrieve all credit memo assigned to the order
      * @return \Entity\Wrapper\Creditmemo[]
      */
+    public function getAllOrderItems()
+    {
+        $orderItems = $this->getOrderItems();
+        foreach ($this->getSegregatedOrders() as $order) {
+            $orderItems = array_merge($orderItems, $order->getOrderItems());
+        }
+
+        return $orderItems;
+    }
+
+    /**
+     * Retrieve all credit memo assigned to the order
+     * @return \Entity\Wrapper\Creditmemo[]
+     */
     public function getAllCreditmemos()
     {
         $creditmemos = $this->getCreditmemos();
@@ -411,7 +425,7 @@ class Order extends AbstractWrapper
     {
         $totalItemsDiscount = 0;
 
-        $orderItems = $this->getOrderItems();
+        $orderItems = $this->getAllOrderItems();
         foreach ($orderItems as $orderItem) {
             $totalItemsDiscount += $orderItem->getTotalDiscount();
         }
