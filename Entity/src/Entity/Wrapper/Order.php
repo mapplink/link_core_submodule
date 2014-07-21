@@ -125,13 +125,7 @@ class Order extends AbstractWrapper
      */
     public function getSegregatedOrders()
     {
-        if (!count($this->_cachedSegregatedOrders)) {
-            /** @var \Entity\Service\EntityService $entityService */
-            $entityService = $this->getServiceLocator()->get('entityService');
-
-            $this->_cachedSegregatedOrders = $entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
-        }
-
+        $this->isOriginalOrder();
         return $this->_cachedSegregatedOrders;
     }
 
