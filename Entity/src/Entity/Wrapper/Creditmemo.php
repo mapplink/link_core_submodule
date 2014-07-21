@@ -67,16 +67,21 @@ class Creditmemo extends AbstractWrapper
     }
 
     /**
+     * Alias of getParent()
+     * @return \Entity\Wrapper\Order|NULL $order
+     */
+    public function getOrder()
+    {
+        return $this->getParent();
+    }
+
+    /**
      * Get the uppermost original order
      * @return \Entity\Wrapper\Order|NULL $order
      */
     public function getOriginalOrder()
     {
-        /** @var \Entity\Wrapper\Order $order */
-        $order = $this->getServiceLocator()->get('entityService')
-            ->loadEntityId($this->getLoadedNodeId(), $this->getParentId());
-
-        return $order->getOriginalOrder();
+        return $this->getOrder()->getOriginalOrder();
     }
 
     /**

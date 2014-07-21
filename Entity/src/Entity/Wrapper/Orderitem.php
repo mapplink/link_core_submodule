@@ -84,8 +84,17 @@ class Orderitem extends AbstractWrapper
      * @return \Entity\Wrapper\Order
      */
     public function getOrder()
-    {   
+    {
         return $this->getParent();
+    }
+
+    /**
+     * Get original order
+     * @return \Entity\Wrapper\Order
+     */
+    public function getOriginalOrder()
+    {
+        return $this->getOrder()->getOriginalOrder();
     }
 
     /**

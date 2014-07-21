@@ -71,15 +71,6 @@ class Creditmemoitem extends AbstractWrapper
     }
 
     /**
-     * Get order
-     * @return \Entity\Wrapper\Order
-     */
-    public function getCreditmemo()
-    {   
-        return $this->getParent();
-    }
-
-    /**
      * Get discounted row total
      * @return float
      */
@@ -92,5 +83,34 @@ class Creditmemoitem extends AbstractWrapper
 
         return $discountedTotal;
     }
+
+    /**
+     * Get creditmemo
+     * @return \Entity\Wrapper\Creditmemo
+     */
+    public function getCreditmemo()
+    {
+        return $this->getParent();
+    }
+
+    /**
+     * Get order
+     * @return Order
+     */
+    public function getOrder()
+    {
+        return $this->getCreditmemo()->getOrder();
+    }
+
+    /**
+     * Get original order
+     * @return Order
+     */
+    public function getOriginalOrder()
+    {
+        return $this->getCreditmemo()->getOriginalOrder();
+    }
+
+
 
 }
