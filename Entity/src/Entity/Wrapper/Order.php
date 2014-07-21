@@ -576,7 +576,7 @@ class Order extends AbstractWrapper
      * Get aggregated items refunds of the order and all segregated orders
      * @return float
      */
-    protected function getAllItemsRefunds()
+    public function getAllItemsRefunds()
     {
         $itemsRefundsAmount = $this->getItemsRefunds();
         foreach ($this->getSegregatedOrders() as $order) {
@@ -590,7 +590,7 @@ class Order extends AbstractWrapper
      * Get aggregated cash refunds of the order and all segregated orders
      * @return float
      */
-    protected function getAllCashRefunds()
+    public function getAllCashRefunds()
     {
         $cashRefundsAmount = $this->getCashRefunds();
         foreach ($this->getSegregatedOrders() as $order) {
@@ -604,7 +604,7 @@ class Order extends AbstractWrapper
      * Get aggregated non cash refunds of the order and all segregated orders
      * @return float
      */
-    protected function getAllNonCashRefunds()
+    public function getAllNonCashRefunds()
     {
         $nonCash = $this->getNonCashRefunds();
         foreach ($this->getSegregatedOrders() as $order) {
@@ -618,7 +618,7 @@ class Order extends AbstractWrapper
      * Get aggregated shipping refunds of the order and all segregated orders
      * @return float
      */
-    protected function getAllShippingRefunds()
+    public function getAllShippingRefunds()
     {
         $shippingRefundAmount = $this->getShippingRefunds();
         foreach ($this->getSegregatedOrders() as $order) {
