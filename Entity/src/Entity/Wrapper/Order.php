@@ -376,6 +376,20 @@ class Order extends AbstractWrapper
     }
 
     /**
+     * Get aggregated grand total of all segregated orders (original grand total)
+     * @return float
+     */
+    public function getOriginalGrandTotal()
+    {
+        $grandTotal = $this->getData('grand_total', 0);
+        foreach ($this->getSegregatedOrders() as $order) {
+            $grandTotal += $order->getData('grand_total', 0);
+        }
+
+        return $grandTotal;
+    }
+
+    /**
      * Get order total excl. shipping
      * @return float
      */
@@ -397,7 +411,7 @@ class Order extends AbstractWrapper
      */
     public function getOriginalOrderTotal()
     {
-        $orderTotal = $this->getData('grand_total', 0) + $this->getNonCashPayments();
+        $orderTotal = $this->getOriginalGrandTotal() + $this->getNonCashPayments();
         return $orderTotal;
     }
 
@@ -511,19 +525,19 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * Get Aggregated Cash Refunds
+     * Get aggregated cash refunds
      * @return float
      */
     public function getCashRefunds()
     {
         $creditmemos = $this->getAllCreditmemos();
 
-        $cashRefundAmount = 0;
+        $cashRefundsAmount = 0;
         foreach ($creditmemos as $creditmemo) {
-            $cashRefundAmount += $creditmemo->getCashRefund();
+            $cashRefundsAmount += $creditmemo->getCashRefund();
         }
 
-        return $cashRefundAmount;
+        return $cashRefundsAmount;
     }
 
     /**
@@ -534,12 +548,12 @@ class Order extends AbstractWrapper
     {
         $creditmemos = $this->getAllCreditmemos();
 
-        $nonCashRefundAmount = 0;
+        $non = 0;
         foreach ($creditmemos as $creditmemo) {
-            $nonCashRefundAmount += $creditmemo->getNonCashRefund();
+            $nonCash += $creditmemo->getNonCashRefund();
         }
 
-        return $nonCashRefundAmount;
+        return $nonCash;
     }
 
     /**
@@ -550,12 +564,68 @@ class Order extends AbstractWrapper
     {
         $creditmemos = $this->getAllCreditmemos();
 
-        $nonCashRefundAmount = 0;
+        $shippingRefundAmount = 0;
         foreach ($creditmemos as $creditmemo) {
-            $nonCashRefundAmount += $creditmemo->getShippingRefund();
+            $shippingRefundAmount += $creditmemo->getShippingRefund();
         }
 
-        return $nonCashRefundAmount;
+        return $shippingRefundAmount;
+    }
+
+    /**
+     * Get aggregated items refunds of the order and all segregated orders
+     * @return float
+     */
+    protected function getAllItemsRefunds()
+    {
+        $itemsRefundsAmount = $this->getItemsRefunds();
+        foreach ($this->getSegregatedOrders() as $order) {
+            $itemsRefundsAmount += $order->getItemsRefunds();
+        }
+
+        return $itemsRefundsAmount;
+    }
+
+    /**
+     * Get aggregated cash refunds of the order and all segregated orders
+     * @return float
+     */
+    protected function getAllCashRefunds()
+    {
+        $cashRefundsAmount = $this->getCashRefunds();
+        foreach ($this->getSegregatedOrders() as $order) {
+            $cashRefundsAmount += $order->getCashRefunds();
+        }
+
+        return $cashRefundsAmount;
+    }
+
+    /**
+     * Get aggregated non cash refunds of the order and all segregated orders
+     * @return float
+     */
+    protected function getAllNonCashRefunds()
+    {
+        $nonCash = $this->getNonCashRefunds();
+        foreach ($this->getSegregatedOrders() as $order) {
+            $nonCash += $order->getNonCashRefunds();
+        }
+
+        return $nonCash;
+    }
+
+    /**
+     * Get aggregated shipping refunds of the order and all segregated orders
+     * @return float
+     */
+    protected function getAllShippingRefunds()
+    {
+        $shippingRefundAmount = $this->getShippingRefunds();
+        foreach ($this->getSegregatedOrders() as $order) {
+            $shippingRefundAmount += $order->getShippingRefunds();
+        }
+
+        return $shippingRefundAmount;
     }
 
 }
