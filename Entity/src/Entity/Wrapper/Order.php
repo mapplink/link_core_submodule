@@ -548,7 +548,7 @@ class Order extends AbstractWrapper
     {
         $creditmemos = $this->getAllCreditmemos();
 
-        $non = 0;
+        $nonCash = 0;
         foreach ($creditmemos as $creditmemo) {
             $nonCash += $creditmemo->getNonCashRefund();
         }
