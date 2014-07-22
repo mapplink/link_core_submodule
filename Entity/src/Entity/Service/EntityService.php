@@ -1049,13 +1049,17 @@ class EntityService implements ServiceLocatorAwareInterface {
     }
 
     /**
-     * @param        $method
-     * @param        $amount
+     * @param string $method
+     * @param string $amount
      * @param string $ccType
      * @return array
      */
     public function convertPaymentData($method, $amount, $ccType = '')
     {
+        if (is_numeric($method) && !is_numeric($amount)) {
+            list($method, $amount) = array($amount, $method);
+        }
+
         $methodCcType = $method.($ccType ? '{{'.$ccType.'}}' : '');
         $payments = array($methodCcType => $amount);
 
