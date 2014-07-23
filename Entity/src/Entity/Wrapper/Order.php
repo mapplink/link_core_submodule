@@ -411,7 +411,8 @@ class Order extends AbstractWrapper
      */
     public function getOriginalOrderTotal()
     {
-        $orderTotal = $this->getOriginalGrandTotal() + $this->getNonCashPayments();
+        $orderTotal = $this->getOriginalGrandTotal() + $this->getNonCashPayments()
+            - $this->getOriginalDiscountedShippingTotal();
         return $orderTotal;
     }
 
@@ -467,6 +468,15 @@ class Order extends AbstractWrapper
     {
         $discountedShipping = $this->getData('shipping_total', 0) - $this->getShippingDiscount();
         return $discountedShipping;
+    }
+
+    /**
+     * Get discounted shipping amount of the original order
+     * @return float
+     */
+    public function getOriginalDiscountedShippingTotal()
+    {
+        return $this->getOriginalOrder()->getDiscountedShippingTotal();
     }
 
     /**
