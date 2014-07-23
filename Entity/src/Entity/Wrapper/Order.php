@@ -456,7 +456,7 @@ class Order extends AbstractWrapper
      */
     public function getShippingDiscount()
     {
-        $shippingDiscount = $this->getDiscountTotal() - $this->getTotalItemsDiscount();
+        $shippingDiscount = max(0, $this->getDiscountTotal() - $this->getTotalItemsDiscount());
         return $shippingDiscount;
     }
 
