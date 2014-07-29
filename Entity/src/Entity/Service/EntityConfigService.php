@@ -245,7 +245,12 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
             }
             $result = $this->getTableGateway('entity_type')->select(array('name'=>$entity_type));
             if(!$result || !count($result)){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'pet_dbg', 'Could not find in DB - ' . $entity_type, array('entity_type'=>$entity_type));
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'pet_dbg',
+                        'Could not find in DB - '.$entity_type,
+                        array('entity_type'=>$entity_type)
+                    );
                 $this->_entityTypeCache[$entity_type] = false;
                 return false;
             }

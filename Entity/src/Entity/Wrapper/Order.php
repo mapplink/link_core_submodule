@@ -501,7 +501,7 @@ class Order extends AbstractWrapper
     /**
      * @return string $methodsString
      */
-    public function getPaymentMethod()
+    public function getPaymentMethodsString()
     {
         $methodsString = trim(implode(', ', $this->getPaymentMethods()));
         return $methodsString;

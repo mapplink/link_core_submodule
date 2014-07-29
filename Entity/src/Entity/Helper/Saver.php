@@ -172,38 +172,42 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         $attributesToCreate = array();
         $attributesToDelete = array();
         
-        foreach($updatedData as $k=>$v){
-            if(is_object($v) && $v instanceof \Entity\Entity){
-                if(!$v->getId()){
+        foreach ($updatedData as $code=>$newValue) {
+
+            if (is_object($newValue) && $newValue instanceof \Entity\Entity){
+                if (!$newValue->getId()) {
                     throw new NodeException('Invalid ID for Entity-type value');
+                }else{
+                    $newValue = $newValue->getId();
                 }
-                $v = $v->getId();
             }
-            $d = $entity->getData($k);
-            if($v === null && $d !== null){
-                $attributesToDelete[] = $k;
-            }else if($d === null && $v !== null){
-                $attributesToCreate[] = $k;
-            }else if($d !== $v){
-                if(is_array($d) && $merge === true){
-                    $attributesToMerge[] = $k;
-                }else if(is_array($merge)){
-                    if(isset($merge[$k]) && $merge[$k] == true){
-                        $attributesToMerge[] = $k;
+
+            $oldValue = $entity->getData($code);
+            if ($newValue === NULL && $oldValue !== NULL) {
+                $attributesToDelete[] = $code;
+
+            }elseif ($oldValue === NULL && $newValue !== NULL) {
+                $attributesToCreate[] = $code;
+
+            }elseif($oldValue !== $newValue) {
+                if (is_array($oldValue) && $merge === TRUE) {
+                    $attributesToMerge[] = $code;
+                }elseif (is_array($merge)) {
+                    if (isset($merge[$code]) && $merge[$code] == TRUE) {
+                        $attributesToMerge[] = $code;
                     }else{
-                        $attributesToUpdate[] = $k;
+                        $attributesToUpdate[] = $code;
                     }
                 }else{
-                    $attributesToUpdate[] = $k;
+                    $attributesToUpdate[] = $code;
                 }
             }else{
                 // Not changed - perhaps warn
             }
         }
 
-
         $attribute = array();
-        foreach(array_merge($attributesToUpdate, $attributesToMerge, $attributesToCreate, $attributesToDelete) as $att){
+        foreach (array_merge($attributesToUpdate, $attributesToMerge, $attributesToCreate, $attributesToDelete) as $att) {
             $attribute[$att] = $this->getAttribute($att, $entity->getType());
         }
 
