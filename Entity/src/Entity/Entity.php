@@ -190,7 +190,8 @@ class Entity implements ServiceLocatorAwareInterface
      * Fetch all set data as an associative array
      * @return array
      */
-    public function getAllData(){
+    public function getAllSetData()
+    {
         $ret = array();
         $invMap = array_flip($this->_attributesMap);
         foreach($this->_data as $k=>$v){

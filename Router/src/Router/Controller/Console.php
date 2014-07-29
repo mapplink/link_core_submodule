@@ -72,7 +72,7 @@ class Console extends AbstractConsole
                 $entity,
                 $tf,
                 \Entity\Update::TYPE_UPDATE,
-                $entity->getAllData()
+                $entity->getAllSetData()
             );
 
             if ($skip) {
@@ -87,7 +87,7 @@ class Console extends AbstractConsole
                 continue;
             }
 
-            if ($tfObj->init($entity, FALSE, $tf, $entity->getAllData())) {
+            if ($tfObj->init($entity, FALSE, $tf, $entity->getAllSetData())) {
                 $this->getServiceLocator()->get('logService')
                     ->log(\Log\Service\LogService::LEVEL_INFO,
                         'app_transform',

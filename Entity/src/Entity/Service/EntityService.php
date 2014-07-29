@@ -905,7 +905,7 @@ class EntityService implements ServiceLocatorAwareInterface {
             throw new NodeException('Cannot delete entity ' . $entity->getId() . ' - still linked to node ' . $row['node_id']);
         }
 
-        $this->getServiceLocator()->get('routerService')->processTransforms($entity, $entity->getAllData(), $node_id, \Entity\Update::TYPE_DELETE);
+        $this->getServiceLocator()->get('routerService')->processTransforms($entity, $entity->getAllSetData(), $node_id, \Entity\Update::TYPE_DELETE);
         $this->getServiceLocator()->get('routerService')->distributeUpdate($entity, array(), $node_id, \Entity\Update::TYPE_DELETE);
         $this->unlinkEntity($node_id, $entity);
 

@@ -267,7 +267,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     protected function getSpecficEntityReplacementValues(\Entity\Entity $entity, $alias)
     {
         $parameters = array();
-        foreach ($entity->getAllData() as $code=>$value) {
+        foreach ($entity->getAllSetData() as $code=>$value) {
             $method = 'get'.str_replace('_', '', ucfirst($code));
             if (method_exists($entity, $method)) {
                 $value = $entity->$method();

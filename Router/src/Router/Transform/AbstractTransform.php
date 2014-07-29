@@ -41,7 +41,7 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface {
         $this->_entity = $entity;
 
         $this->_newData = $updated_data;
-        foreach($entity->getAllData() as $k=>$v){
+        foreach($entity->getAllSetData() as $k=>$v){
             if(!array_key_exists($k, $this->_newData)){
                 $this->_newData[$k] = $v;
             }
