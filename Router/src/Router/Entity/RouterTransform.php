@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="router_transform", indexes={@ORM\Index(name="entity_type_id_idx", columns={"entity_type_id"}), @ORM\Index(name="src_attribute_idx", columns={"src_attribute"}), @ORM\Index(name="dest_attribute_idx", columns={"dest_attribute"})})
  * @ORM\Entity(repositoryClass="Router\Repository\RouterTransformRepository")
  */
-class RouterTransform extends \Magelink\Entity\DatadBaseEntity
+class RouterTransform extends \Magelink\Entity\DataDBaseEntity
 {
     protected $_simpleDataKey = 'getTransformId';
     /**

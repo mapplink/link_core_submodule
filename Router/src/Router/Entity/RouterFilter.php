@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="router_filter", indexes={@ORM\Index(name="parent_id_idx", columns={"parent_id"})})
  * @ORM\Entity(repositoryClass="Router\Repository\RouterFilterRepository")
  */
-class RouterFilter extends \Magelink\Entity\DatadBaseEntity
+class RouterFilter extends \Magelink\Entity\DataDBaseEntity
 {
     protected $_simpleDataKey = 'getFilterId';
     /**

@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="node", indexes={@ORM\Index(name="type_idx", columns={"type"})})
  * @ORM\Entity(repositoryClass="Node\Repository\NodeRepository")
  */
-class Node extends \Magelink\Entity\DatadBaseEntity
+class Node extends \Magelink\Entity\DataDBaseEntity
 {
     protected $_simpleDataKey = 'getNodeId';
 

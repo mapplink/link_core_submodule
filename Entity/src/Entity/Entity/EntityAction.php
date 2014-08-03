@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="entity_action", indexes={@ORM\Index(name="entity_id_idx", columns={"entity_id"}), @ORM\Index(name="type", columns={"action_type"}), @ORM\Index(name="entity_type", columns={"entity_id", "action_type"})})
  * @ORM\Entity(repositoryClass="Entity\Repository\EntityActionRepository")
  */
-class EntityAction extends \Magelink\Entity\DatadBaseEntity
+class EntityAction extends \Magelink\Entity\DataDBaseEntity
 {
     protected $_simpleDataKey = 'getId';
     /**

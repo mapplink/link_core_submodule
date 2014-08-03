@@ -7,8 +7,8 @@ namespace Magelink\Entity;
  * This software is subject to our terms of trade and any applicable licensing agreements.
  */
 
-interface DatadInterface {
-    
+interface DataDInterface
+{
     /**
      * If $key is specified, return a single value from the simple data, loading if necessary.
      * If $key is null, return an array of all simple data.
