@@ -92,8 +92,9 @@ abstract class DataDBaseEntity extends DoctrineBaseEntity implements DataDInterf
             $this->_simpleData = array();
 
             foreach ($rows as $row) {
+                $this->_simpleData[$row['key']] = unserialize($row['value']);
                 // Prevents "Notice: unserialize(): Error at offset"
-                $this->_simpleData[$row['key']] = unserialize(base64_decode($row['value']));
+                //$this->_simpleData[$row['key']] = unserialize(base64_decode($row['value']));
             }
         }
     }
@@ -110,7 +111,8 @@ abstract class DataDBaseEntity extends DoctrineBaseEntity implements DataDInterf
             $this->_simpledataTableGateway->insert(array(
                 'parent_id'=>$this->{$this->_simpleDataKey}(),
                 'key'=>$key,
-                'value'=>base64_encode(serialize($value)) // Prevents "Notice: unserialize(): Error at offset"
+                'value'=>serialize($value)
+                //'value'=>base64_encode(serialize($value)) // Prevents "Notice: unserialize(): Error at offset"
             ));
         }
     }
