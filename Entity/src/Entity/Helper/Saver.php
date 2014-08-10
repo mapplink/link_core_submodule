@@ -163,9 +163,10 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      * @param \Entity\Entity $entity The Entity to update.
      * @param array $updatedData
      * @param array $merge
+     * @param bool $forcedUpdate
      * @return string[] A list of all attribute codes that were updated
      */
-    public function saveEntity(\Entity\Entity $entity, $updatedData, $merge=array())
+    public function saveEntity(\Entity\Entity $entity, $updatedData, $merge = array(), $forcedUpdate = FALSE)
     {
         $attributesToUpdate = array();
         $attributesToMerge = array();
@@ -189,7 +190,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }elseif ($oldValue === NULL && $newValue !== NULL) {
                 $attributesToCreate[] = $code;
 
-            }elseif($oldValue !== $newValue) {
+            }elseif ($oldValue !== $newValue || $forcedUpdate) {
                 if (is_array($oldValue) && $merge === TRUE) {
                     $attributesToMerge[] = $code;
                 }elseif (is_array($merge)) {
