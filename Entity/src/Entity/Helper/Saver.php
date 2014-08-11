@@ -184,7 +184,10 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
 
             $oldValue = $entity->getData($code);
-            settype($newValue, gettype($oldValue));
+            if ($oldValue !== NULL) {
+                settype($newValue, gettype($oldValue));
+            }
+
             if ($newValue === NULL && $oldValue !== NULL) {
                 $attributesToDelete[] = $code;
 
