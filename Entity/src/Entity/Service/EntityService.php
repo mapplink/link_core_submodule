@@ -785,7 +785,7 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @param boolean|array $merge
      * @throws MagelinkException
      */
-    public function updateEntity($nodeId, \Entity\Entity $entity, $data, $merge = FALSE)
+    public function updateEntity($nodeId, \Entity\Entity $entity, $data, $merge = FALSE, $forcedUpdate = FALSE)
     {
         $this->verifyNodeId($nodeId);
         $allowedAttributes = $this->getServiceLocator()->get('nodeService')
@@ -800,27 +800,31 @@ class EntityService implements ServiceLocatorAwareInterface {
                 throw new NodeException('Invalid attribute ('.$key.') specified for update.');
             }
         }
-        $preData = $data;
 
+        $preData = $data;
         $transformedData = $this->getServiceLocator()->get('routerService')
             ->processTransforms($entity, $data, $nodeId, \Entity\Update::TYPE_UPDATE);
-        foreach ($transformedData as $key=>$value) {
-            if (is_array($merge) && array_key_exists($key, $merge)) {
-                $merge[$key] = FALSE;
+
+        if (count($transformedData)) {
+            foreach ($transformedData as $key=>$value) {
+                if (is_array($merge) && array_key_exists($key, $merge)) {
+                    $merge[$key] = FALSE;
+                }
+                $data[$key] = $value;
             }
-            $data[$key] = $value;
+
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                    'update_tf',
+                    'updateEntity - transform gave '.count($transformedData).' updates for - '.$entity->getId(),
+                    array('tfdata'=>$transformedData, 'predata'=>$preData),
+                    array('entity'=>$entity, 'node'=>$nodeId)
+                );
         }
-        $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
-                'update_tf',
-                'updateEntity - transform gave '.count($transformedData).' updates for - '.$entity->getId(),
-                array('tfdata'=>$transformedData, 'predata'=>$preData),
-                array('entity'=>$entity, 'node'=>$nodeId)
-            );
 
-        $attributes = $this->getSaver()->saveEntity($entity, $data, $merge);
+        $attributes = $this->getSaver()->saveEntity($entity, $data, $merge, $forcedUpdate);
 
-        if(!count($attributes)){
+        if (!count($attributes)) {
             $this->getServiceLocator()->get('logService')->log(
                 \Log\Service\LogService::LEVEL_WARN,
                 'update_same',
