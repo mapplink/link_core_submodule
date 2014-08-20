@@ -92,7 +92,8 @@ class LogService implements ServiceLocatorAwareInterface {
      * * Where these are not specified we will try and infer useful values from the stack
      * @return int ID of the new log entry
      */
-    public function log($level, $code, $message, $data, $options=array()){
+    public function log($level, $code, $message, array $data, array $options = array())
+    {
         if($this->_loggers == false){
             $this->initLoggers();
         }
