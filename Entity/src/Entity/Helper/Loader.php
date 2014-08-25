@@ -434,11 +434,11 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
                 $field = $table . '.`key`';
             case 'multi_value':
                 $select->join(
-                        array($table => 'entity_value_' . $attribute['type']),
-                        new \Zend\Db\Sql\Expression($baseCondition . ' AND ' . $this->generateFieldCriteria($field, $v, 'in')),
-                        ($suppressSelect ? array() : array($table.'_v'=>new \Zend\Db\Sql\Expression($field))),
-                        $select::JOIN_INNER
-                    );
+                    array($table => 'entity_value_' . $attribute['type']),
+                    new \Zend\Db\Sql\Expression($baseCondition . ' AND ' . $this->generateFieldCriteria($field, $v, 'in', FALSE, FALSE)),
+                    ($suppressSelect ? array() : array($table.'_v'=>new \Zend\Db\Sql\Expression($field))),
+                    $select::JOIN_INNER
+                );
                 break;
             case 'all_eq':
             case 'all_in':
