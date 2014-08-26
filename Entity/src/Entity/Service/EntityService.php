@@ -916,7 +916,7 @@ class EntityService implements ServiceLocatorAwareInterface {
     /**
      * Dispatch an action on a provided entity.
      *
-     * @param int $node_id
+     * @param int $nodeId
      * @param \Entity\Entity $entity
      * @param string $action_type
      * @param array $actionData
@@ -993,7 +993,7 @@ class EntityService implements ServiceLocatorAwareInterface {
     public function loadEntityAdminComment(\Entity\Entity $entity)
     {
         $adminComment = $this->loadSpecficEntityComment($entity, Comment::ADMIN_COMMENT_PREFIX, FALSE);
-//var_dump('HI!');die();
+
         return $adminComment;
     }
 
@@ -1004,23 +1004,23 @@ class EntityService implements ServiceLocatorAwareInterface {
      * @param string $source A description of where this comment came from (user name, automated process name, etc)
      * @param string $title The comment title
      * @param string $body The comment body
-     * @param string $reference_id The entity-specific reference ID to compare this comment (optional)
-     * @param bool $customer_visible Whether this comment should be visible to the customer (optional, default false)
-     * @param int|bool $node_id The node ID of the creating node
+     * @param string $referenceId The entity-specific reference ID to compare this comment (optional)
+     * @param bool $customerVisible Whether this comment should be visible to the customer (optional, default false)
+     * @param int|bool $nodeId The node ID of the creating node
      * @throws MagelinkException If we fail to create the comment
      * @return \Entity\Comment
      */
     public function createEntityComment(\Entity\Entity $entity, $source, $title, $body,
-        $reference_id = '', $customer_visible = FALSE, $node_id = FALSE)
+        $referenceId = '', $customerVisible = FALSE, $nodeId = FALSE)
     {
         $row = array(
             'entity_id'=>$entity->getId(),
-            'reference_id'=>$reference_id,
+            'reference_id'=>$referenceId,
             'timestamp'=>date('Y-m-d H:i:s'),
             'source'=>$source,
             'title'=>$title,
             'body'=>$body,
-            'customer_visible'=>($customer_visible ? 1 : 0),
+            'customer_visible'=>($customerVisible ? 1 : 0),
         );
 
         $res = $this->getTableGateway('entity_comment')->insert($row);
@@ -1030,15 +1030,15 @@ class EntityService implements ServiceLocatorAwareInterface {
             throw new MagelinkException('Error creating entity comment for ' . $entity->getId());
         }
 
-        if($node_id){
+        if ($nodeId) {
             $this->dispatchAction(
-                $node_id,
+                $nodeId,
                 $entity, 'comment',
                 array(
                     'source'=>$source,
                     'title'=>$title,
                     'body'=>$body,
-                    'customer_visible'=>$customer_visible,
+                    'customer_visible'=>$customerVisible,
                     'timestamp'=>date('Y-m-d H:i:s'),
                     'comment_id'=>$row['comment_id']
                 )
@@ -1255,12 +1255,12 @@ class EntityService implements ServiceLocatorAwareInterface {
      * If any of the entities cannot be loaded, that array entry will be null.
      * The query may optionally return a column "key" which will be used as the array key.
      *
-     * @param int $node_id The ID of the node executing this query
+     * @param int $nodeId The ID of the node executing this query
      * @param string $mlql The MLQL to be executed (see separate MLQL docs)
      * @throws MagelinkException If the MLQL is invalid or contains a syntax error
      * @return \Entity\Entity[]
      */
-    public function executeQueryEntities($node_id, $mlql){
+    public function executeQueryEntities($nodeId, $mlql){
         $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql_col', 'executeQueryColumn: ' . $mlql, array('query'=>$mlql));
         try{
             $data = $this->getQuerier()->executeQuery($mlql);
@@ -1272,7 +1272,7 @@ class EntityService implements ServiceLocatorAwareInterface {
         foreach($data as $row){
             $id = intval($row['entity_id']);
             $ids[] = $id;
-            $ent = $this->loadEntityId($node_id, $id);
+            $ent = $this->loadEntityId($nodeId, $id);
             if(isset($row['key'])){
                 $ret[$row['key']] = $ent;
             }else{
@@ -1286,26 +1286,28 @@ class EntityService implements ServiceLocatorAwareInterface {
     /**
      * Verify that given node ID is valid (and transform as needed)
      * 
-     * @param int $node_id The node ID to process (by-reference)
+     * @param int $nodeId The node ID to process (by-reference)
      * @throws MagelinkException If the passed node ID is invalid
      * @return int The processed node ID
      */
-    protected function verifyNodeId(&$node_id)
+    protected function verifyNodeId(&$nodeId)
     {
-        if ($node_id === 0) {
-            return 0;
-        }
-        if ($node_id instanceof \Node\Entity\Node) {
-            $node_id = $node_id->getId();
-        }
-        if ($node_id instanceof \Node\AbstractNode) {
-            $node_id = $node_id->getNodeId();
-        }
-        if ($node_id <= 0 || !is_int($node_id)) {
-            throw new \Magelink\Exception\NodeException('Invalid node ID passed to EntityService');
+        if ($nodeId === 0) {
+            // Bypass
+        }else{
+            if ($nodeId instanceof \Node\Entity\Node) {
+                $nodeId = $nodeId->getId();
+            }elseif ($nodeId instanceof \Node\AbstractNode) {
+                $nodeId = $nodeId->getNodeId();
+            }
+
+            if ($nodeId <= 0 || !is_int($nodeId)) {
+                throw new \Magelink\Exception\NodeException('Invalid node ID passed to EntityService');
+                $nodeId = NULL;
+            }
         }
 
-        return $node_id;
+        return $nodeId;
     }
     
     /**
