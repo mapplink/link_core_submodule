@@ -22,6 +22,12 @@ use Entity\Comment;
 class EntityService implements ServiceLocatorAwareInterface
 {
 
+    /** @var ServiceLocatorInterface The service locator */
+    protected $_serviceLocator;
+
+    /** @var TableGateway[] Cache of preloaded table gateways */
+    protected $_tgCache = array();
+
     /** @var \Entity\Helper\Saver Helper used for saving records to the database */
     protected $_saver;
 
@@ -1033,7 +1039,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function loadEntityAdminComment(\Entity\Entity $entity)
     {
         $adminComment = $this->loadSpecficEntityComment($entity, Comment::ADMIN_COMMENT_PREFIX, FALSE);
-//var_dump('HI!');die();
+
         return $adminComment;
     }
 
@@ -1044,23 +1050,23 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param string $source A description of where this comment came from (user name, automated process name, etc)
      * @param string $title The comment title
      * @param string $body The comment body
-     * @param string $reference_id The entity-specific reference ID to compare this comment (optional)
-     * @param bool $customer_visible Whether this comment should be visible to the customer (optional, default false)
+     * @param string $referenceId The entity-specific reference ID to compare this comment (optional)
+     * @param bool $customerVisible Whether this comment should be visible to the customer (optional, default false)
      * @param int|bool $nodeId The node ID of the creating node
      * @throws MagelinkException If we fail to create the comment
      * @return \Entity\Comment
      */
     public function createEntityComment(\Entity\Entity $entity, $source, $title, $body,
-        $reference_id = '', $customer_visible = FALSE, $nodeId = FALSE)
+        $referenceId = '', $customerVisible = FALSE, $nodeId = FALSE)
     {
         $row = array(
             'entity_id'=>$entity->getId(),
-            'reference_id'=>$reference_id,
+            'reference_id'=>$referenceId,
             'timestamp'=>date('Y-m-d H:i:s'),
             'source'=>$source,
             'title'=>$title,
             'body'=>$body,
-            'customer_visible'=>($customer_visible ? 1 : 0),
+            'customer_visible'=>($customerVisible ? 1 : 0),
         );
 
         $res = $this->getTableGateway('entity_comment')->insert($row);
@@ -1070,7 +1076,7 @@ class EntityService implements ServiceLocatorAwareInterface
             throw new MagelinkException('Error creating entity comment for ' . $entity->getId());
         }
 
-        if($nodeId){
+        if ($nodeId) {
             $this->dispatchAction(
                 $nodeId,
                 $entity, 'comment',
@@ -1078,7 +1084,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     'source'=>$source,
                     'title'=>$title,
                     'body'=>$body,
-                    'customer_visible'=>$customer_visible,
+                    'customer_visible'=>$customerVisible,
                     'timestamp'=>date('Y-m-d H:i:s'),
                     'comment_id'=>$row['comment_id']
                 )
@@ -1345,16 +1351,18 @@ class EntityService implements ServiceLocatorAwareInterface
     protected function verifyNodeId(&$nodeId)
     {
         if ($nodeId === 0) {
-            return 0;
-        }
-        if ($nodeId instanceof \Node\Entity\Node) {
-            $nodeId = $nodeId->getId();
-        }
-        if ($nodeId instanceof \Node\AbstractNode) {
-            $nodeId = $nodeId->getNodeId();
-        }
-        if ($nodeId <= 0 || !is_int($nodeId)) {
-            throw new \Magelink\Exception\NodeException('Invalid node ID passed to EntityService');
+            // Bypass
+        }else{
+            if ($nodeId instanceof \Node\Entity\Node) {
+                $nodeId = $nodeId->getId();
+            }elseif ($nodeId instanceof \Node\AbstractNode) {
+                $nodeId = $nodeId->getNodeId();
+            }
+
+            if ($nodeId <= 0 || !is_int($nodeId)) {
+                throw new \Magelink\Exception\NodeException('Invalid node ID passed to EntityService');
+                $nodeId = NULL;
+            }
         }
 
         return $nodeId;
@@ -1392,10 +1400,22 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Cache of preloaded table gateways
-     * @var TableGateway[]
+     * Set service locator
+     * @param ServiceLocatorInterface $serviceLocator
      */
-    protected $_tgCache = array();
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+    }
+
+    /**
+     * Get service locator
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
+    }
 
     /**
      * Returns a new TableGateway instance for the requested table
@@ -1410,31 +1430,6 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
 
         return $this->_tgCache[$table];
-    }
-
-    /**
-     * @var ServiceLocatorInterface The service locator
-     */
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     *
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     *
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
     }
 
 }
