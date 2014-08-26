@@ -22,6 +22,12 @@ use Entity\Comment;
 class EntityService implements ServiceLocatorAwareInterface
 {
 
+    /** @var ServiceLocatorInterface The service locator */
+    protected $_serviceLocator;
+
+    /** @var TableGateway[] Cache of preloaded table gateways */
+    protected $_tgCache = array();
+
     /** @var \Entity\Helper\Saver Helper used for saving records to the database */
     protected $_saver;
 
@@ -1395,10 +1401,22 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Cache of preloaded table gateways
-     * @var TableGateway[]
+     * Set service locator
+     * @param ServiceLocatorInterface $serviceLocator
      */
-    protected $_tgCache = array();
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+    }
+
+    /**
+     * Get service locator
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
+    }
 
     /**
      * Returns a new TableGateway instance for the requested table
@@ -1413,31 +1431,6 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
 
         return $this->_tgCache[$table];
-    }
-
-    /**
-     * @var ServiceLocatorInterface The service locator
-     */
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     *
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     *
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
     }
 
 }
