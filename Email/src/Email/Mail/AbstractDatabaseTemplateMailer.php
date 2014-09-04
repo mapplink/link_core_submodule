@@ -107,6 +107,18 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     }
 
     /**
+     * Initialise mail, get message and return body text
+     * @return string
+     */
+    public function getBodyText()
+    {
+        $this->init();
+        $message = $this->getMessage();
+
+        return $message->getBodyText();
+    }
+
+    /**
      * Get replacement code
      * @param $entityType
      * @param $attributeCode
