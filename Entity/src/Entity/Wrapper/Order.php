@@ -367,12 +367,29 @@ class Order extends AbstractWrapper
      * Get non-cash payments total
      * @return float
      */
+    public static function getNonCashPaymentCodes()
+    {
+        $nonCashPaymentCodes = array(
+            'Gift Card Total'=>'giftcard_total',
+            'Reward Points Total'=>'reward_total',
+            'Store Credit Total'=>'storecredit_total'
+        );
+        return $nonCashPaymentCodes;
+
+    }
+
+    /**
+     * Get non-cash payments total
+     * @return float
+     */
     public function getNonCashPayments()
     {
-        $nonCash = $this->getData('giftcard_total', 0) + $this->getData('reward_total', 0)
-            + $this->getData('storecredit_total', 0);
-        return $nonCash;
+        $nonCash = 0;
+        foreach ($this->getNonCashPaymentCodes() as $code) {
+            $nonCash += $this->getData($code, 0);
+        }
 
+        return $nonCash;
     }
 
     /**
