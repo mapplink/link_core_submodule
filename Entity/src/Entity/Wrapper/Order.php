@@ -61,6 +61,14 @@ class Order extends AbstractWrapper
         return $items;
     }
 
+    public function getAllOrders()
+    {
+        $order = $this->getOriginalOrder();
+        $allOrders = array_merge(array($order), $order->getSegregatedOrders());
+
+        return $allOrders;
+    }
+
     /**
      * Determine if this is a root original order
      * @return (bool) $isRootOriginal
@@ -393,6 +401,21 @@ class Order extends AbstractWrapper
     }
 
     /**
+     * Get non-cash payments total
+     * @return float
+     */
+    public function getAllNonCashPayments()
+    {
+        $nonCash = 0;
+        foreach ($this->getAllOrders() as $order) {
+            foreach ($order->getNonCashPaymentCodes() as $code) {
+                $nonCash += $order->getData($code, 0);
+            }
+        }
+        return $nonCash;
+    }
+
+    /**
      * Get aggregated grand total of all segregated orders (original grand total)
      * @return float
      */
@@ -605,8 +628,8 @@ class Order extends AbstractWrapper
      */
     public function getAllItemsRefunds()
     {
-        $itemsRefundsAmount = $this->getItemsRefunds();
-        foreach ($this->getSegregatedOrders() as $order) {
+        $itemsRefundsAmount = 0;
+        foreach ($this->getAllOrders() as $order) {
             $itemsRefundsAmount += $order->getItemsRefunds();
         }
 
@@ -619,8 +642,8 @@ class Order extends AbstractWrapper
      */
     public function getAllCashRefunds()
     {
-        $cashRefundsAmount = $this->getCashRefunds();
-        foreach ($this->getSegregatedOrders() as $order) {
+        $cashRefundsAmount = 0;
+        foreach ($this->getAllOrders() as $order) {
             $cashRefundsAmount += $order->getCashRefunds();
         }
 
@@ -633,8 +656,8 @@ class Order extends AbstractWrapper
      */
     public function getAllNonCashRefunds()
     {
-        $nonCash = $this->getNonCashRefunds();
-        foreach ($this->getSegregatedOrders() as $order) {
+        $nonCash = 0;
+        foreach ($this->getAllOrders() as $order) {
             $nonCash += $order->getNonCashRefunds();
         }
 
@@ -647,8 +670,8 @@ class Order extends AbstractWrapper
      */
     public function getAllShippingRefunds()
     {
-        $shippingRefundAmount = $this->getShippingRefunds();
-        foreach ($this->getSegregatedOrders() as $order) {
+        $shippingRefundAmount = 0;
+        foreach ($this->getAllOrders() as $order) {
             $shippingRefundAmount += $order->getShippingRefunds();
         }
 
