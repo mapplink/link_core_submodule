@@ -104,7 +104,7 @@ class Orderitem extends AbstractWrapper
     public function getTotalPrice()
     {
         if (!($totalPrice = $this->getData('total_price', 0))) {
-            $totalPrice = $this->getData('item_price', 0) * (int) $this->getQuantity();
+            $totalPrice = $this->getData('item_price', 0) * $this->getQuantity();
         }
 
         return $totalPrice;

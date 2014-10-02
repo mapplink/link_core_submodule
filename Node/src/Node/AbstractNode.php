@@ -125,7 +125,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
      * Updates all data into the node’s source - should load and collapse all pending updates and call writeUpdates,
      *   as well as loading and sequencing all actions.
      */
-    public function update(){
+    public function update()
+    {
         /** @var \Node\Service\NodeService $nodeService */
         $nodeService = $this->getServiceLocator()->get('nodeService');
 
