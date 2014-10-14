@@ -524,7 +524,7 @@ class Order extends AbstractWrapper
      */
     public function getItemsRefunds()
     {
-        $creditmemoitems = $this->getAllCreditmemoItems();
+        $creditmemoitems = $this->getCreditmemoItems();
 
         $itemsRefundAmount = 0;
         foreach ($creditmemoitems as $item) {
