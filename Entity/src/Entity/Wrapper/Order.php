@@ -540,7 +540,7 @@ class Order extends AbstractWrapper
      */
     public function getCashRefunds()
     {
-        $creditmemos = $this->getAllCreditmemos();
+        $creditmemos = $this->getCreditmemos();
 
         $cashRefundsAmount = 0;
         foreach ($creditmemos as $creditmemo) {
@@ -556,7 +556,7 @@ class Order extends AbstractWrapper
      */
     public function getNonCashRefunds()
     {
-        $creditmemos = $this->getAllCreditmemos();
+        $creditmemos = $this->getCreditmemos();
 
         $nonCash = 0;
         foreach ($creditmemos as $creditmemo) {
