@@ -38,15 +38,29 @@ class Querier extends AbstractHelper implements \Zend\ServiceManager\ServiceLoca
      * @param string $mlql The MLQL to be executed (see separate MLQL docs)
      * @return array
      */
-    public function executeQuery($mlql){
+    public function executeQuery($mlql)
+    {
         $sql = $this->parseQuery($mlql);
-        $res = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+        $resultArray = $this->executeSqlQuery($sql);
 
-        $ret = array();
-        foreach($res as $row){
-            $ret[] = (array)$row;
+        return $resultArray;
+    }
+
+    /**
+     * Execute a SQL query and return all rows as associative arrays
+     * @param string $mlql The MLQL to be executed (see separate MLQL docs)
+     * @return array
+     */
+    public function executeSqlQuery($sql)
+    {
+        $result = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+
+        $resultArray = array();
+        foreach($result as $row){
+            $resultArray[] = (array)$row;
         }
-        return $ret;
+
+        return $resultArray;
     }
 
     /**

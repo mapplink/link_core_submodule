@@ -641,7 +641,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $existing = $this->getTableGateway('entity_identifier')
             ->select(array('entity_id'=>$entity->getId(), 'node_id'=>$nodeId));
-        if($existing && count($existing)){
+        if ($existing && count($existing)) {
             throw new NodeException('Entity is already linked - '.$entity->getId().' with node ' . $nodeId);
         }
 
@@ -1197,15 +1197,50 @@ class EntityService implements ServiceLocatorAwareInterface
      * @throws MagelinkException If the MLQL is invalid or contains a syntax error
      * @return array
      */
-    public function executeQuery($mlql){
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql', 'executeQuery: ' . $mlql, array('query'=>$mlql));
+    public function executeQuery($mlql)
+    {
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql', 'executeQuery: ' . $mlql, array('query'=>$mlql));
         try{
             $resp = $this->getQuerier()->executeQuery($mlql);
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql_r', 'Result: ' . var_export($resp, true), array('ret'=>$resp));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                    'execmlql_r',
+                    'Result: '.var_export($resp, true),
+                    array('ret'=>$resp)
+                );
             return $resp;
         }catch(\Exception $e){
             throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $e);
         }
+    }
+
+    /**
+     * Executes a SQL query and returns all rows as associative arrays
+     * Implemented for fast sql execution for time critical actions
+     *
+     * @param string $sql The SQL to be executed (see separate MLQL docs)
+     * @throws MagelinkException If the MLQL is invalid or contains a syntax error
+     * @return array
+     */
+    public function executeSqlQuery($sql)
+    {
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'execsql', 'executeQuery: ' . $sql, array('query'=>$sql));
+        try{
+            $response = $this->getQuerier()->executeSqlQuery($sql);
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                    'execsql_r',
+                    'Result: '.var_export($response, TRUE),
+                    array('return'=>$response)
+                );
+        }catch(\Exception $exception){
+            throw new MagelinkException('Error executing SQL: ' . $sql, 0, $exception);
+            $response = NULL;
+        }
+
+        return $response;
     }
 
     /**
