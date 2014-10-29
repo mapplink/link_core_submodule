@@ -171,7 +171,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
      */
     protected function renderOrderItems()
     {
-        $items = $this->entity->getOrderItems();
+        $items = $this->entity->getOrderitems();
 
         $content = '';
         foreach ($items as $item) {

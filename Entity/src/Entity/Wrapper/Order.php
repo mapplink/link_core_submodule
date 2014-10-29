@@ -26,14 +26,14 @@ class Order extends AbstractWrapper
      */
     public function getItems()
     {
-        return $this->getOrderItems();
+        return $this->getOrderitems();
     }
 
     /**
      * Retrieve all the order items attached to this order
      * @return \Entity\Wrapper\Orderitem[]
      */
-    public function getOrderItems()
+    public function getOrderitems()
     {
         return $this->getChildren('orderitem');
     }
@@ -135,9 +135,9 @@ class Order extends AbstractWrapper
      */
     public function getAllOrderItems()
     {
-        $orderItems = $this->getOrderItems();
+        $orderItems = $this->getOrderitems();
         foreach ($this->getSegregatedOrders() as $order) {
-            $orderItems = array_merge($orderItems, $order->getOrderItems());
+            $orderItems = array_merge($orderItems, $order->getOrderitems());
         }
 
         return $orderItems;
@@ -242,7 +242,7 @@ class Order extends AbstractWrapper
      * @return int
      * @throws MagelinkException
      */
-    public function getOrderItemsTotalQuantity()
+    public function getOrderitemsTotalQuantity()
     {
         /** @var \Entity\Service\EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
@@ -263,9 +263,9 @@ class Order extends AbstractWrapper
      * @return int
      * @throws MagelinkException
      */
-    public function getOrderItemsTotalDeliveryQuantity()
+    public function getOrderitemsTotalDeliveryQuantity()
     {
-        $quantities = $this->getOrderItemsDeliveryQuantities();
+        $quantities = $this->getOrderitemsDeliveryQuantities();
         $quantity = array_sum($quantities);
 
         return (int) $quantity;
@@ -276,9 +276,9 @@ class Order extends AbstractWrapper
      * @return int
      * @throws MagelinkException
      */
-    public function getOrderItemsTotalRefundedQuantity()
+    public function getOrderitemsTotalRefundedQuantity()
     {
-        $quantity = $this->getOrderItemsTotalQuantity() - $this->getOrderItemsTotalDeliveryQuantity();
+        $quantity = $this->getOrderitemsTotalQuantity() - $this->getOrderitemsTotalDeliveryQuantity();
         return (int) $quantity;
     }
 
@@ -303,11 +303,11 @@ class Order extends AbstractWrapper
      * Get delivery quantities in an array[<item id>] = <quantity>
      * @return int[]
      */
-    protected function getOrderItemsDeliveryQuantities()
+    protected function getOrderitemsDeliveryQuantities()
     {
         $quantities = array();
 
-        $orderItems = $this->getOrderItems();
+        $orderItems = $this->getOrderitems();
         /** @var \Entity\Wrapper\Orderitem $orderItem */
         foreach ($orderItems as $orderItem) {
             $quantities[$orderItem->getId()] = $orderItem->getDeliveryQuantity();
@@ -355,7 +355,7 @@ class Order extends AbstractWrapper
      */
     public function isInStock()
     {
-        foreach ($this->getOrderItems() as $item) {
+        foreach ($this->getOrderitems() as $item) {
             if (!$item->isInStock()) {
                 return FALSE;
             }
@@ -397,7 +397,7 @@ class Order extends AbstractWrapper
     {
         $orderTotal = 0;
 
-        $orderItems = $this->getOrderItems();
+        $orderItems = $this->getOrderitems();
         foreach ($orderItems as $item) {
             $orderTotal += $item->getDiscountedPrice() * $item->getQuantity();
         }
