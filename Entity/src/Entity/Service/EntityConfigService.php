@@ -17,49 +17,93 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\Db\TableGateway\TableGateway;
 
 
-class EntityConfigService implements ServiceLocatorAwareInterface {
+class EntityConfigService implements ServiceLocatorAwareInterface
+{
+    /** @var ServiceLocatorInterface $_serviceLocator */
+    protected $_serviceLocator;
+
+    /** Cache for checkAttribute
+     * @see EntityConfigService::checkAttribute()
+     * @var array
+     */
+    protected $_checkAttributeCache = array();
+
+    /** @var TableGateway[]  Cache of preloaded table gateways */
+    protected $_tgCache = array();
+
+    /** Local cache of entity type lookups, key is name and value is ID
+     * @see EntityConfigService::parseEntityType()
+     * @var array
+     */
+    protected $_entityTypeCache = array();
+
+    /** @var array $_attributeCache  Cache for parseAttribute */
+    protected $_attributeCache = array();
+
+    /** @var array $_attributeRevCache  Cache for getAttribute */
+    protected $_attributeRevCache = array();
+
+    /** @var array $entityAttributeTypes */
+    protected static $entityAttributeTypes = array(
+        'varchar',
+        'int',
+        'multi',
+        'decimal',
+        'text',
+        'fkey',
+        'datetime',
+        'entity'
+    );
 
     /**
-     * Set up a new attribute within the system. Will return gracefully if the attribute already exists with matching data, otherwise will throw an exception.
+     * Get static entity fields (uppercase)
+     * @return array
+     */
+    public function getStaticFields()
+    {
+        return array(
+            'ENTITY_ID',
+            'UNIQUE_ID',
+            'STORE_ID',
+            'PARENT_ID',
+            'UPDATED_AT'
+        );
+    }
+
+    /**
+     * Set up a new attribute within the system.
+     * Will return gracefully if the attribute already exists with matching data, otherwise will throw an exception.
      * @param string $code
      * @param string $name
      * @param boolean $metadata
      * @param string $type
-     * @param int|string $entity_type
+     * @param int|string $entityType
      * @param string $comment
      * @throws \Magelink\Exception\MagelinkException If an error occurs during creation
      * @return int New attribute ID
      */
-    public function createAttribute ( $code, $name, $metadata, $type, $entity_type, $comment = null ) {
-        $entity_type = $this->parseEntityType($entity_type);
-        if(!$entity_type){
-            throw new \Magelink\Exception\MagelinkException('Invalid entity type for new attribute ' . $code);
+    public function createAttribute($code, $name, $metadata, $type, $entityType, $comment = NULL)
+    {
+        $entityType = $this->parseEntityType($entityType);
+        if (!$entityType) {
+            throw new \Magelink\Exception\MagelinkException('Invalid entity type for new attribute '.$code);
         }
 
         $code = strtolower($code);
-        if($this->checkAttribute($entity_type, $code)){
-            throw new \Magelink\Exception\MagelinkException('Attribute already exists ' . $code);
+        if($this->checkAttribute($entityType, $code)){
+            throw new \Magelink\Exception\MagelinkException('Attribute already exists '.$code);
         }
 
-        if($type == 'bool' || $type == 'boolean'){
+        if ($type == 'bool' || $type == 'boolean') {
             $type = 'int';
         }
 
-        if(!in_array($type, array(
-            'varchar',
-            'int',
-            'multi',
-            'decimal',
-            'text',
-            'fkey',
-            'datetime',
-            'entity'
-        ))){
-            throw new \Magelink\Exception\MagelinkException('Invalid attribute type for ' . $code . ' - ' . $type);
+        if (!in_array($type, self::entityAttributeTypes)) {
+            throw new \Magelink\Exception\MagelinkException('Invalid attribute type for '.$code.' - '.$type);
         }
 
-        $res = $this->getTableGateway('entity_attribute')->insert(array(
-            'entity_type_id'=>$entity_type,
+        $result = $this->getTableGateway('entity_attribute')->insert(array(
+            'entity_type_id'=>$entityType,
             'type'=>$type,
             'metadata'=>($metadata ? 1 : 0),
             'code'=>$code,
@@ -67,35 +111,44 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
             'comment'=>$comment
         ));
 
-        if(!$res){
-            throw new \Magelink\Exception\MagelinkException('Unknown error creating attribute ' . $code);
+        if (!$result) {
+            throw new \Magelink\Exception\MagelinkException('Unknown error creating attribute '.$code);
         }
 
         return $this->getAdapter()->getDriver()->getLastGeneratedValue();
-
     }
 
     /**
      * Set up a new entity type within the system. Will return gracefully if the entity type already exists with matching data, otherwise will throw an exception.
      * @param string $name
-     * @param string $human_name
+     * @param string $humanName
      * @param boolean $internal
+     * @param boolean|string $flatTableFields (comma-separated list)
      * @throws \Magelink\Exception\MagelinkException If the entity type already exists
      */
-    public function createEntityType ( $name, $human_name, $internal = false ) {
+    public function createEntityType($name, $humanName, $internal = FALSE, $flatTableFields = FALSE)
+    {
         $name = strtolower($name);
 
-        if($this->parseEntityType($name)){
-            throw new \Magelink\Exception\MagelinkException('Conflicting entity type name - ' . $name);
+        if ($this->parseEntityType($name)) {
+            throw new \Magelink\Exception\MagelinkException('Conflicting entity type name - '.$name);
         }
 
-        $res = $this->getTableGateway('entity_type')->insert(array('name'=>$name, 'name_human'=>$human_name, 'internal'=>($internal ? 1 : 0)));
+        $internal = ($internal ? 1 : 0);
+        $flatTableFields = (trim($flatTableFields) ? $flatTableFields : '');
 
-        if(!$res){
-            throw new \Magelink\Exception\MagelinkException('Unknown error creating entity type ' . $name);
+        $result = $this->getTableGateway('entity_type')->insert(array(
+            'name'=>$name,
+            'name_human'=>$humanName,
+            'internal'=>$internal,
+            'flat_table_fields'=>$flatTableFields
+        ));
+
+        if (!$result) {
+            throw new \Magelink\Exception\MagelinkException('Unknown error creating entity type '.$name);
         }
 
-        if(isset($this->_entityTypeCache[$name])){
+        if (isset($this->_entityTypeCache[$name])) {
             unset($this->_entityTypeCache[$name]);
         }
     }
@@ -107,13 +160,14 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
      * @param string $code
      * @throws \Magelink\Exception\MagelinkException
      */
-    public function destroyAttribute ( $code ) {
+    public function destroyAttribute($code)
+    {
         $code = strtolower($code);
 
         // Ensure that attribute exists
         $searchRes = $this->getTableGateway('entity_attribute')->select(array('code'=>$code));
         if(!$searchRes || !count($searchRes)){
-            throw new \Magelink\Exception\MagelinkException('Attribute ' . $code . ' does not exist so cannot be destroyed!');
+            throw new \Magelink\Exception\MagelinkException('Attribute '.$code.' does not exist so cannot be destroyed!');
         }
 
         // Fetch attribute ID
@@ -122,13 +176,13 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
             $att_id = $row['attribute_id'];
         }
         if($att_id == false){
-            throw new \Magelink\Exception\MagelinkException('Error fetching attribute ID for ' . $code);
+            throw new \Magelink\Exception\MagelinkException('Error fetching attribute ID for '.$code);
         }
 
         // Ensure no attributes are subscribed
         $links = $this->getTableGateway('node_attribute')->select(array('attribute_id'=>$att_id));
         if($links && count($links)){
-            throw new \Magelink\Exception\MagelinkException('Attribute ' . $code . ' cannot be destroyed as it is still linked to nodes.');
+            throw new \Magelink\Exception\MagelinkException('Attribute '.$code.' cannot be destroyed as it is still linked to nodes.');
         }
 
         // Delete attribute - FKs should clean up
@@ -137,42 +191,35 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
     }
 
     /**
-     * Cache for checkAttribute
-     * @see EntityConfigService::checkAttribute()
-     * @var array
-     */
-    protected $_checkAttributeCache = array();
-
-    /**
      * Returns true if an attribute by the provided code exists. Includes extensive caching so this can be called regularly with little overhead.
-     * @param int $entity_type_id
+     * @param int $entityTypeId
      * @param string $code
      * @return boolean
      */
-    public function checkAttribute ( $entity_type_id, $code ) {
-        if(!is_int($entity_type_id)){
-            $entity_type_id = $this->parseEntityType($entity_type_id);
+    public function checkAttribute ( $entityTypeId, $code ) {
+        if(!is_int($entityTypeId)){
+            $entityTypeId = $this->parseEntityType($entityTypeId);
         }
-        if(!isset($this->_checkAttributeCache[$entity_type_id])){
-            $this->_checkAttributeCache[$entity_type_id] = array();
+        if(!isset($this->_checkAttributeCache[$entityTypeId])){
+            $this->_checkAttributeCache[$entityTypeId] = array();
         }
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'ca', 'checkAttribute - ' . $entity_type_id . ' - ' . $code, array('code'=>$code, 'type'=>$entity_type_id));
+        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'ca', 'checkAttribute - '.$entityTypeId.' - '.$code, array('code'=>$code, 'type'=>$entityTypeId));
         $code = strtolower($code);
-        if(isset($this->_checkAttributeCache[$entity_type_id][$code])){
-            return $this->_checkAttributeCache[$entity_type_id][$code];
+        if(isset($this->_checkAttributeCache[$entityTypeId][$code])){
+            return $this->_checkAttributeCache[$entityTypeId][$code];
         }
 
-        $result = $this->getTableGateway('entity_attribute')->select(array('code'=>$code, 'entity_type_id'=>$entity_type_id));
+        $result = $this->getTableGateway('entity_attribute')->select(array('code'=>$code, 'entity_type_id'=>$entityTypeId));
 
         $result = ($result && count($result));
 
-        $this->_checkAttributeCache[$entity_type_id][$code] = $result;
+        $this->_checkAttributeCache[$entityTypeId][$code] = $result;
         return $result;
     }
 
     /**
      * Return all attributes assigned to the provided entity type.
-     * @param int|string $entity_type
+     * @param int|string $entityType
      * @return string[]
      */
     public function getAttributesCode($entityTypeOrId)
@@ -208,107 +255,88 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
     }
 
     /**
-     * Local cache of entity type lookups, key is name and value is ID
-     * @see EntityConfigService::parseEntityType()
-     * @var array
-     */
-    protected $_entityTypeCache = array();
-
-    /**
      * Turn a string or object based entity type into the ID
-     * @param string $entity_type
+     * @param string $entityType
      * @throws \Magelink\Exception\MagelinkException
      * @return int
      */
-    public function parseEntityType($entity_type)
+    public function parseEntityType($entityType)
     {
-        //$this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'pet', 'parseEntityType - ' . $entity_type, array('entity_type'=>$entity_type));
-        if(is_object($entity_type)){
-            if($entity_type instanceof \Entity\Entity){
-                $entity_type = $entity_type->getType();
+        //$this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'pet', 'parseEntityType - '.$entityType, array('entity_type'=>$entityType));
+        if(is_object($entityType)){
+            if($entityType instanceof \Entity\Entity){
+                $entityType = $entityType->getType();
             }else{
                 throw new \Magelink\Exception\MagelinkException('Unknown entity type type');
             }
         }
-        if(is_numeric($entity_type)){
-            $entity_type = intval($entity_type);
+        if(is_numeric($entityType)){
+            $entityType = intval($entityType);
         }
-        if(is_int($entity_type)){
-            //$this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'pet_dbg', 'ET was already int - ' . $entity_type, array('entity_type'=>$entity_type));
-            return $entity_type;
+        if(is_int($entityType)){
+            //$this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'pet_dbg', 'ET was already int - '.$entityType, array('entity_type'=>$entityType));
+            return $entityType;
         }
-        if(is_string($entity_type)){
-            $entity_type = strtolower($entity_type);
-            if(isset($this->_entityTypeCache[$entity_type])){
-                //$this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'pet_dbg', 'ET was cached - ' . $entity_type . ' - ' . $this->_entityTypeCache[$entity_type], array('entity_type'=>$entity_type));
-                return $this->_entityTypeCache[$entity_type];
+        if(is_string($entityType)){
+            $entityType = strtolower($entityType);
+            if(isset($this->_entityTypeCache[$entityType])){
+                //$this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'pet_dbg', 'ET was cached - '.$entityType.' - '.$this->_entityTypeCache[$entityType], array('entity_type'=>$entityType));
+                return $this->_entityTypeCache[$entityType];
             }
-            $result = $this->getTableGateway('entity_type')->select(array('name'=>$entity_type));
+            $result = $this->getTableGateway('entity_type')->select(array('name'=>$entityType));
             if(!$result || !count($result)){
                 $this->getServiceLocator()->get('logService')
                     ->log(\Log\Service\LogService::LEVEL_ERROR,
                         'pet_dbg',
-                        'Could not find in DB - '.$entity_type,
-                        array('entity_type'=>$entity_type)
+                        'Could not find in DB - '.$entityType,
+                        array('entity_type'=>$entityType)
                     );
-                $this->_entityTypeCache[$entity_type] = false;
+                $this->_entityTypeCache[$entityType] = false;
                 return false;
             }
             foreach($result as $row){
-                //$this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'pet_dbg', 'ET in DB - ' . $entity_type . ' - ' . $row['entity_type_id'], array('entity_type'=>$entity_type, 'row'=>$row));
-                $this->_entityTypeCache[$entity_type] = intval($row['entity_type_id']);
+                //$this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'pet_dbg', 'ET in DB - '.$entityType.' - '.$row['entity_type_id'], array('entity_type'=>$entityType, 'row'=>$row));
+                $this->_entityTypeCache[$entityType] = intval($row['entity_type_id']);
                 return intval($row['entity_type_id']);
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'pet_dbg', 'DB iterate failed weirdly - ' . $entity_type, array('entity_type'=>$entity_type));
-            $this->_entityTypeCache[$entity_type] = false;
+            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'pet_dbg', 'DB iterate failed weirdly - '.$entityType, array('entity_type'=>$entityType));
+            $this->_entityTypeCache[$entityType] = false;
             return false;
         }
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'pet_dbg', 'Unknown type of input - ' . $entity_type, array('entity_type'=>$entity_type));
+        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'pet_dbg', 'Unknown type of input - '.$entityType, array('entity_type'=>$entityType));
         return false;
     }
 
     /**
-     * Cache for parseAttribute
-     * @var array
-     */
-    protected $_attributeCache = array();
-
-    /**
      * Get the attribute ID for a code/type.
      * @param string $attribute_code
-     * @param int $entity_type
+     * @param int $entityType
      * @return array|null
      */
-    public function parseAttribute($attribute_code, $entity_type)
+    public function parseAttribute($attribute_code, $entityType)
     {
-        $entity_type = $this->parseEntityType($entity_type);
-        if(isset($this->_attributeCache[$entity_type])){
-            if(isset($this->_attributeCache[$entity_type][$attribute_code])){
-                return $this->_attributeCache[$entity_type][$attribute_code];
+        $entityType = $this->parseEntityType($entityType);
+        if(isset($this->_attributeCache[$entityType])){
+            if(isset($this->_attributeCache[$entityType][$attribute_code])){
+                return $this->_attributeCache[$entityType][$attribute_code];
             }
         }else{
-            $this->_attributeCache[$entity_type] = array();
+            $this->_attributeCache[$entityType] = array();
         }
 
         $res = $this->getTableGateway('entity_attribute')->select(array(
-            'entity_type_id'=>$entity_type,
+            'entity_type_id'=>$entityType,
             'code'=>$attribute_code,
         ));
 
         foreach($res as $row){
-            $this->_attributeCache[$entity_type][$attribute_code] = $row['attribute_id'];
+            $this->_attributeCache[$entityType][$attribute_code] = $row['attribute_id'];
             return $row['attribute_id'];
         }
 
-        $this->_attributeCache[$entity_type][$attribute_code] = null;
+        $this->_attributeCache[$entityType][$attribute_code] = null;
         return null;
     }
-
-    /**
-     * Cache for getAttribute
-     * @var array
-     */
-    protected $_attributeRevCache = array();
 
     /**
      * Get an array of attribute data by ID
@@ -334,61 +362,60 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
 
     /**
      * Turn an integer entity type into the string variant
-     * @param int $entity_type
+     * @param int $entityType
      * @return string|false
      */
-    public function parseEntityTypeReverse ( $entity_type ){
-        if(!is_int($entity_type)){
-            $entity_type = $this->parseEntityType($entity_type);
+    public function parseEntityTypeReverse($entityType)
+    {
+        if (is_int($entityType)) {
+            $entityTypeId = $entityType;
+        }else{
+            $entityTypeId = $this->parseEntityType($entityType);
         }
         foreach($this->_entityTypeCache as $code=>$id){
-            if($id == $entity_type){
+            if($id == $entityType){
                 return $code;
             }
         }
 
-        $result = $this->getTableGateway('entity_type')->select(array('entity_type_id'=>$entity_type));
-        if(!$result){
-            return false;
+        $result = $this->getTableGateway('entity_type')
+            ->select(array('entity_type_id'=>$entityTypeId));
+        $return = FALSE;
+        if ($result) {
+            foreach ($result as $row) {
+                $return = $row['name'];
+                break;
+            }
         }
-        foreach($result as $row){
-            return $row['name'];
-        }
-        return false;
+
+        return $return;
     }
 
     /**
      * Return the database adapter to be used to communicate with Entity storage.
      * @return \Zend\Db\Adapter\Adapter
      */
-    protected function getAdapter(){
+    protected function getAdapter()
+    {
         return $this->getServiceLocator()->get('zend_db');
     }
-
-    /**
-     * Cache of preloaded table gateways
-     * @var TableGateway[]
-     */
-    protected $_tgCache = array();
 
     /**
      * Returns a new TableGateway instance for the requested table
      * @param string $table
      * @return \Zend\Db\TableGateway\TableGateway
      */
-    protected function getTableGateway($table){
-        if(isset($this->_tgCache[$table])){
-            return $this->_tgCache[$table];
+    protected function getTableGateway($table)
+    {
+        if (!isset($this->_tgCache[$table])) {
+            $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
         }
-        $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
+
         return $this->_tgCache[$table];
     }
 
-    protected $_serviceLocator;
-
     /**
      * Set service locator
-     *
      * @param ServiceLocatorInterface $serviceLocator
      */
     public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
@@ -398,7 +425,6 @@ class EntityConfigService implements ServiceLocatorAwareInterface {
 
     /**
      * Get service locator
-     *
      * @return ServiceLocatorInterface
      */
     public function getServiceLocator()
