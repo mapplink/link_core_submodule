@@ -724,7 +724,7 @@ class EntityService implements ServiceLocatorAwareInterface
                             }
 
                             $sql = 'INSERT INTO entity_flat_'.$entityType.' SET '.explode(', ', $inserts).';';
-                            if ($this->executeSqlQuery($this->getNodeId(), $sql)) {
+                            if ($this->executeSqlQuery($nodeId, $sql)) {
                                 unset($flatData[$key]);
                             }
                         }
