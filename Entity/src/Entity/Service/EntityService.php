@@ -648,7 +648,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return array
      * @throws NodeException
      */
-    protected function getEntitytypeCodeArrayFromFlatFieldname($nodeId, $flatFields)
+    protected function getEntityAttributeArray($nodeId, $flatFields)
     {
         if (!is_array($flatFields)) {
             $flatFields = array($flatFields);
@@ -656,7 +656,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $entityAttributeArray = array();
         foreach ($flatFields as $field) {
-            list($entityType, $attributeCode) = $this->getEntityEavDetails($field);
+            list($entityType, $attributeCode) = each($this->getEntityEavDetails($field));
             if ($entityType && $attributeCode) {
                 if (array_key_exists($entityType, $entityAttributeArray)) {
                     $entityAttributeArray[$entityType][] = $attributeCode;
@@ -711,7 +711,7 @@ class EntityService implements ServiceLocatorAwareInterface
             if ($entity) {
                 $flatFields = $this->getServiceLocator()->get('entityConfigService')
                     ->getFlatEntityTypeFields($entity->getTypeStr());
-                $entityAttributeArray = $this->getEntitytypeCodeArrayFromFlatFieldname($nodeId, $flatFields);
+                $entityAttributeArray = $this->getEntityAttributeArray($nodeId, $flatFields);
                 $flatData = $entity->getFlatDataFromEav($entityAttributeArray);
 
                 if (is_array($flatData) && count($flatData)) {
