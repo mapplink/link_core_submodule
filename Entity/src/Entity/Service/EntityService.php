@@ -1576,13 +1576,21 @@ class EntityService implements ServiceLocatorAwareInterface
 
     /**
      * Get flat table column name from entity type and eav code
-     * @param string|int $entityType
+     * @param string $entityType
      * @param string $code
      * @return bool|string $flatTableColumn
      */
     public function getFlatTableColumn($entityType, $eavCode)
     {
-        if ($entityType = $this->hasFlatTable($entityType)) {
+        if (is_int($entityType)) {
+            $entityTypeId = $this->verifyEntityType($entityType);
+            if ($entityTypeId) {
+                $entityTypes = $this->getServiceLocator()->get('entityConfigService')->getEntityTypeCodes();
+                $entityType = isset($entityTypes[$entityTypeId]) ? $entityTypes[$entityTypeId] : FALSE;
+            }
+        }
+
+        if (is_string($entityType) && trim($entityType)) {
             $flatTableColumn = $entityType.'_'.strtolower($eavCode);
         }else{
             $flatTableColumn = FALSE;
