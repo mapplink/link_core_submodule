@@ -298,7 +298,7 @@ class EntityConfigService implements ServiceLocatorAwareInterface
         }
 
         if ($entityType) {
-            $entityTypeId = $this->getServiceLocator()->get('entityService')->verifyEntityType($entityType);
+            $entityTypeId = $this->parseEntityType($entityType);
             if (isset($flatFields[$entityTypeId])) {
                 $flatFields = $flatFields[$entityTypeId];
             }else{

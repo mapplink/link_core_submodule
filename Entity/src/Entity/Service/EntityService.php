@@ -688,7 +688,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return bool
      * @throws NodeException
      */
-    public function createFlatFromEav ($nodeId, $entityType, $storeId, $uniqueId)
+    public function createFlatFromEav($nodeId, $entityType, $storeId, $uniqueId)
     {
         $success = FALSE;
         $this->verifyNodeId($nodeId);
