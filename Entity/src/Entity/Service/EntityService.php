@@ -1563,6 +1563,7 @@ class EntityService implements ServiceLocatorAwareInterface
             $entityTypeId = $this->verifyEntityType($entityType);
             if ($entityTypeId) {
                 $flatEntityTypes = $this->getServiceLocator()->get('entityConfigService')->getFlatEntityTypeCodes();
+                $flatEntityTypeIds = array_flip($flatEntityTypes);
                 $hasFlatTable = in_array($entityTypeId, $flatEntityTypeIds);
             }
         }catch (\Exception $exception) {
