@@ -720,10 +720,10 @@ class EntityService implements ServiceLocatorAwareInterface
                         foreach ($insertData as $key => $data) {
                             $inserts = array();
                             foreach ($data as $field => $value) {
-                                $inserts[] = $field." = '".$value."'";
+                                $inserts[] = "`".$field."` = '".$value."'";
                             }
 
-                            $sql = 'INSERT INTO entity_flat_'.$entityType.' SET '.explode(', ', $inserts).';';
+                            $sql = 'INSERT INTO entity_flat_'.$entityType.' SET '.implode(', ', $inserts).';';
                             if ($this->executeSqlQuery($nodeId, $sql)) {
                                 unset($flatData[$key]);
                             }
@@ -1563,7 +1563,6 @@ class EntityService implements ServiceLocatorAwareInterface
             $entityTypeId = $this->verifyEntityType($entityType);
             if ($entityTypeId) {
                 $flatEntityTypes = $this->getServiceLocator()->get('entityConfigService')->getFlatEntityTypeCodes();
-                $flatEntityTypeIds = array_flip($flatEntityTypes);
                 $hasFlatTable = in_array($entityTypeId, $flatEntityTypeIds);
             }
         }catch (\Exception $exception) {
@@ -1582,7 +1581,7 @@ class EntityService implements ServiceLocatorAwareInterface
      */
     public function getFlatTableColumn($entityType, $eavCode)
     {
-        if ($this->hasFlatTable($entityType)) {
+        if ($entityType = $this->hasFlatTable($entityType)) {
             $flatTableColumn = $entityType.'_'.strtolower($eavCode);
         }else{
             $flatTableColumn = FALSE;
