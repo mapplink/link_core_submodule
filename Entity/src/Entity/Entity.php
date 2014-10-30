@@ -112,9 +112,21 @@ class Entity implements ServiceLocatorAwareInterface
             $this->_data[$attribute_id] = $data;
         }
     }
-    
+
+    /**
+     * Returns entity id
+     * @return int
+     */
     public function getId() {
         return $this->_id;
+    }
+
+    /**
+     * Returns entity id (alias of getId())
+     * @return int
+     */
+    public function getEntityId() {
+        return $this->getId();
     }
 
     /**
