@@ -29,7 +29,8 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
      * @return \Entity\Entity[]
      * @throws MagelinkException
      */
-    public function loadEntities( $entity_type_id, $store_id, $searchData, $attribute_codes, $searchType=array(), $options=array() ){
+    public function loadEntities($entity_type_id, $store_id, $searchData, $attribute_codes, $searchType=array(), $options=array())
+    {
         if($entity_type_id === false){
             throw new NodeException('No entity type ID passed to loadEntities');
         }

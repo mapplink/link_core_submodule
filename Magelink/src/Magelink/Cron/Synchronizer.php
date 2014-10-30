@@ -11,7 +11,8 @@ use Magelink\Exception\SyncException;
 use Magelink\Exception\NodeException;
 use Application\CronRunnable;
 
-class Synchronizer implements CronRunnable, ServiceLocatorAwareInterface {
+class Synchronizer implements CronRunnable, ServiceLocatorAwareInterface
+{
 
 
     /**
@@ -21,7 +22,7 @@ class Synchronizer implements CronRunnable, ServiceLocatorAwareInterface {
      */
     public function cronCheck($time)
     {
-        if($time % 1800 == 0){ // 30 minute interval
+        if ($time % 1800 == 0) { // 30 minute interval
             return true;
         }
         return false;

@@ -84,11 +84,17 @@ class Querier extends AbstractHelper implements \Zend\ServiceManager\ServiceLoca
      * @return string
      *{string:string}
      */
-    public function parseQuery($mlql){
-        $mlql = preg_replace_callback('#{([a-z0-9]+):([a-z0-9]+):?([a-z0-9,_]*):?([a-zA-Z0-9,<=>!+\-*\/\.\'"_ ()]*):?([a-zA-Z0-9,<=>!+\-*\/\.\'"_ ]*)}#', array($this, 'parseQueryTable'), $mlql);
-
-        //$mlql = str_replace('{', '', $mlql);
-        //$mlql = str_replace('}', '', $mlql);
+    public function parseQuery($mlql)
+    {
+        $splitMlql = '#{'
+                .'([a-z0-9]+)' // entity
+                .':([a-z0-9]+)' // alias
+                .':?([a-z0-9,_]*)' // attribute list (ALL)
+                .':?([a-zA-Z0-9,<=>!+\-*\/\.\'"_ ()]*)'
+                .':?([a-zA-Z0-9,<=>!+\-*\/\.\'"_ ]*)'
+            .'}#';
+        $mlql = preg_replace_callback($splitMlql, array($this, 'parseQueryTable'), $mlql);
+        //$mlql = str_replace(array('{', '}'), '', $mlql);
 
         return $mlql;
     }
@@ -98,43 +104,47 @@ class Querier extends AbstractHelper implements \Zend\ServiceManager\ServiceLoca
      * @param array $matches
      * @return string
      */
-    protected function parseQueryTable($matches){
+    protected function parseQueryTable($matches)
+    {
         $entityType = $matches[1];
         $alias = $matches[2];
-        $atts = (isset($matches[3]) && strlen($matches[3]) ? explode(',', $matches[3]) : false);
-        if(count($atts) == 1 && $atts[0] == 'ALL'){
-            $atts = false;
+
+        $columns = (isset($matches[3]) && strlen($matches[3]) ? explode(',', $matches[3]) : FALSE);
+        if(count($columns) == 1 && $columns[0] == 'ALL'){
+            $columns = false;
         }
+
         $where = array();
-        if(isset($matches[4])){
+        if (isset($matches[4])) {
             $whereSplit = explode(',', $matches[4]);
-            foreach($whereSplit as $cond){
-                if(strlen($cond) == 0){
-                    continue;
+            foreach ($whereSplit as $condition) {
+                if (strlen($condition) > 0) {
+                    $options = array();
+                    $splitWhereConditions = '#^([a-z0-9\._]+)\s([=<>!]+|!?in|!?like)\s([a-zA-Z0-9\._ <=>!+\-*\/()]+)$#';
+                    preg_match($splitWhereConditions, $condition, $options);
+                    if ($options[2] == '=' && $options[3] == 'NULL') {
+                        $options[2] = 'null';
+                    }elseif ($options[2] == '!=' && $options[3] == 'NULL') {
+                        $options[2] = 'notnull';
+                    }
+                    $where[$options[1]] = array($options[2], $options[3]);
                 }
-                $opts = array();
-                preg_match('#^([a-z0-9\._]+)\s([=<>!]+|!?in|!?like)\s([a-zA-Z0-9\._ <=>!+\-*\/()]+)$#', $cond, $opts);
-                if($opts[2] == '=' && $opts[3] == 'NULL'){
-                    $opts[2] = 'null';
-                }else if($opts[2] == '!=' && $opts[3] == 'NULL'){
-                    $opts[2] = 'notnull';
-                }
-                $where[$opts[1]] = array($opts[2], $opts[3]);
             }
         }
-        $options = array();
-        if(isset($matches[5])){
-            $optSplit = explode(',', $matches[5]);
-            foreach($optSplit as $cond){
-                if(strlen($cond) == 0){
-                    continue;
+
+        $mlqlOptions = array();
+        if (isset($matches[5])) {
+            $optionSplit = explode(',', $matches[5]);
+            foreach ($optionSplit as $condition) {
+                if (strlen($condition) > 0) {
+                    $options = array();
+                    preg_match('#^([a-z0-9_]+)=([a-zA-Z0-9<=>!+\-*\/.\'"]+)$#', $condition, $options);
+                    $mlqlOptions[$options[1]] = $options[2];
                 }
-                $opts = array();
-                preg_match('#^([a-z0-9_]+)=([a-zA-Z0-9<=>!+\-*\/.\'"]+)$#', $cond, $opts);
-                $options[$opts[1]] = $opts[2];
             }
         }
-        return $this->getEntitySubselect($entityType, $alias, $atts, $where, $options);
+
+        return $this->getEntitySubselect($entityType, $alias, $columns, $where, $mlqlOptions);
     }
 
     /**

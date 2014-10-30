@@ -18,7 +18,7 @@ class ErrorHandler {
     const ERROR_TO = 'forms@lero9.co.nz';
     const ERROR_FROM = 'noreply@lero9.co.nz';
 
-    //*** Client data should not be here
+    // ToDo: Move client data to the config
     const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
     const ERROR_TO_CLIENT_CODE = 'accsync_';
 
