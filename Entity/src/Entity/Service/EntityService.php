@@ -656,12 +656,13 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $entityAttributeArray = array();
         foreach ($flatFields as $field) {
-            $entityType = strtok($field, '_');
-            $attributeCode = strtok($field);
-            if (array_key_exists($entityType, $entityAttributeArray)) {
-                $entityAttributeArray[$entityType][] = $attributeCode;
-            }else{
-                $entityAttributeArray[$entityType] = array($attributeCode);
+            list($entityType, $attributeCode) = $this->getEntityEavDetails($field);
+            if ($entityType && $attributeCode) {
+                if (array_key_exists($entityType, $entityAttributeArray)) {
+                    $entityAttributeArray[$entityType][] = $attributeCode;
+                }else {
+                    $entityAttributeArray[$entityType] = array($attributeCode);
+                }
             }
         }
 
@@ -717,7 +718,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     $maxTries = 3;
                     do {
                         $insertData = $flatData;
-                        foreach ($insertData as $key => $data) {
+                        foreach ($insertData as $key=>$data) {
                             $inserts = array();
                             foreach ($data as $field => $value) {
                                 $inserts[] = "`".$field."` = '".$value."'";
@@ -1575,7 +1576,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Get flat table column name from entity type and eav code
+     * Get flat table column name from entity type and attribute
      * @param string $entityType
      * @param string $code
      * @return bool|string $flatTableColumn
@@ -1599,6 +1600,22 @@ class EntityService implements ServiceLocatorAwareInterface
         return $flatTableColumn;
     }
 
+    /**
+     * Get entity type-attribute code array from flat table column
+     * @param $flatColumn
+     * @return array
+     */
+    public function getEntityEavDetails($flatColumn)
+    {
+        $entityType = strtok($flatColumn, '_');
+        $attributeCode = strtok('');
+
+        if (!trim($entityType) || !trim($attributeCode)) {
+            $entityType = $attributeCode = '';
+        }
+
+        return array($entityType=>$attributeCode);
+    }
 
     /**
      * Return the database adapter to be used to communicate with Entity storage.
