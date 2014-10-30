@@ -711,8 +711,7 @@ class EntityService implements ServiceLocatorAwareInterface
             if ($entity) {
                 $flatFields = $this->getServiceLocator()->get('entityConfigService')
                     ->getFlatEntityTypeFields($entity->getTypeStr());
-                $entityAttributeArray = $this->getEntityAttributeArray($nodeId, $flatFields);
-                $flatData = $entity->getFlatDataFromEav($entityAttributeArray);
+                $flatData = $entity->getFlatDataFromEav($flatFields);
 
                 if (is_array($flatData) && count($flatData)) {
                     $maxTries = 3;
