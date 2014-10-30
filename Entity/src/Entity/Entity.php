@@ -227,11 +227,27 @@ class Entity implements ServiceLocatorAwareInterface
      * @return array
      */
     public function getArrayCopy()
-    {   
+    {
         $results = array();
-
         foreach ($this->_attributes as $value) {
             $results[$value['code']] = $this->getData($value['code']);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Get a array for attributes mapping value (Mainly for Zend/Form/Form)
+     * @return array
+     */
+    public function getFullArrayCopy()
+    {
+        $results = $this->getArrayCopy();
+
+        $staticFields = $this->getServiceLocator()->get('entityConfigService')->getStaticFields();
+        foreach ($staticFields as $staticField) {
+            $method = 'get'.str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($staticField))));
+            $results[$staticField] = $this->$method();
         }
 
         return $results;
