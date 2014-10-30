@@ -713,21 +713,26 @@ class EntityService implements ServiceLocatorAwareInterface
                 $entityAttributeArray = $this->getEntitytypeCodeArrayFromFlatFieldname($nodeId, $flatFields);
                 $flatData = $entity->getFlatDataFromEav($entityAttributeArray);
 
-                $maxTries = 3;
-                do {
-                    $insertData = $flatData;
-                    foreach ($insertData as $key=>$data) {
-                        $inserts = array();
-                        foreach ($data as $field=>$value) {
-                            $inserts[] = $field." = '".$value."'";
-                        }
+                if (is_array($flatData) && count($flatData)) {
+                    $maxTries = 3;
+                    do {
+                        $insertData = $flatData;
+                        foreach ($insertData as $key => $data) {
+                            $inserts = array();
+                            foreach ($data as $field => $value) {
+                                $inserts[] = $field." = '".$value."'";
+                            }
 
-                        $sql = 'INSERT INTO entity_flat_'.$entityType.' SET '.explode(', ', $inserts).';';
-                        if ($this->executeSqlQuery($this->getNodeId(), $sql)) {
-                            unset($flatData[$key]);
+                            $sql = 'INSERT INTO entity_flat_'.$entityType.' SET '.explode(', ', $inserts).';';
+                            if ($this->executeSqlQuery($this->getNodeId(), $sql)) {
+                                unset($flatData[$key]);
+                            }
                         }
-                    }
-                } while(count($flatData) && --$maxTries > 0);
+                    }while (count($flatData) && --$maxTries > 0);
+                    $success = !count($flatData);
+                }else{
+                    throw new MagelinkException('Creation of flat data failed.');
+                }
             }
         }
 
@@ -1578,7 +1583,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function getFlatTableColumn($entityType, $eavCode)
     {
         if ($this->hasFlatTable($entityType)) {
-            $flatTableColumn = $entityType.'_'.$eavCode;
+            $flatTableColumn = $entityType.'_'.strtolower($eavCode);
         }else{
             $flatTableColumn = FALSE;
         }
