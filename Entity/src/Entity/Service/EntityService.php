@@ -21,15 +21,20 @@ use Entity\Comment;
 
 class EntityService implements ServiceLocatorAwareInterface
 {
-
-    /** @var ServiceLocatorInterface The service locator */
+    /** @var ServiceLocatorInterface */
     protected $_serviceLocator;
 
-    /** @var TableGateway[] Cache of preloaded table gateways */
+    /** @var TableGateway[]  Cache of preloaded table gateways */
     protected $_tgCache = array();
 
-    /** @var \Entity\Helper\Saver Helper used for saving records to the database */
+    /** @var \Entity\Helper\Saver  Helper used for saving records to the database */
     protected $_saver;
+
+    /** @var \Entity\Helper\Loader  Helper used for loading records from the database */
+    protected $_loader;
+
+    /** @var \Entity\Helper\Querier  Helper used for loading records from the database using MLQL */
+    protected $_querier;
 
 
     /**
@@ -37,7 +42,8 @@ class EntityService implements ServiceLocatorAwareInterface
      * @see $_saver
      * @return \Entity\Helper\Saver
      */
-    protected function getSaver(){
+    protected function getSaver()
+    {
         if($this->_saver){
             return $this->_saver;
         }
@@ -47,17 +53,12 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Helper used for loading records from the database
-     * @var \Entity\Helper\Loader
-     */
-    protected $_loader;
-
-    /**
      * Retrieve Loading helper
      * @see $_loader
      * @return \Entity\Helper\Loader
      */
-    protected function getLoader(){
+    protected function getLoader()
+    {
         if($this->_loader){
             return $this->_loader;
         }
@@ -65,12 +66,6 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->_loader->setServiceLocator($this->getServiceLocator());
         return $this->_loader;
     }
-
-    /**
-     * Helper used for loading records from the database using MLQL
-     * @var \Entity\Helper\Querier
-     */
-    protected $_querier;
 
     /**
      * Retrieve Querying helper
@@ -88,7 +83,6 @@ class EntityService implements ServiceLocatorAwareInterface
 
     /**
      * Loads the entity with the given ID from the database for the given node.
-     * 
      * @param int $nodeId
      * @param int $entityId
      * @return \Entity\Entity|null
@@ -221,18 +215,38 @@ class EntityService implements ServiceLocatorAwareInterface
                 array('limit'=>1, 'node_id'=>$nodeId)
             );
 
-        if (!$result || !count($result)) {
-            return null;
-        }else{
-            foreach ($result as $ent) {
-                // Return first row
-                return $ent;
+        $return = NULL;
+        if ($result && count($result)) {
+            foreach ($result as $entity) {
+                $return = $entity;
+                break;
             }
         }
 
-        return null;
+        return $return;
     }
-    
+
+    /**
+     * Loads the entity flat data from the database
+     * @param string $entityType
+     * @param string $where
+     * @param boolean|string $orderBy
+     */
+    public function loadFlatEntityData($entityType, $where, $orderBy = FALSE)
+    {
+        if ($entityType = $this->hasFlatTable($entityType)) {
+            $sql = "SELECT * FROM entity_flat_".$entityType
+                ." WHERE ".$where
+                .($orderBy ? " ORDER BY ".$orderBy : "")
+                .";";
+            $itemData = $this->executeSqlQuery($this->getNodeId(), $sql);
+        }else{
+            $itemData = array();
+        }
+
+        return $itemData;
+    }
+
     /**
      * Loads the entity identified by the given local_id from the database for the given node.
      * 
@@ -425,7 +439,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return int
      * @throws \Magelink\Exception\MagelinkException
      */
-    public function countEntity ( $nodeId, $entityType, $store_id, $searchData, $searchType = array(), $options = array() ) {
+    public function countEntity($nodeId, $entityType, $store_id, $searchData, $searchType = array(), $options = array()) {
         if($nodeId !== 0){
             $this->verifyNodeId($nodeId);
         }
@@ -627,7 +641,99 @@ class EntityService implements ServiceLocatorAwareInterface
 
         return $entity;
     }
-    
+
+    /**
+     * @param $nodeId
+     * @param $flatFields
+     * @return array
+     * @throws NodeException
+     */
+    protected function getEntitytypeCodeArrayFromFlatFieldname($nodeId, $flatFields)
+    {
+        if (!is_array($flatFields)) {
+            $flatFields = array($flatFields);
+        }
+
+        $entityAttributeArray = array();
+        foreach ($flatFields as $field) {
+            $entityType = strtok($field, '_');
+            $attributeCode = strtok($field);
+            if (array_key_exists($entityType, $entityAttributeArray)) {
+                $entityAttributeArray[$entityType][] = $attributeCode;
+            }else{
+                $entityAttributeArray[$entityType] = array($attributeCode);
+            }
+        }
+
+        foreach ($entityAttributeArray as $entityType=>$attributeCodes) {
+            $entityTypeId = $this->verifyEntityType($entityType);
+            $subscribedAttributes = $this->getServiceLocator()->get('nodeService')
+                ->getSubscribedAttributeCodes($nodeId, $entityTypeId);
+
+            foreach ($attributeCodes as $code) {
+                if (!in_array($code, $subscribedAttributes)) {
+                    unset($entityAttributeArray[$entityType][$code]);
+                }
+            }
+        }
+
+        return $entityAttributeArray;
+    }
+
+    /**
+     * @param $nodeId
+     * @param $entityType
+     * @param $storeId
+     * @param $uniqueId
+     * @return bool
+     * @throws NodeException
+     */
+    public function createFlatFromEav ($nodeId, $entityType, $storeId, $uniqueId)
+    {
+        $success = FALSE;
+        $this->verifyNodeId($nodeId);
+
+        if ($this->hasFlatTable($entityType)) {
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                    'cr_flat',
+                    'createFlat - '.$nodeId.' - '.$entityType.' - '.$storeId.' - '.$uniqueId,
+                    array(
+                        'node_id' => $nodeId,
+                        'entity_type' => $entityType,
+                        'store_id' => $storeId,
+                        'unique_id' => $uniqueId
+                    )
+                );
+
+            $entity = $this->loadEntity($nodeId, $entityType, $storeId, $uniqueId);
+            if ($entity) {
+                $flatFields = $this->getServiceLocator()->get('entityConfigService')
+                    ->getFlatEntityTypeFields($entity->getTypeStr());
+                $entityAttributeArray = $this->getEntitytypeCodeArrayFromFlatFieldname($nodeId, $flatFields);
+                $flatData = $entity->getFlatDataFromEav($entityAttributeArray);
+
+                $maxTries = 3;
+                do {
+                    $insertData = $flatData;
+                    foreach ($insertData as $key=>$data) {
+                        $inserts = array();
+                        foreach ($data as $field=>$value) {
+                            $inserts[] = $field." = '".$value."'";
+                        }
+
+                        $sql = 'INSERT INTO entity_flat_'.$entityType.' SET '.explode(', ', $inserts).';';
+                        if ($this->executeSqlQuery($this->getNodeId(), $sql)) {
+                            unset($flatData[$key]);
+                        }
+                    }
+                } while(count($flatData) && --$maxTries > 0);
+            }
+        }
+
+        return $success;
+    }
+
     /**
      * Creates an entity identifier entry to link the given entity to this node.
      * @param int $nodeId
@@ -701,17 +807,22 @@ class EntityService implements ServiceLocatorAwareInterface
      */
     public function getLocalId($nodeId, $entity)
     {
-        if(is_object($entity)){
+        if (is_object($entity)) {
             $entity = $entity->getId();
         }
-        $res = $this->getTableGateway('entity_identifier')->select(array(
+
+        $result = $this->getTableGateway('entity_identifier')->select(array(
             'entity_id'=>$entity,
             'node_id'=>$nodeId,
         ));
-        foreach($res as $row){
-            return $row['local_id'];
+
+        $return = NULL;
+        foreach ($result as $row) {
+            $return = $row['local_id'];
+            break;
         }
-        return null;
+
+        return $return;
     }
 
     /**
@@ -729,7 +840,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $nodeRes = $this->getTableGateway('node')->select(array('type'=>$remote_type));
         if(!$nodeRes || !count($nodeRes)){
-            return ($allowMultiple ? array() : null);
+            return ($allowMultiple ? array() : NULL);
         }
 
         $nodeIds = array();
@@ -786,8 +897,15 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param \Entity\Entity $entity
      * @param string[] $attributes
      */
-    public function touchEntity ( \Entity\Entity $entity, $attributes = array() ) {
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'touch', 'touchEntity - ' . $entity->getId(), array(), array('entity'=>$entity));
+    public function touchEntity(\Entity\Entity $entity, $attributes = array())
+    {
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'touch',
+                'touchEntity - '.$entity->getId(),
+                array(),
+                array('entity'=>$entity)
+            );
         $this->getSaver()->touchEntity($entity, $attributes);
     }
 
@@ -1384,15 +1502,16 @@ class EntityService implements ServiceLocatorAwareInterface
      * @throws MagelinkException If the passed node ID is invalid
      * @return int The processed node ID
      */
-    protected function verifyNodeId(&$nodeId)
+    protected function verifyNodeId(&$node)
     {
+        $nodeId = $node;
         if ($nodeId === 0) {
             // Bypass
         }else{
-            if ($nodeId instanceof \Node\Entity\Node) {
-                $nodeId = $nodeId->getId();
-            }elseif ($nodeId instanceof \Node\AbstractNode) {
-                $nodeId = $nodeId->getNodeId();
+            if ($node instanceof \Node\Entity\Node) {
+                $nodeId = $node = $node->getId();
+            }elseif ($node instanceof \Node\AbstractNode) {
+                $nodeId = $node = $node->getNodeId();
             }
 
             if ($nodeId <= 0 || !is_int($nodeId)) {
@@ -1413,25 +1532,67 @@ class EntityService implements ServiceLocatorAwareInterface
      */
     protected function verifyEntityType(&$entityType)
     {
-        $entityType_in = $entityType;
-        //if($entityType instanceof Entity\Model\Type){
-        //    $entityType = $entityType->getId();
-        //}
-        if(is_string($entityType)){
-            $entityType = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
-        }
-        if($entityType <= 0 || !is_int($entityType)){
-            throw new \Magelink\Exception\NodeException('Invalid entity type passed to EntityService - '.$entityType_in.' - '.$entityType);
+        $entityTypePassed = $entityTypeId = $entityType;
+        if (is_string($entityType)) {
+            $entityTypeId = $entityType = $this->getServiceLocator()->get('entityConfigService')
+                ->parseEntityType($entityType);
         }
 
-        return $entityType;
+        if ($entityTypeId <= 0 || !is_int($entityTypeId)) {
+            $message = 'Invalid entity type passed to EntityService - '.$entityTypePassed.' - '.$entityType;
+            throw new \Magelink\Exception\NodeException($message);
+            $entityTypeId = NULL;
+        }
+
+        return $entityTypeId;
     }
+
+    /**
+     * @param int|string $entityType
+     * @return bool $hasFlatTable|string $entityType
+     * @throws NodeException
+     */
+    protected function hasFlatTable($entityType)
+    {
+        try{
+            $entityTypeId = $this->verifyEntityType($entityType);
+            if ($entityTypeId) {
+                $flatEntityTypes = $this->getServiceLocator()->get('entityConfigService')->getFlatEntityTypeCodes();
+                $flatEntityTypeIds = array_flip($flatEntityTypes);
+                $hasFlatTable = in_array($entityTypeId, $flatEntityTypeIds);
+            }
+        }catch (\Exception $exception) {
+            $hasFlatTable = FALSE;
+            throw new $exception;
+        }
+
+        return $hasFlatTable ? $flatEntityTypes[$entityTypeId] : $hasFlatTable;
+    }
+
+    /**
+     * Get flat table column name from entity type and eav code
+     * @param string|int $entityType
+     * @param string $code
+     * @return bool|string $flatTableColumn
+     */
+    public function getFlatTableColumn($entityType, $eavCode)
+    {
+        if ($this->hasFlatTable($entityType)) {
+            $flatTableColumn = $entityType.'_'.$eavCode;
+        }else{
+            $flatTableColumn = FALSE;
+        }
+
+        return $flatTableColumn;
+    }
+
 
     /**
      * Return the database adapter to be used to communicate with Entity storage.
      * @return \Zend\Db\Adapter\Adapter
      */
-    protected function getAdapter(){
+    protected function getAdapter()
+    {
         return $this->getServiceLocator()->get('zend_db');
     }
 
