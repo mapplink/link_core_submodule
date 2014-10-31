@@ -248,6 +248,17 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * Loads the entity flat data from the database
+     * @param string $entityType
+     * @param string $where
+     * @param boolean|string $orderBy
+     */
+    public function executeFlatEntityQuery($sql)
+    {
+        return $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+    }
+
+    /**
      * Loads the entity identified by the given local_id from the database for the given node.
      * 
      * @param int $nodeId
