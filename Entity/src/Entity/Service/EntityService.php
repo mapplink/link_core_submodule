@@ -232,7 +232,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param string $where
      * @param boolean|string $orderBy
      */
-    public function loadFlatEntityData($entityType, $columns = '*', $where = FALSE, $orderBy = FALSE)
+    public function loadFlatEntity($entityType, $columns = '*', $where = FALSE, $orderBy = FALSE)
     {
         if ($entityType = $this->hasFlatTable($entityType)) {
             $sql = "SELECT ".$columns." FROM entity_flat_".$entityType
@@ -245,6 +245,36 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         return $itemData;
+    }
+
+    /**
+     * @param string$entityType
+     * @param array $set
+     * @param string $where
+     * @return bool
+     */
+    public function updateFlatEntity($entityType, array $set, $where)
+    {
+        $success = FALSE;
+        if ($entityType = $this->hasFlatTable($entityType)) {
+            $sets = array();
+            foreach ($set as $field=>$expression) {
+                $sets[] = "`".$field."` = ".$expression;
+            }
+            $set = trim(implode(', ', $sets));
+            $where = trim($where);
+
+            if ($set && $where) {
+                $sql = "UPDATE entity_flat_".$entityType
+                    ." SET ".$set
+                    ." WHERE ".$where
+                    .";";
+
+                $success = (bool) $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
+            }
+        }
+
+        return $success;
     }
 
     public function executeFlatEntityQuery($sql)
