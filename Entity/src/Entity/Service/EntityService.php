@@ -239,7 +239,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 ." WHERE ".$where
                 .($orderBy ? " ORDER BY ".$orderBy : "")
                 .";";
-            $itemData = $this->executeSqlQuery($this->getNodeId(), $sql);
+            $itemData = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
         }else{
             $itemData = array();
         }
@@ -1328,7 +1328,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function executeQuery($mlql)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql', 'executeQuery: ' . $mlql, array('query'=>$mlql));
+            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql', 'executeQuery: '.$mlql, array('query'=>$mlql));
         try{
             $resp = $this->getQuerier()->executeQuery($mlql);
             $this->getServiceLocator()->get('logService')
@@ -1354,7 +1354,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function executeSqlQuery($sql)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'execsql', 'executeQuery: ' . $sql, array('query'=>$sql));
+            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'execsql', 'executeQuery: '.$sql, array('query'=>$sql));
         try{
             $response = $this->getQuerier()->executeSqlQuery($sql);
             $this->getServiceLocator()->get('logService')
@@ -1364,7 +1364,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     array('return'=>$response)
                 );
         }catch(\Exception $exception){
-            throw new MagelinkException('Error executing SQL: ' . $sql, 0, $exception);
+            throw new MagelinkException('Error executing SQL: '.$sql, 0, $exception);
             $response = NULL;
         }
 
