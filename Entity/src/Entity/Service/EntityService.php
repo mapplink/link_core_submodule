@@ -232,11 +232,11 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param string $where
      * @param boolean|string $orderBy
      */
-    public function loadFlatEntityData($entityType, $where, $orderBy = FALSE)
+    public function loadFlatEntityData($entityType, $columns = '*', $where = FALSE, $orderBy = FALSE)
     {
         if ($entityType = $this->hasFlatTable($entityType)) {
-            $sql = "SELECT * FROM entity_flat_".$entityType
-                ." WHERE ".$where
+            $sql = "SELECT ".$columns." FROM entity_flat_".$entityType
+                .($where ? " WHERE ".$where : "")
                 .($orderBy ? " ORDER BY ".$orderBy : "")
                 .";";
             $itemData = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
@@ -247,12 +247,6 @@ class EntityService implements ServiceLocatorAwareInterface
         return $itemData;
     }
 
-    /**
-     * Loads the entity flat data from the database
-     * @param string $entityType
-     * @param string $where
-     * @param boolean|string $orderBy
-     */
     public function executeFlatEntityQuery($sql)
     {
         return $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
