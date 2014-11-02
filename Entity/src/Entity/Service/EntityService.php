@@ -774,7 +774,7 @@ class EntityService implements ServiceLocatorAwareInterface
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_DEBUG,
                     'cr_flat',
-                    'createFlat - '.$nodeId.' - '.$entity->getTypeStr().' - '.$$entity->getUniqueId(),
+                    'createFlat - '.$nodeId.' - '.$entity->getTypeStr().' - '.$entity->getUniqueId(),
                     array(
                         'node_id'=>$nodeId,
                         'entity_type'=>$entity->getTypeStr(),
