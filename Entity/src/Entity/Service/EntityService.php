@@ -673,9 +673,9 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @param $nodeId
-     * @param $flatFields
-     * @return array
+     * @param int $nodeId
+     * @param array|string $flatFields
+     * @return array $entityAttributeArray
      * @throws NodeException
      */
     protected function getEntityAttributeArray($nodeId, $flatFields)
@@ -801,7 +801,7 @@ class EntityService implements ServiceLocatorAwareInterface
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_DEBUG,
                     'upd_flat',
-                    'updateFlat - '.$nodeId.' - '.$entity->getTypeStr().' - '.$$entity->getUniqueId(),
+                    'updateFlat - '.$nodeId.' - '.$entity->getTypeStr().' - '.$entity->getUniqueId(),
                     array(
                         'node_id'=>$nodeId,
                         'entity_type'=>$entity->getTypeStr(),
@@ -809,6 +809,87 @@ class EntityService implements ServiceLocatorAwareInterface
                     )
                 );
             $success = $this->replaceFlatFromEav($entity);
+        }
+
+        return $success;
+    }
+
+    /**
+     * @param int $nodeId
+     * @param int $storeId
+     * @param string|NULL $flatEntityType
+     * @param string|null $flatUniqueId
+     * @param array $fieldsToUpdate
+     * @param \Entity\Entity $entity
+     * @return bool $success
+     * @throws MagelinkException
+     * @throws NodeException
+     */
+    public function updateEavFromFlat($nodeId, $storeId, $flatEntityType, $flatUniqueId,
+        array $fieldsToUpdate, $entity = NULL)
+    {
+        $success = FALSE;
+        $this->verifyNodeId($nodeId);
+
+        $logData = array(
+            'node_id'=>$nodeId,
+            'store_id'=>$storeId,
+            'flat entity_type'=>$flatEntityType,
+            'flat unique_id'=>$flatUniqueId
+        );
+
+        $isValidEntity = $entity === NULL || $entity instanceof \Entity\Entity;
+        if ($flatEntityType === NULL || $flatUniqueId === NULL || !$isValidEntity) {
+            $message = 'updateEavFromFlat failed: '.$nodeId.' - '
+                .var_export($flatEntityType, TRUE).' ('.var_export($flatUniqueId, TRUE).')';
+            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'upd_eav_fl_fail',
+                    $message, $logData, array('entity'=>$entity)
+            );
+            //throw new MagelinkException($message);
+        }elseif ($this->hasFlatTable($flatEntityType)) {
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                    'upd_eav_flat', 'updateEavFromFlat - '.$nodeId.' - '.$flatEntityType.' - '.$flatUniqueId,
+                    array(
+                        'node_id'=>$nodeId,
+                        'flat entity_type'=>$flatEntityType,
+                        'flat unique_id'=>$flatUniqueId
+                    )
+                );
+            $where = "`".$this->getFlatTableColumn($flatEntityType, 'unique_id')."` = '".$flatUniqueId."'";
+            if ($entity) {
+                $where .= " AND `".$this->getFlatTableColumn($entity->getTypeStr(), 'unique_id')
+                    ."` = '".$entity->getUniqueId()."'";
+            }
+            $flatEntityRows = $this->loadFlatEntity($entity->getTypeStr(), '*', $where);
+            foreach ($flatEntityRows as $row) {
+                $updateArray = array();
+                foreach ($fieldsToUpdate as $flatColumn) {
+                    list($entityType, $attributeCode) = $this->getEntityEavDetails($flatColumn);
+                    if (!array_key_exists($entityType, $updateArray)) {
+                        $updateArray[$entityType] = array();
+                    }
+                    $uniqueId = $row[$this->getFlatTableColumn($entityType, 'unique_id')];
+                    if (!array_key_exists($uniqueId, $updateArray[$entityType])) {
+                        $updateArray[$entityType][$uniqueId] = array();
+                    }
+                    $updateArray[$entityType][$uniqueId][$attributeCode] = $row[$flatColumn];
+                }
+
+                foreach($updateArray as $entityType=>$updateEntityData) {
+                    foreach ($updateEntityData as $uniqueId=>$updateData) {
+                        $entityToUpdate = $this->loadEntity($nodeId, $entityType, $storeId, $uniqueId);
+                        $this->updateEntity($nodeId, $entityToUpdate, $updateData);
+                    }
+                }
+            }
+
+            // ToDo : Implement real success control
+            if ($entity) {
+                $success = $this->reloadEntity($entity);
+            }else{
+                $success = TRUE;
+            }
         }
 
         return $success;
