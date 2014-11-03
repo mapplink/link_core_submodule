@@ -867,13 +867,15 @@ class EntityService implements ServiceLocatorAwareInterface
                         'flat unique_id'=>$flatUniqueId
                     )
                 );
+
             $where = "`".$this->getFlatTableColumn($flatEntityType, 'unique_id')."` = '".$flatUniqueId."'".$where;
             $flatEntityRows = $this->loadFlatEntity($entityType, '*', $where);
 
             foreach ($flatEntityRows as $row) {
+                $success = TRUE;
                 $updateArray = array();
                 foreach ($fieldsToUpdate as $flatColumn) {
-                    list($entityType, $attributeCode) = $this->getEntityEavDetails($flatColumn);
+                    list($entityType, $attributeCode) = each($this->getEntityEavDetails($flatColumn));
                     if (!array_key_exists($entityType, $updateArray)) {
                         $updateArray[$entityType] = array();
                     }
@@ -893,10 +895,12 @@ class EntityService implements ServiceLocatorAwareInterface
             }
 
             // ToDo : Implement real success control
-            if ($entity) {
+            if (!$success) {
+                $success = FALSE;
+            }elseif ($entity) {
                 $success = $this->reloadEntity($entity);
             }else{
-                $success = TRUE;
+                $success = $success && TRUE;
             }
         }
 
