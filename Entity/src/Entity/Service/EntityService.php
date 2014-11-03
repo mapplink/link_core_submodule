@@ -718,7 +718,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return bool $success
      * @throws MagelinkException
      */
-    protected function replaceFlatFromEav(\Entity\Entity $entity, $insert = FALSE, $flatEntityType = NULL)
+    protected function replaceFlatFromEav(\Entity\Entity $entity, $insert = FALSE, $entityToUpdate = NULL)
     {
         if ($insert === TRUE) {
             $sqlType = "INSERT INTO";
@@ -729,13 +729,13 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $entityType = $entity->getTypeStr();
-        if ($flatEntityType === NULL) {
-            $flatEntityType = $entity->getTypeStr();
+        if ($entityToUpdate === NULL) {
+            $entityToUpdate = $entity;
         }
 
         $flatFields = $this->getServiceLocator()->get('entityConfigService')
-            ->getFlatEntityTypeFields($flatEntityType);
-        $flatData = $entity->getFlatDataFromEav($flatFields, $entityType);
+            ->getFlatEntityTypeFields($entityType);
+        $flatData = $entity->getFlatDataFromEav($flatFields, $entityToUpdate);
 
         if (is_array($flatData) && count($flatData)) {
             $maxTries = 3;
@@ -747,17 +747,17 @@ class EntityService implements ServiceLocatorAwareInterface
                         $replaces[] = "`".$field."` = '".$value."'";
                     }
 
-                    $sql = $sqlType." entity_flat_".$flatEntityType." SET ".implode(', ', $replaces).";";
+                    $sql = $sqlType." entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
                     try {
                         $this->getServiceLocator()->get('logService')
                             ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'rpl_flat', 'replaceFlat query: '.$sql,
                                 array(
-                                    'flat entity_type'=>$flatEntityType,
-                                    'entity_type'=>$entityType,
+                                    'flat entity_type'=>$entityType,
+                                    'to update entity_type'=>$entityToUpdate->getTypeStr(),
                                     'unique_id'=>$entity->getUniqueId(),
                                     'sql'=>$sql
                                 ),
-                                array($entity)
+                                array('flat entity'=>$entity, 'entity to update'=>$entityToUpdate)
                             );
                         $success = (bool) $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($nodeId, $sql);
                     }catch(\Exception $exception) {
@@ -804,18 +804,22 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @param $nodeId
+     * @param int $nodeId
      * @param \Entity\Entity $entity
+     * @param int $flatEntityId
      * @return bool
      */
-    public function updateFlatFromEav($nodeId, \Entity\Entity $entity, $flatEntityType = NULL)
+    public function updateFlatFromEav($nodeId, \Entity\Entity $entity, $flatEntityId = NULL)
     {
         $success = FALSE;
         $this->verifyNodeId($nodeId);
 
-        if ($flatEntityType === NULL) {
-            $flatEntityType = $entity->getTypeStr();
+        if ($flatEntityId === NULL) {
+            $flatEntity = $entity;
+        }else{
+            $flatEntity = $this->loadEntityId($nodeId, $flatEntityId);
         }
+        $flatEntityType = $flatEntity->getTypeStr();
 
         if ($this->hasFlatTable($flatEntityType)) {
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG,
@@ -828,7 +832,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     'unique_id'=>$entity->getUniqueId()
                 )
             );
-            $success = $this->replaceFlatFromEav($entity, FALSE, $flatEntityType);
+            $success = $this->replaceFlatFromEav($flatEntity, FALSE, $entity);
         }
 
         return $success;
