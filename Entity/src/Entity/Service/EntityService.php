@@ -860,7 +860,7 @@ class EntityService implements ServiceLocatorAwareInterface
             //throw new MagelinkException($message);
         }elseif ($this->hasFlatTable($flatEntityType)) {
             $where = "`".$this->getFlatTableColumn($flatEntityType, 'unique_id')."` = '".$flatUniqueId."'".$where;
-            $flatEntityRows = $this->loadFlatEntity($entityType, '*', $where);
+            $flatEntityRows = $this->loadFlatEntity($flatEntityType, '*', $where);
 
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_DEBUG,
@@ -892,7 +892,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     if (!array_key_exists($uniqueId, $updateArray[$entityType])) {
                         $updateArray[$entityType][$uniqueId] = array();
                     }
-                    $updateArray[$entityType][$uniqueId][$attributeCode] = $row[$flatColumn];
+                    $updateArray[$entityType][$uniqueId][$attributeCode] = $row[$field];
                 }
 
                 foreach($updateArray as $entityType=>$updateEntityData) {
