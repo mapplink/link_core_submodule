@@ -859,18 +859,25 @@ class EntityService implements ServiceLocatorAwareInterface
             );
             //throw new MagelinkException($message);
         }elseif ($this->hasFlatTable($flatEntityType)) {
+            $where = "`".$this->getFlatTableColumn($flatEntityType, 'unique_id')."` = '".$flatUniqueId."'".$where;
+            $flatEntityRows = $this->loadFlatEntity($entityType, '*', $where);
+
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_DEBUG,
                     'upd_eav_flat', 'updateEavFromFlat - '.$nodeId.' - '.$flatEntityType.' - '.$flatUniqueId,
                     array(
                         'node_id'=>$nodeId,
                         'flat entity_type'=>$flatEntityType,
-                        'flat unique_id'=>$flatUniqueId
+                        'flat unique_id'=>$flatUniqueId,
+                        'entity_type'=>$entityType,
+                        'where'=>$where,
+                        'flat results count'=>count($flatEntityRows)
+                    ),
+                    array(
+                        'entity'=>$entity,
+                        'flatEntityRows'=>$flatEntityRows
                     )
                 );
-
-            $where = "`".$this->getFlatTableColumn($flatEntityType, 'unique_id')."` = '".$flatUniqueId."'".$where;
-            $flatEntityRows = $this->loadFlatEntity($entityType, '*', $where);
 
             foreach ($flatEntityRows as $row) {
                 $success = TRUE;
