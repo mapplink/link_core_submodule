@@ -686,7 +686,8 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $entityAttributeArray = array();
         foreach ($flatFields as $field) {
-            list($entityType, $attributeCode) = each($this->getEntityEavDetails($field));
+            $eavDetails = $this->getEntityEavDetails($field);
+            list($entityType, $attributeCode) = each($eavDetails);
             if ($entityType && $attributeCode) {
                 if (array_key_exists($entityType, $entityAttributeArray)) {
                     $entityAttributeArray[$entityType][] = $attributeCode;
@@ -874,8 +875,9 @@ class EntityService implements ServiceLocatorAwareInterface
             foreach ($flatEntityRows as $row) {
                 $success = TRUE;
                 $updateArray = array();
-                foreach ($fieldsToUpdate as $flatColumn) {
-                    list($entityType, $attributeCode) = each($this->getEntityEavDetails($flatColumn));
+                foreach ($fieldsToUpdate as $field) {
+                    $eavDetails = $this->getEntityEavDetails($field);
+                    list($entityType, $attributeCode) = each($eavDetails);
                     if (!array_key_exists($entityType, $updateArray)) {
                         $updateArray[$entityType] = array();
                     }
@@ -897,7 +899,7 @@ class EntityService implements ServiceLocatorAwareInterface
             // ToDo : Implement real success control
             if (!$success) {
                 $success = FALSE;
-            }elseif ($entity) {
+            }elseif ($entity !== NULL) {
                 $success = $this->reloadEntity($entity);
             }else{
                 $success = $success && TRUE;
