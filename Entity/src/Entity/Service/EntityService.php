@@ -842,7 +842,7 @@ class EntityService implements ServiceLocatorAwareInterface
             $isValidEntity = TRUE;
             $entityType = $flatEntityType;
             $where = '';
-        }elseif (is_a($entity, '\Entity\Entity')) {
+        }elseif (is_a($entity, 'Entity')) {
             $isValidEntity = TRUE;
             $entityType = $entity->getTypeStr();
             $where = " AND `".$this->getFlatTableColumn($entityType, 'unique_id')."` = '".$entity->getUniqueId()."'";
