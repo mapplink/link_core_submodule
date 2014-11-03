@@ -718,9 +718,8 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return bool $success
      * @throws MagelinkException
      */
-    protected function replaceFlatFromEav(\Entity\Entity $entity, $insert = FALSE)
+    protected function replaceFlatFromEav(\Entity\Entity $entity, $insert = FALSE, $flatEntityType = NULL)
     {
-        $entityType = $entity->getTypeStr();
         if ($insert === TRUE) {
             $sqlType = "INSERT INTO";
         }elseif ($insert === FALSE) {
@@ -729,9 +728,14 @@ class EntityService implements ServiceLocatorAwareInterface
             $sqlType = "REPLACE INTO";
         }
 
+        $entityType = $entity->getTypeStr();
+        if ($flatEntityType === NULL) {
+            $flatEntityType = $entity->getTypeStr();
+        }
+
         $flatFields = $this->getServiceLocator()->get('entityConfigService')
-            ->getFlatEntityTypeFields($entityType);
-        $flatData = $entity->getFlatDataFromEav($flatFields);
+            ->getFlatEntityTypeFields($flatEntityType);
+        $flatData = $entity->getFlatDataFromEav($flatFields, $entityType);
 
         if (is_array($flatData) && count($flatData)) {
             $maxTries = 3;
@@ -743,11 +747,16 @@ class EntityService implements ServiceLocatorAwareInterface
                         $replaces[] = "`".$field."` = '".$value."'";
                     }
 
-                    $sql = $sqlType." entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
+                    $sql = $sqlType." entity_flat_".$flatEntityType." SET ".implode(', ', $replaces).";";
                     try {
                         $this->getServiceLocator()->get('logService')
                             ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'rpl_flat', 'replaceFlat query: '.$sql,
-                                array('entity_type'=>$entityType, 'unique_id'=>$entity->getUniqueId(), 'sql'=>$sql),
+                                array(
+                                    'flat entity_type'=>$flatEntityType,
+                                    'entity_type'=>$entityType,
+                                    'unique_id'=>$entity->getUniqueId(),
+                                    'sql'=>$sql
+                                ),
                                 array($entity)
                             );
                         $success = (bool) $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($nodeId, $sql);
@@ -799,23 +808,27 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param \Entity\Entity $entity
      * @return bool
      */
-    public function updateFlatFromEav($nodeId, \Entity\Entity $entity)
+    public function updateFlatFromEav($nodeId, \Entity\Entity $entity, $flatEntityType = NULL)
     {
         $success = FALSE;
         $this->verifyNodeId($nodeId);
 
-        if ($this->hasFlatTable($entity->getTypeStr())) {
-            $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUG,
-                    'upd_flat',
-                    'updateFlat - '.$nodeId.' - '.$entity->getTypeStr().' - '.$entity->getUniqueId(),
-                    array(
-                        'node_id'=>$nodeId,
-                        'entity_type'=>$entity->getTypeStr(),
-                        'unique_id'=>$entity->getUniqueId()
-                    )
-                );
-            $success = $this->replaceFlatFromEav($entity);
+        if ($flatEntityType === NULL) {
+            $flatEntityType = $entity->getTypeStr();
+        }
+
+        if ($this->hasFlatTable($flatEntityType)) {
+            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'upd_flat',
+                'updateFlat - '.$nodeId.' - '.$entity->getTypeStr().' ('.$flatEntityType.') - '.$entity->getUniqueId(),
+                array(
+                    'node_id'=>$nodeId,
+                    'flat entity_type'=>$flatEntityType,
+                    'entity_type'=>$entity->getTypeStr(),
+                    'unique_id'=>$entity->getUniqueId()
+                )
+            );
+            $success = $this->replaceFlatFromEav($entity, FALSE, $flatEntityType);
         }
 
         return $success;
