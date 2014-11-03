@@ -838,7 +838,7 @@ class EntityService implements ServiceLocatorAwareInterface
             'flat unique_id'=>$flatUniqueId
         );
 
-        $isValidEntity = $entity === NULL || $entity instanceof \Entity\Entity;
+        $isValidEntity = $entity === NULL || is_a($entity, '\Entity\Entity');
         if ($flatEntityType === NULL || $flatUniqueId === NULL || !$isValidEntity) {
             $message = 'updateEavFromFlat failed: '.$nodeId.' - '
                 .var_export($flatEntityType, TRUE).' ('.var_export($flatUniqueId, TRUE).')';
