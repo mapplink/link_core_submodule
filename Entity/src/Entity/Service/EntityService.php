@@ -718,8 +718,9 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return bool $success
      * @throws MagelinkException
      */
-    protected function replaceFlatFromEav($entity, $insert = FALSE)
+    protected function replaceFlatFromEav(\Entity\Entity $entity, $insert = FALSE)
     {
+        $entityType = $entity->getTypeStr();
         if ($insert === TRUE) {
             $sqlType = "INSERT INTO";
         }elseif ($insert === FALSE) {
@@ -729,7 +730,7 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $flatFields = $this->getServiceLocator()->get('entityConfigService')
-            ->getFlatEntityTypeFields($entity->getTypeStr());
+            ->getFlatEntityTypeFields($entityType);
         $flatData = $entity->getFlatDataFromEav($flatFields);
 
         if (is_array($flatData) && count($flatData)) {
@@ -742,8 +743,13 @@ class EntityService implements ServiceLocatorAwareInterface
                         $replaces[] = "`".$field."` = '".$value."'";
                     }
 
-                    $sql = $sqlType." entity_flat_".$entity->getTypeStr()." SET ".implode(', ', $replaces).";";
+                    $sql = $sqlType." entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
                     try {
+                        $this->getServiceLocator()->get('logService')
+                            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'rpl_flat', 'replaceFlat query: '.$sql,
+                                array('entity_type'=>$entityType, 'unique_id'=>$entity->getUniqueId(), 'sql'=>$sql),
+                                array($entity)
+                            );
                         $success = (bool) $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($nodeId, $sql);
                     }catch(\Exception $exception) {
                         $success = FALSE;
