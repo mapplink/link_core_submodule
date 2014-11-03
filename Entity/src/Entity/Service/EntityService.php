@@ -838,7 +838,18 @@ class EntityService implements ServiceLocatorAwareInterface
             'flat unique_id'=>$flatUniqueId
         );
 
-        $isValidEntity = $entity === NULL || is_a($entity, '\Entity\Entity');
+        if ($entity === NULL) {
+            $isValidEntity = TRUE;
+            $entityType = $flatEntityType;
+            $where = '';
+        }elseif (is_a($entity, '\Entity\Entity')) {
+            $isValidEntity = TRUE;
+            $entityType = $entity->getTypeStr();
+            $where = " AND `".$this->getFlatTableColumn($entityType, 'unique_id')."` = '".$entity->getUniqueId()."'";
+        }else{
+            $isValidEntity = FALSE;
+        }
+
         if ($flatEntityType === NULL || $flatUniqueId === NULL || !$isValidEntity) {
             $message = 'updateEavFromFlat failed: '.$nodeId.' - '
                 .var_export($flatEntityType, TRUE).' ('.var_export($flatUniqueId, TRUE).')';
@@ -856,12 +867,9 @@ class EntityService implements ServiceLocatorAwareInterface
                         'flat unique_id'=>$flatUniqueId
                     )
                 );
-            $where = "`".$this->getFlatTableColumn($flatEntityType, 'unique_id')."` = '".$flatUniqueId."'";
-            if ($entity) {
-                $where .= " AND `".$this->getFlatTableColumn($entity->getTypeStr(), 'unique_id')
-                    ."` = '".$entity->getUniqueId()."'";
-            }
-            $flatEntityRows = $this->loadFlatEntity($entity->getTypeStr(), '*', $where);
+            $where = "`".$this->getFlatTableColumn($flatEntityType, 'unique_id')."` = '".$flatUniqueId."'".$where;
+            $flatEntityRows = $this->loadFlatEntity($entityType, '*', $where);
+
             foreach ($flatEntityRows as $row) {
                 $updateArray = array();
                 foreach ($fieldsToUpdate as $flatColumn) {
