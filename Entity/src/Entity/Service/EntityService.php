@@ -718,16 +718,8 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return bool $success
      * @throws MagelinkException
      */
-    protected function replaceFlatFromEav(\Entity\Entity $entity, $insert = FALSE, $entityToUpdate = NULL)
+    protected function replaceFlatFromEav(\Entity\Entity $entity, $entityToUpdate = NULL)
     {
-        if ($insert === TRUE) {
-            $sqlType = "INSERT INTO";
-        }elseif ($insert === FALSE) {
-            $sqlType = "UPDATE";
-        }else{
-            $sqlType = "REPLACE INTO";
-        }
-
         $entityType = $entity->getTypeStr();
         if ($entityToUpdate === NULL) {
             $entityToUpdate = $entity;
@@ -747,7 +739,7 @@ class EntityService implements ServiceLocatorAwareInterface
                         $replaces[] = "`".$field."` = '".$value."'";
                     }
 
-                    $sql = $sqlType." entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
+                    $sql = "REPLACE INTO entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
                     try {
                         $this->getServiceLocator()->get('logService')
                             ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'rpl_flat', 'replaceFlat query: '.$sql,
@@ -797,7 +789,7 @@ class EntityService implements ServiceLocatorAwareInterface
                         'unique_id'=>$entity->getUniqueId()
                     )
                 );
-            $success = $this->replaceFlatFromEav($entity, TRUE);
+            $success = $this->replaceFlatFromEav($entity);
         }
 
         return $success;
@@ -833,7 +825,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     'unique_id'=>$entity->getUniqueId()
                 )
             );
-            $success = $this->replaceFlatFromEav($flatEntity, FALSE, $entity);
+            $success = $this->replaceFlatFromEav($flatEntity, $entity);
         }
 
         return $success;
