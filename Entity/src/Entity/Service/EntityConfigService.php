@@ -285,6 +285,22 @@ class EntityConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * Return all entity types with flat types to be updated
+     * @return array $entityTypes
+     */
+    public function getEntityTypeFlatUpdateCodes()
+    {
+        $entityTypes = array();
+        foreach ($this->getEntityTypesData() as $entityTypeId=>$typeData) {
+            if ($typeData['flat_types_to_update']) {
+                $entityTypes[$entityTypeId] = explode(',', $typeData['flat_types_to_update']);
+            }
+        }
+
+        return $entityTypes;
+    }
+
+    /**
      * Return all entity flat data fields
      * @return array $flatFields
      */
