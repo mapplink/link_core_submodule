@@ -809,14 +809,15 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param int $flatEntityId
      * @return bool
      */
-    public function updateFlatFromEav($nodeId, \Entity\Entity $entity, $flatEntityId = NULL)
+    public function updateFlatFromEav($nodeId, \Entity\Entity $entity, $flatEntityIdField = NULL)
     {
         $success = FALSE;
         $this->verifyNodeId($nodeId);
 
-        if ($flatEntityId === NULL) {
+        if ($flatEntityIdField === NULL) {
             $flatEntity = $entity;
         }else{
+            $flatEntityId = $entity->getData($flatEntityIdField);
             $flatEntity = $this->loadEntityId($nodeId, $flatEntityId);
         }
         $flatEntityType = $flatEntity->getTypeStr();
