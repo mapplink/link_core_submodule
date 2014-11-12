@@ -46,7 +46,10 @@ class Entity implements ServiceLocatorAwareInterface
     /** @var array All extended data for this Entity (fkey data, etc) */
     protected $_extendedData = array();
 
-    
+    /** @var \Entity\Entity[] */
+    protected $_resolveCache = array();
+
+
     /**
      * Creates a new Entity instance based on the provided row of data from the entity table.
      * @param array $row
@@ -185,15 +188,27 @@ class Entity implements ServiceLocatorAwareInterface
      * @return string|array|null The value, or null/default if none specified
      * @throws \Magelink\Exception\MagelinkException If the attribute was not loaded for this Entity
      */
-    public function getData($key, $default=null){
-        if(!isset($this->_attributesMap[$key])){
+    public function getData($key, $default=null)
+    {
+        if (!isset($this->_attributesMap[$key])) {
+            if (is_object($key)) {
+                $key = 'Object '.get_class($key);
+                if (method_exists($key, 'getId')) {
+                    $key = 'Object '.get_class($key).' '.$key->getId();
+                }else{
+                    $key = 'Object '.get_class($key);
+                }
+            }
+
             $message = 'Invalid attribute specified for getData ('.$this->getTypeStr().', by '.$this->getLoadedNodeId()
                 .') - ' . $key.'. Check attribute existence and subscription.';
             throw new MagelinkException($message);
         }
-        if(!isset($this->_data[$this->_attributesMap[$key]])){
+
+        if (!isset($this->_data[$this->_attributesMap[$key]])) {
             return $default;
         }
+
         return $this->_data[$this->_attributesMap[$key]];
     }
 
@@ -281,8 +296,6 @@ class Entity implements ServiceLocatorAwareInterface
         $this->_loadedFromNode = $node_id;
     }
 
-    protected $_resolveCache = array();
-    
     /**
      * Resolve a foreign-key relationship. Specified attribute must be Entity type.
      * 
