@@ -741,22 +741,27 @@ class EntityService implements ServiceLocatorAwareInterface
 
                     $sql = "REPLACE INTO entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
                     try {
-                        $this->getServiceLocator()->get('logService')
-                            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'rpl_flat', 'replaceFlat query: '.$sql,
-                                array(
-                                    'flat entity_type'=>$entityType,
-                                    'to update entity_type'=>$entityToUpdate->getTypeStr(),
-                                    'unique_id'=>$entity->getUniqueId(),
-                                    'sql'=>$sql
-                                ),
-                                array('flat entity'=>$entity, 'entity to update'=>$entityToUpdate)
-                            );
                         $success = (bool) $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($nodeId, $sql);
                     }catch(\Exception $exception) {
                         $success = FALSE;
                     }
+
+                    $message = ' replaceFlat query: '.$sql;
+                    $dataArray = array(
+                        'flat entity_type'=>$entityType,
+                        'to update entity_type'=>$entityToUpdate->getTypeStr(),
+                        'unique_id'=>$entity->getUniqueId(),
+                        'sql'=>$sql
+                    );
+                    $entityArray = array('flat entity'=>$entity, 'entity to update'=>$entityToUpdate);
+
                     if ($success) {
+                        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                            'rpl_flat', 'Successful'.$message, $dataArray, $entityArray);
                         unset($flatData[$key]);
+                    }else{
+                        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                            'rpl_flat_failed', 'Failure of'.$message, $dataArray, $entityArray);
                     }
                 }
             }while (count($flatData) && --$maxTries > 0);
