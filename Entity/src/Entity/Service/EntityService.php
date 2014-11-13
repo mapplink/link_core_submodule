@@ -737,7 +737,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     $replaces = array();
                     $escapedData = $this->getQuerier()->getEscapedColumnValueArray($data);
                     foreach ($escapedData as $field=>$value) {
-                        $replaces[$field] = "`".$field."` = '".$value."'";
+                        $replaces[$field] = "`".$field."` = ".$value;
                     }
 
                     $sql = "REPLACE INTO entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
@@ -745,6 +745,7 @@ class EntityService implements ServiceLocatorAwareInterface
                         $response = $this->executeSqlQuery($nodeId, $sql);
                         $success = (bool) $response;
                     }catch(\Exception $exception) {
+                        $response = NULL;
                         $success = FALSE;
                     }
 
