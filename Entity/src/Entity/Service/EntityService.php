@@ -730,7 +730,6 @@ class EntityService implements ServiceLocatorAwareInterface
         $flatData = $entity->getFlatDataFromEav($flatFields, $entityToUpdate);
 
         if (is_array($flatData) && count($flatData)) {
-            $adapter = ;
             $maxTries = 3;
             do {
                 $replaceData = $flatData;
@@ -738,7 +737,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     $replaces = array();
                     $escapedData = $this->getQuerier()->getEscapedColumnValueArray($data);
                     foreach ($escapedData as $field=>$value) {
-                        $replaces[$field] = "`".$field."` = '".$adapter->quote($value)."'";
+                        $replaces[$field] = "`".$field."` = '".$value."'";
                     }
 
                     $sql = "REPLACE INTO entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
