@@ -18,15 +18,26 @@ use Magelink\Exception\NodeException;
  *
  * @package Entity\Helper
  */
-abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface { 
+abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
+{
 
     protected static $_transactionStack = array();
+
+
+    protected $_attributeCache = array();
+
+    protected $_attributeCodeCache = array();
+
+    /** @var \Zend\ServiceManager\ServiceLocatorInterface The service locator */
+    protected $_serviceLocator = null;
+
 
     /**
      * Starts a transaction with the given ID
      * @param string $id
      */
-    public function beginTransaction($id){
+    public function beginTransaction($id)
+    {
         self::$_transactionStack[] = $id;
         if(count(self::$_transactionStack) == 1){
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_begin_actual', 'beginTransaction - actual - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
@@ -43,7 +54,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * @param string $id
      * @throws MagelinkException If an invalid transaction ID is passed
      */
-    public function rollbackTransaction($id){
+    public function rollbackTransaction($id)
+    {
         if(!in_array($id, self::$_transactionStack)){
             $this->rollbackTransactionInternal();
             throw new MagelinkException('Invalid transaction to roll back - ' . $id);
@@ -95,7 +107,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     /**
      * Internal function to rollback a transaction, used in error cases of above functions.
      */
-    protected function rollbackTransactionInternal(){
+    protected function rollbackTransactionInternal()
+    {
         $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_rollback_int', 'rollbackTransactionInternal', array('stack'=>self::$_transactionStack));
         $adapter = $this->getAdapter();
         $adapter->getDriver()->getConnection()->rollback();
@@ -107,12 +120,25 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * @param mixed $value Should be a scalar value or something that will automatically convert to a string.
      * @return string
      */
-    protected function escape($value){
+    protected function escape($value)
+    {
         return $this->getAdapter()->platform->quoteValue($value);
     }
-    
-    protected $_attributeCache = array();
-    protected $_attributeCodeCache = array();
+
+    /**
+     * Escape values of a column value array for usage in raw SQL
+     * @param array $columnValueArray
+     * @return array
+     */
+    public function getEspacedColumnValueArray(array $columnValueArray)
+    {
+        $escapedColumnValueArray = array();
+        foreach ($columnValueArray as $column=>$value) {
+            $escapedColumnValueArray[$column] = $this->escape($value);
+        }
+
+        return $escapedColumnValueArray;
+    }
     
     /**
      * Get attribute data array, loading if necessary
@@ -121,7 +147,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * @return array|false
      * @throws \Magelink\Exception\MagelinkException
      */
-    public function getAttribute($code, $entity_type_id){
+    public function getAttribute($code, $entity_type_id)
+    {
         if(!isset($this->_attributeCache[$entity_type_id])){
             $this->_attributeCache[$entity_type_id] = array();
         }
@@ -155,7 +182,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * Internal function to retrieve attribute caches for debugging
      * @return array
      */
-    public function getAttributeDebuggingData(){
+    public function getAttributeDebuggingData()
+    {
         return array($this->_attributeCache, $this->_attributeCodeCache);
     }
     
@@ -313,7 +341,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * Return the database adapter to be used to communicate with Entity storage.
      * @return \Zend\Db\Adapter\Adapter
      */
-    protected function getAdapter(){
+    protected function getAdapter()
+    {
         return $this->getServiceLocator()->get('zend_db');
     }
     
@@ -322,26 +351,24 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * @param string $table
      * @return \Zend\Db\TableGateway\TableGateway
      */
-    protected function getTableGateway($table){
+    protected function getTableGateway($table)
+    {
         return new TableGateway($table, \Zend\Db\TableGateway\Feature\GlobalAdapterFeature::getStaticAdapter());
     }
     
     /**
-     * @var \Zend\ServiceManager\ServiceLocatorInterface The service locator
-     */
-    protected $_serviceLocator = null;
-    
-    /**
      * @return \Zend\ServiceManager\ServiceLocatorInterface
      */
-    public function getServiceLocator() {
+    public function getServiceLocator()
+    {
         return $this->_serviceLocator;
     }
 
     /**
      * @param \Zend\ServiceManager\ServiceLocatorInterface $serviceLocator
      */
-    public function setServiceLocator(\Zend\ServiceManager\ServiceLocatorInterface $serviceLocator) {
+    public function setServiceLocator(\Zend\ServiceManager\ServiceLocatorInterface $serviceLocator)
+    {
         $this->_serviceLocator = $serviceLocator;
     }
 }

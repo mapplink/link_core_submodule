@@ -718,7 +718,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return bool $success
      * @throws MagelinkException
      */
-    protected function replaceFlatFromEav(\Entity\Entity $entity, $entityToUpdate = NULL)
+    protected function replaceFlatFromEav($nodeId, \Entity\Entity $entity, $entityToUpdate = NULL)
     {
         $entityType = $entity->getTypeStr();
         if ($entityToUpdate === NULL) {
@@ -730,18 +730,20 @@ class EntityService implements ServiceLocatorAwareInterface
         $flatData = $entity->getFlatDataFromEav($flatFields, $entityToUpdate);
 
         if (is_array($flatData) && count($flatData)) {
+            $adapter = ;
             $maxTries = 3;
             do {
                 $replaceData = $flatData;
                 foreach ($replaceData as $key=>$data) {
                     $replaces = array();
-                    foreach ($data as $field=>$value) {
-                        $replaces[] = "`".$field."` = '".$value."'";
+                    $escapedData = $this->getQuerier()->getEscapedColumnValueArray($data);
+                    foreach ($escapedData as $field=>$value) {
+                        $replaces[$field] = "`".$field."` = '".$adapter->quote($value)."'";
                     }
 
                     $sql = "REPLACE INTO entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
                     try {
-                        $response = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($nodeId, $sql);
+                        $response = $this->executeSqlQuery($nodeId, $sql);
                         $success = (bool) $response;
                     }catch(\Exception $exception) {
                         $success = FALSE;
@@ -809,7 +811,7 @@ class EntityService implements ServiceLocatorAwareInterface
                         'unique_id'=>$entity->getUniqueId()
                     )
                 );
-            $success = $this->replaceFlatFromEav($entity);
+            $success = $this->replaceFlatFromEav($nodeId, $entity);
         }
 
         return $success;
@@ -845,7 +847,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     'unique_id'=>$entity->getUniqueId()
                 )
             );
-            $success = $this->replaceFlatFromEav($flatEntity, $entity);
+            $success = $this->replaceFlatFromEav($nodeId, $flatEntity, $entity);
         }
 
         return $success;
