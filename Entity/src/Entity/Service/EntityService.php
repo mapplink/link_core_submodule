@@ -742,7 +742,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
                     $sql = "REPLACE INTO entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
                     try {
-                        $response = $this->executeSqlQuery($nodeId, $sql);
+                        $response = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
                         $success = (bool) $response;
                     }catch(\Exception $exception) {
                         $response = NULL;
