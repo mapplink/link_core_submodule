@@ -737,7 +737,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     $replaces = array();
                     $escapedData = $this->getQuerier()->getEscapedColumnValueArray($data);
                     foreach ($escapedData as $field=>$value) {
-                        $replaces[$field] = "`".$field."` = ".$value;
+                        $replaces[$field] = $field." = ".$value;
                     }
 
                     $sql = "REPLACE INTO entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
@@ -800,18 +800,27 @@ class EntityService implements ServiceLocatorAwareInterface
         $success = FALSE;
         $this->verifyNodeId($nodeId);
 
+        $logData = array(
+            'node_id'=>$nodeId,
+            'entity_type'=>$entity->getTypeStr(),
+            'unique_id'=>$entity->getUniqueId()
+        );
+
         if ($this->hasFlatTable($entity->getTypeStr())) {
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_DEBUG,
                     'cr_flat',
                     'createFlat - '.$nodeId.' - '.$entity->getTypeStr().' - '.$entity->getUniqueId(),
-                    array(
-                        'node_id'=>$nodeId,
-                        'entity_type'=>$entity->getTypeStr(),
-                        'unique_id'=>$entity->getUniqueId()
-                    )
+                    $logData
                 );
             $success = $this->replaceFlatFromEav($nodeId, $entity);
+        }else{
+            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_WARN,
+                'cr_no_flat',
+                'no flat table for '.$entity->getTypeStr().' - '.$entity->getUniqueId(),
+                $logData
+            );
+
         }
 
         return $success;
@@ -836,18 +845,26 @@ class EntityService implements ServiceLocatorAwareInterface
         }
         $flatEntityType = $flatEntity->getTypeStr();
 
+        $logData = array(
+            'node_id'=>$nodeId,
+            'flat entity_type'=>$flatEntityType,
+            'entity_type'=>$entity->getTypeStr(),
+            'unique_id'=>$entity->getUniqueId()
+        );
+
         if ($this->hasFlatTable($flatEntityType)) {
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG,
                 'upd_flat',
                 'updateFlat - '.$nodeId.' - '.$entity->getTypeStr().' ('.$flatEntityType.') - '.$entity->getUniqueId(),
-                array(
-                    'node_id'=>$nodeId,
-                    'flat entity_type'=>$flatEntityType,
-                    'entity_type'=>$entity->getTypeStr(),
-                    'unique_id'=>$entity->getUniqueId()
-                )
+                $logData
             );
             $success = $this->replaceFlatFromEav($nodeId, $flatEntity, $entity);
+        }else{
+            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_WARN,
+                'upd_no_flat',
+                'no flat table for '.$entity->getTypeStr().' ('.$flatEntityType.') - '.$entity->getUniqueId(),
+                $logData
+            );
         }
 
         return $success;
