@@ -842,7 +842,6 @@ class EntityService implements ServiceLocatorAwareInterface
     {
         $success = FALSE;
         $this->verifyNodeId($nodeId);
-        $this->reloadEntity($entity);
 
         if ($flatEntityIdField === NULL) {
             $flatEntity = $entity;
