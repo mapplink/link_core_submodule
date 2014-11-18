@@ -240,6 +240,9 @@ class EntityService implements ServiceLocatorAwareInterface
                 .($orderBy ? " ORDER BY ".$orderBy : "")
                 .";";
             $itemData = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
+
+            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                'ld_flat_ety', 'load flat entity: '.$sql, array('sql'=>$sql, 'response'=>$itemData));
         }else{
             $itemData = array();
         }
@@ -271,6 +274,9 @@ class EntityService implements ServiceLocatorAwareInterface
                     .";";
 
                 $success = (bool) $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
+
+                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                        'upd_flat_ety', 'update flat entity: '.$sql, array('sql'=>$sql, 'success'=>$success));
             }
         }
 
