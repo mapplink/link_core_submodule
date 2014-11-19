@@ -724,17 +724,19 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return bool $success
      * @throws MagelinkException
      */
-    protected function replaceFlatFromEav($nodeId, \Entity\Entity $entity, $entityToUpdate = NULL)
+    protected function replaceFlatFromEav($nodeId, \Entity\Entity $entity, $entityToUpdate = NULL, $entityOnly = FALSE)
     {
         $entityType = $entity->getTypeStr();
         if ($entityToUpdate === NULL) {
             $entityToUpdate = $entity;
+            $entityOnly = FALSE;
         }
+
         $entityArray = array('flat entity'=>$entity, 'entity to update'=>$entityToUpdate);
 
         $flatFields = $this->getServiceLocator()->get('entityConfigService')
             ->getFlatEntityTypeFields($entityType);
-        $flatData = $entity->getFlatDataFromEav($flatFields, $entityToUpdate);
+        $flatData = $entity->getFlatDataFromEav($flatFields, $entityToUpdate, $entityOnly);
 
         if (is_array($flatData) && count($flatData)) {
             $maxTries = 3;
@@ -852,8 +854,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param int $flatEntityId
      * @return bool
      */
-    public function updateFlatFromEav($nodeId, \Entity\Entity $entity, $flatEntityIdField = NULL)
-    {
+    public function updateFlatFromEav($nodeId, \Entity\Entity $entity, $flatEntityIdField = NULL, $entityOnly = FALSE) {
         $success = FALSE;
         $this->verifyNodeId($nodeId);
 
@@ -878,7 +879,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 'updateFlat - '.$nodeId.' - '.$entity->getTypeStr().' ('.$flatEntityType.') - '.$entity->getUniqueId(),
                 $logData
             );
-            $success = $this->replaceFlatFromEav($nodeId, $flatEntity, $entity);
+            $success = $this->replaceFlatFromEav($nodeId, $flatEntity, $entity, $entityOnly);
         }else{
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_WARN,
                 'upd_no_flat',
