@@ -730,6 +730,7 @@ class EntityService implements ServiceLocatorAwareInterface
         if ($entityToUpdate === NULL) {
             $entityToUpdate = $entity;
         }
+        $entityArray = array('flat entity'=>$entity, 'entity to update'=>$entityToUpdate);
 
         $flatFields = $this->getServiceLocator()->get('entityConfigService')
             ->getFlatEntityTypeFields($entityType);
@@ -760,12 +761,11 @@ class EntityService implements ServiceLocatorAwareInterface
                         'entity_id'=>$entity->getId(),
                         'flat entity_type'=>$entityType,
                         'to update entity_type'=>$entityToUpdate->getTypeStr(),
-                        'unique_id'=>$entity->getUniqueId(),
+                        'to update unique_id'=>$entity->getUniqueId(),
                         'data'=>$data,
                         'sql'=>$sql,
                         'response'=>$response
                     );
-                    $entityArray = array('flat entity'=>$entity, 'entity to update'=>$entityToUpdate);
 
                     if ($success) {
                         $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
@@ -790,7 +790,21 @@ class EntityService implements ServiceLocatorAwareInterface
                     'failed_rpl_flat', 'Replacing of '.count($flatData).' flat rows failed.', $dataArray, $entityArray);
             }
         }else{
-            throw new MagelinkException('Creation of flat data on '.$entity->getId().' failed completely.');
+            $message = 'Creation of flat data on '.$entity->getId().' ('.$entity->getUniqueId().') failed completely.';
+            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
+                'failed_rpl_flat',
+                $message,
+                array(
+                    'entity_id'=>$entity->getId(),
+                    'flat entity_type'=>$entityType,
+                    'to update entity_type'=>$entityToUpdate->getTypeStr(),
+                    'to update unique_id'=>$entity->getUniqueId(),
+                    'flat fields'=>$flatFields,
+                    'flat data'=>$flatData,
+                ),
+                $entityArray
+            );
+            throw new MagelinkException($message);
         }
 
         return $allSuccessful;
