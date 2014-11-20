@@ -781,7 +781,7 @@ class EntityService implements ServiceLocatorAwareInterface
             }while (count($flatData) && --$maxTries > 0);
 
             $allSuccessful = !count($flatData);
-            unset($dataArray['data'], $dataArray['response']);
+            unset($dataArray['data'], $dataArray['sql'], $dataArray['response']);
 
             if ($allSuccessful) {
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG,
@@ -854,7 +854,8 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param int $flatEntityId
      * @return bool
      */
-    public function updateFlatFromEav($nodeId, \Entity\Entity $entity, $flatEntityIdField = NULL, $entityOnly = FALSE) {
+    public function updateFlatFromEav($nodeId, \Entity\Entity $entity, $flatEntityIdField = NULL, $entityOnly = FALSE)
+    {
         $success = FALSE;
         $this->verifyNodeId($nodeId);
 
