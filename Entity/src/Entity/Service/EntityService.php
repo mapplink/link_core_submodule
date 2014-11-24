@@ -729,7 +729,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $entityType = $entity->getTypeStr();
         if ($entityToUpdate === NULL) {
             $entityToUpdate = $entity;
-            $entityOnly = FALSE;
+            $entityOnly = FALSE; // Create only
         }
 
         $entityArray = array('flat entity'=>$entity, 'entity to update'=>$entityToUpdate);
@@ -1312,7 +1312,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param \Entity\Entity $entity
      * @throws MagelinkException If other nodes are linked to this entity, or if invalid data is passed.
      */
-    public function deleteEntity ($nodeId, \Entity\Entity $entity)
+    public function deleteEntity($nodeId, \Entity\Entity $entity)
     {
         $this->verifyNodeId($nodeId);
 
@@ -1563,8 +1563,11 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param string $mlql The MLQL to be parsed (see separate MLQL docs)
      * @return array
      */
-    public function parseQuery($mlql){
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'parsemlql', 'parseQuery: ' . $mlql, array('query'=>$mlql));
+    public function parseQuery($mlql)
+    {
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'parsemlql', 'parseQuery: ' . $mlql, array('query'=>$mlql));
+
         return $this->getQuerier()->parseQuery($mlql);
     }
 
@@ -1579,14 +1582,14 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->getServiceLocator()->get('logService')
             ->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql', 'executeQuery: '.$mlql, array('query'=>$mlql));
         try{
-            $resp = $this->getQuerier()->executeQuery($mlql);
+            $response = $this->getQuerier()->executeQuery($mlql);
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_DEBUG,
                     'execmlql_r',
-                    'Result: '.var_export($resp, true),
-                    array('ret'=>$resp)
+                    'Result: '.var_export($response, TRUE),
+                    array('querier response'=>$response)
                 );
-            return $resp;
+            return $response;
         }catch(\Exception $e){
             throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $e);
         }
@@ -1626,19 +1629,33 @@ class EntityService implements ServiceLocatorAwareInterface
      * @throws MagelinkException If the MLQL is invalid or contains a syntax error
      * @return array
      */
-    public function executeQueryColumn($mlql){
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql_col', 'executeQueryColumn: ' . $mlql, array('query'=>$mlql));
+    public function executeQueryColumn($mlql)
+    {
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'execmlql_col',
+                'executeQueryColumn: '.$mlql,
+                array('query'=>$mlql)
+            );
         try{
             $data = $this->getQuerier()->executeQuery($mlql);
-        }catch(\Exception $e){
-            throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $e);
+        }catch(\Exception $exception){
+            throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $exception);
+            $data = NULL;
         }
-        $ret = array();
+
+        $return = array();
         foreach($data as $row){
-            $ret[] = array_shift($row);
+            $return[] = array_shift($row);
         }
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql_col_r', 'Result: ' . var_export($ret, true), array('ret'=>$ret));
-        return $ret;
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'execmlql_col_r',
+                'Result: '.var_export($return, TRUE),
+                array('ret'=>$return)
+            );
+
+        return $return;
     }
 
     /**
@@ -1696,12 +1713,22 @@ class EntityService implements ServiceLocatorAwareInterface
      * @throws MagelinkException If the MLQL is invalid or contains a syntax error
      * @return mixed|null
      */
-    public function executeQueryScalar($mlql){
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql_sca', 'executeQueryScalar: ' . $mlql, array('query'=>$mlql));
+    public function executeQueryScalar($mlql)
+    {
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                'execmlql_sca',
+                'executeQueryScalar: '.$mlql,
+                array('query'=>$mlql)
+            );
         try{
-            $resp = $this->getQuerier()->executeQueryScalar($mlql);
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql_sca_r', 'Result: ' . var_export($resp, true), array('ret'=>$resp));
-            return $resp;
+            $response = $this->getQuerier()->executeQueryScalar($mlql);
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                    'execmlql_sca_r',
+                    'Result: '.var_export($response, TRUE),
+                    array('querier response'=>$response));
+            return $response;
         }catch(\Exception $e){
             throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $e);
         }
