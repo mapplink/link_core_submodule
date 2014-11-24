@@ -11,6 +11,22 @@
 namespace Entity\Wrapper;
 
 use Entity\Entity;
+use Magento\Service\MagentoService;
 
 
-class Product extends AbstractWrapper {}
+class Product extends AbstractWrapper
+{
+    /**
+     * Checks if product is shippable
+     * @return bool
+     */
+    public function isShippable()
+    {
+        /** @var \Magento\Service\MagentoService $magentoService */
+        $magentoService = $this->getServiceLocator()->get('magentoService');
+        $isShippable = $magentoService->isProductTypeShippable($this->getData('type'));
+
+        return $isShippable;
+    }
+}
+

@@ -12,6 +12,7 @@
 namespace Entity\Wrapper;
 
 use Entity\Entity;
+use Magento\Service\MagentoService;
 
 
 class Orderitem extends AbstractWrapper
@@ -194,6 +195,19 @@ class Orderitem extends AbstractWrapper
     {
         $deliveryQuantity = $this->getQuantity() - $this->getQuantityRefunded();
         return (int) $deliveryQuantity;
+    }
+
+    /**
+     * Checks if order item is shippable
+     * @return bool
+     */
+    public function isShippable()
+    {
+        /** @var \Magento\Service\MagentoService $magentoService */
+        $magentoService = $this->getServiceLocator()->get('magentoService');
+        $isShippable = $magentoService->isProductTypeShippable($this->getData('product_type'));
+
+        return $isShippable;
     }
 
 }
