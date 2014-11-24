@@ -29,4 +29,3 @@ class Product extends AbstractWrapper
         return $isShippable;
     }
 }
-

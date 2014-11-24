@@ -12,6 +12,7 @@
 namespace Entity\Wrapper;
 
 use Entity\Entity;
+use Entity\Wrapper\Product;
 use Magento\Service\MagentoService;
 
 
