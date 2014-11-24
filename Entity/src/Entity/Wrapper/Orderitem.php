@@ -12,6 +12,7 @@
 namespace Entity\Wrapper;
 
 use Entity\Entity;
+use Entity\Wrapper\Product;
 
 
 class Orderitem extends AbstractWrapper
@@ -196,4 +197,12 @@ class Orderitem extends AbstractWrapper
         return (int) $deliveryQuantity;
     }
 
+    /**
+     * @return bool
+     */
+    public function isShippable()
+    {
+        $type = $this->getData('product_type');
+        return Product::isProductTypeShippable($type);
+    }
 }
