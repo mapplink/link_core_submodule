@@ -4,23 +4,23 @@ namespace Entity\Cron;
 
 use \Zend\ServiceManager\ServiceLocatorInterface;
 
-class Tester implements \Application\CronRunnable, \Zend\ServiceManager\ServiceLocatorAwareInterface {
-
-
+class Tester implements \Application\CronRunnable, \Zend\ServiceManager\ServiceLocatorAwareInterface
+{
     /**
      * Checks whether we should run the cron task this run through.
-     *
-     * @param string $time The time of this cron run (rounded down to 5 minute intervals) as a HH:MM string
+     * @param string $minutes
      * @return boolean
      */
-    public function cronCheck($time) {
-        return false; // Change to enable/disable
+    public function cronCheck($minutes)
+    {
+        return FALSE; // Change to enable/disable
     }
 
     /**
      * Performs any scheduled actions.
      */
-    public function cronRun() {
+    public function cronRun()
+    {
         /** @var \Entity\Service\EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
 

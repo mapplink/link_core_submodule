@@ -15,10 +15,10 @@ interface CronRunnable {
     
     /**
      * Checks whether we should run the cron task this run through.
-     * @param int $time The time of this cron run (rounded down to 5 minute intervals) as a unix timestamp
+     * @param int $minutes The time in minutes of this cron run (unix timestamp in minutes)
      * @return boolean
      */
-    public function cronCheck($time);
+    public function cronCheck($minutes);
     
     /**
      * Performs any scheduled actions.
