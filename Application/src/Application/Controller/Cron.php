@@ -1,21 +1,26 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
+/**
+ * Magelink Cron
+ * Manages calling of individual cron tasks during a run.
+ *
+ * @category Application
+ * @package Application\Controller
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ *
  * This software is subject to our terms of trade and any applicable licensing agreements.
  */
 
 namespace Application\Controller;
 
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\Console\Request as ConsoleRequest;
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Magelink\Exception\MagelinkException;
+use Zend\Console\Request as ConsoleRequest;
+use Zend\Mvc\Controller\AbstractActionController;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
-/**
- * Manages calling of individual cron tasks during a run.
- */
+
 class Cron extends AbstractActionController implements ServiceLocatorAwareInterface
 {
 
@@ -40,11 +45,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
     public static function checkIfUnlocked($code)
     {
         $fileName = self::getLockFileName($code);
-        if (file_exists($fileName)) {
-            $unlocked = FALSE;
-        }else{
-            $unlocked = TRUE;
-        }
+        $unlocked = !file_exists($fileName);
 
         return $unlocked;
     }
@@ -60,8 +61,8 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         if (!is_dir(self::LOCKS_DIRECTORY)) {
             mkdir(self::LOCKS_DIRECTORY);
         }
-        if (!is_writable(self::LOCKS_DIRECTORY)){
-            throw new MagelinkException('Lock directory not writable!');
+        if (!is_writable(self::LOCKS_DIRECTORY)) {
+            throw new SyncException('Lock directory not writable!');
         }
 
         $unlocked = self::checkIfUnlocked($code);
@@ -73,10 +74,8 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
             if (!$handle) {
                 $unlocked = FALSE;
             }else{
-                $res = flock($handle, LOCK_EX | LOCK_NB);
-                if (!$res){
-                    $unlocked = FALSE;
-                }else{
+                $unlocked = flock($handle, LOCK_EX | LOCK_NB);
+                if ($unlocked) {
                     fwrite($handle, $code.'; '.time().'; Date: '.date('Y-m-d H:i:s'));
                     fflush($handle);
                     flock($handle, LOCK_UN);
@@ -98,33 +97,39 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         unlink($fileName);
     }
 
+    /**
+     * No index action on cron
+     * @throws MagelinkException
+     */
     public function indexAction()
     {
         throw new \Magelink\Exception\MagelinkException('Invalid Cron action');
     }
 
-    public function runAction(){
+    public function runAction()
+    {
         new \Application\Helper\ErrorHandler();
 
         if (extension_loaded('newrelic')) {
-            newrelic_background_job(true);
+            newrelic_background_job(TRUE);
         }
         $request = $this->getRequest();
 
-        // Make sure that we are running in a console and the user has not tricked our
-        // application into running this action from a public web server.
+        /* Make sure that we are running in a console and the user has not tricked our application into running this
+           action from a public web server. */
         if (!$request instanceof ConsoleRequest){
             throw new \RuntimeException('You can only use this action from a console!');
         }
 
         $this->getServiceLocator()->get('zend_db');
 
-        $time = time();
-        $time = floor($time/300)*300;
+        /** @var int $time Timestamp rounded to minutes */
+        $minutes = floor(time() / 60);
+        $time = date('H:i y/m/d', $minutes * 60);
 
         $job = $request->getParam('job');
-        if($job == 'all'){
-            $job = null;
+        if ($job == 'all') {
+            $job = NULL;
         }
         
         $config = $this->getServiceLocator()->get('Config');
@@ -139,56 +144,57 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
             die();
         }
 
-        $ran = false;
+        $ran = FALSE;
         $cronJobs = $config['magelink_cron'];
-        foreach($cronJobs as $name=>$class){
-            if($job !== null && $job != $name){
-                // If we have a job specified, and this is not it, skip.
-                continue;
-            }
 
-            $ran = TRUE;
+        foreach ($cronJobs as $name=>$class) {
+            if ($job === NULL || $job == $name) {
+                $ran = TRUE;
 
-            $obj = new $class();
-            if(!($obj instanceof \Application\CronRunnable)){
-                throw new \Magelink\Exception\MagelinkException('Cron task does not implement CronRunnable - ' . $class);
-            }
-            if($obj instanceof \Zend\ServiceManager\ServiceLocatorAwareInterface){
-                $obj->setServiceLocator($this->getServiceLocator());
-            }
-            
-            $check = $obj->cronCheck($time);
-            if($job == $name){
-                $check = TRUE;
-                // Forcing run for forced name
-            }
-            if(!$check){
-                $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_INFO,
-                        'cron_skip',
-                        'Skipping cron job '.$name,
-                        array('time'=>$time, 'name'=>$name, 'class'=>$class)
-                    );
-                continue;
-            }else{
+                $magelinkCron = new $class();
+                if (!($magelinkCron instanceof \Application\CronRunnable)) {
+                    $message = 'Cron task does not implement CronRunnable - '.$class;
+                    throw new \Magelink\Exception\MagelinkException($message);
+                }
+                if ($magelinkCron instanceof \Zend\ServiceManager\ServiceLocatorAwareInterface) {
+                    $magelinkCron->setServiceLocator($this->getServiceLocator());
+                }
+
+                if ($job == $name) {
+                    $runCron = TRUE;
+                }else{
+                    $runCron = $magelinkCron->cronCheck($minutes);
+                }
                 $lock = $this->acquireLock($name);
-                if (!$lock) {
+
+                $logInfo = array('time'=>$time, 'name'=>$name, 'class'=>$class);
+                if (!$runCron) {
                     $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        ->log(
+                            \Log\Service\LogService::LEVEL_INFO,
+                            'cron_skip',
+                            'Skipping cron job '.$name,
+                            $logInfo
+                        );
+                }elseif (!$lock) {
+                    $this->getServiceLocator()->get('logService')
+                        ->log(
+                            \Log\Service\LogService::LEVEL_ERROR,
                             'cron_locked',
                             'Locked cron job '.$name,
-                            array('time'=>$time, 'name'=>$name, 'class'=>$class)
+                            $logInfo
                         );
-                    continue;
+                }else{
+                    $this->getServiceLocator()->get('logService')
+                        ->log(
+                            \Log\Service\LogService::LEVEL_DEBUG,
+                            'cron_run',
+                            'Running cron job '.$name,
+                            $logInfo
+                        );
+                    $magelinkCron->cronRun();
+                    $this->releaseLock($name);
                 }
-                $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_DEBUG,
-                        'cron_run',
-                        'Running cron job '.$name,
-                        array('time'=>$time, 'name'=>$name, 'class'=>$class)
-                    );
-                $obj->cronRun();
-                $this->releaseLock($name);
             }
         }
 
