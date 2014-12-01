@@ -213,21 +213,30 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
 
             foreach ($updates as $entityId=>$update) {
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_INFO,
+                    ->log(
+                        \Log\Service\LogService::LEVEL_INFO,
                         'push_update',
                         'Pushing update for '.$entityId.' to '.$this->getNodeId(),
-                        array('attributes'=>$update['attributes'], 'type'=>$update['type'], 'combined'=>$update['combined']),
+                        array(
+                            'attributes'=>$update['attributes'],
+                            'type'=>$update['type'],
+                            'combined'=>$update['combined']
+                        ),
                         array('entity'=>$entityId, 'node'=>$this)
                     );
 
                 try{
-                    $this->_gateway[$entityType]->writeUpdates($update['entity'], $update['attributes'], $update['type']);
+                    $this->_gateway[$entityType]->writeUpdates(
+                        $update['entity'],
+                        $update['attributes'],
+                        $update['type']
+                    );
                 }catch (GatewayException $gatewayException) {
                     $message = 'Uncaught exception during update processing for '.$entityId.' to '.$this->getNodeId()
                         .': '.$gatewayException->getMessage();
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_ERROR,
-                            'update_ex',
+                            'update_gwex',
                             $message,
                             array($gatewayException->getMessage(), $gatewayException->getTraceAsString()),
                             array('exception'=>$gatewayException)
@@ -241,7 +250,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                         .': '.$exception->getMessage();
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_ERROR,
-                            'update_ex',
+                            'update_mlex',
                             $message,
                             array($exception->getMessage(), $exception->getTraceAsString()),
                             array('exception'=>$exception)
@@ -251,7 +260,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                     break;
                 }
 
-                foreach ($entityTypeUpdates[$entityType][$entityId] as $updateToBeMarkedAsCompleted) {
+                foreach ($entityTypeUpdates[$entityId] as $updateToBeMarkedAsCompleted) {
                     $nodeService->setUpdateStatus($this->_entity, $updateToBeMarkedAsCompleted, 1);
                 }
             }
