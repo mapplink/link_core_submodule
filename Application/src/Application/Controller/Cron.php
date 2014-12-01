@@ -93,8 +93,13 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
      */
     protected function releaseLock($code)
     {
-        $fileName = self::getLockFileName($code);
-        unlink($fileName);
+        $maxTries = 3;
+        do {
+            $fileName = self::getLockFileName($code);
+            unlink($fileName);
+        }while (!($unlocked = self::checkIfUnlocked($code)) && --$maxTries > 0);
+
+        return $unlocked;
     }
 
     /**
@@ -165,35 +170,49 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                 }else{
                     $runCron = $magelinkCron->cronCheck($minutes);
                 }
-                $lock = $this->acquireLock($name);
 
-                $logInfo = array('time'=>$time, 'name'=>$name, 'class'=>$class);
+                $logInfo = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$name, 'class'=>$class);
                 if (!$runCron) {
                     $this->getServiceLocator()->get('logService')
-                        ->log(
-                            \Log\Service\LogService::LEVEL_INFO,
+                        ->log(\Log\Service\LogService::LEVEL_INFO,
                             'cron_skip',
                             'Skipping cron job '.$name,
                             $logInfo
                         );
-                }elseif (!$lock) {
-                    $this->getServiceLocator()->get('logService')
-                        ->log(
-                            \Log\Service\LogService::LEVEL_ERROR,
-                            'cron_locked',
-                            'Locked cron job '.$name,
-                            $logInfo
-                        );
                 }else{
-                    $this->getServiceLocator()->get('logService')
-                        ->log(
-                            \Log\Service\LogService::LEVEL_DEBUG,
-                            'cron_run',
-                            'Running cron job '.$name,
-                            $logInfo
-                        );
-                    $magelinkCron->cronRun();
-                    $this->releaseLock($name);
+                    $lock = $this->acquireLock($name);
+                    if (!$lock) {
+                        $this->getServiceLocator()->get('logService')
+                            ->log(\Log\Service\LogService::LEVEL_ERROR,
+                                'cron_locked',
+                                'Locked cron job '.$name,
+                                $logInfo
+                            );
+                    }else{
+                        $this->getServiceLocator()->get('logService')
+                            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                                'cron_run_'.substr($name, 0, 4),
+                                'Running cron job: '.$name.', begin '.date('H:i:s d/m/y'),
+                                $logInfo
+                            );
+                        $magelinkCron->cronRun();
+                        $this->getServiceLocator()->get('logService')
+                            ->log(
+                                \Log\Service\LogService::LEVEL_DEBUG,
+                                'cron_run_'.substr($name, 0, 4),
+                                'Cron job '.$name.' finished at '.date('H:i:s d/m/y'),
+                                $logInfo
+                            );
+                        if (!$this->releaseLock($name)) {
+                            $file = self::getLockFileName($name);
+                            $this->getServiceLocator()->get('logService')
+                                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                                    'cron_unl_fail',
+                                    'Unlocking of cron job '.$name.' ('.$file.') failed',
+                                    array('name'=>$name, 'file'=>$file)
+                                );
+                        }
+                    }
                 }
             }
         }
