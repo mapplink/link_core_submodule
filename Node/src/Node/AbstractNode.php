@@ -213,8 +213,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
 
             foreach ($updates as $entityId=>$update) {
                 $this->getServiceLocator()->get('logService')
-                    ->log(
-                        \Log\Service\LogService::LEVEL_INFO,
+                    ->log(\Log\Service\LogService::LEVEL_INFO,
                         'push_update',
                         'Pushing update for '.$entityId.' to '.$this->getNodeId(),
                         array(
@@ -236,7 +235,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                         .': '.$gatewayException->getMessage();
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_ERROR,
-                            'update_gwex',
+                            'update_ex_gw',
                             $message,
                             array($gatewayException->getMessage(), $gatewayException->getTraceAsString()),
                             array('exception'=>$gatewayException)
@@ -250,7 +249,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                         .': '.$exception->getMessage();
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_ERROR,
-                            'update_mlex',
+                            'update_ex_ml',
                             $message,
                             array($exception->getMessage(), $exception->getTraceAsString()),
                             array('exception'=>$exception)
