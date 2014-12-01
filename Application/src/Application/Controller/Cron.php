@@ -108,12 +108,11 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
      */
     protected function releaseLock($code)
     {
-        $unlockTries = 3;
+        $maxTries = 3;
         do {
             $fileName = self::getLockFileName($code);
             unlink($fileName);
-
-        }while (!($unlocked = self::checkIfUnlocked($code)) && --$unlockTries > 0);
+        }while (!($unlocked = self::checkIfUnlocked($code)) && --$maxTries > 0);
 
         return $unlocked;
     }
@@ -194,6 +193,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     'class'=>$class,
                     'file'=>__FILE__
                 );
+
                 if (!$runCron) {
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_INFO,
