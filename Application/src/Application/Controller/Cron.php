@@ -172,7 +172,6 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                 }else{
                     $runCron = $magelinkCron->cronCheck($minutes);
                 }
-                $lock = $this->acquireLock($name);
 
                 $logInfo = array('cron start time'=>$time, 'name'=>$name, 'class'=>$class);
                 if (!$runCron) {
@@ -182,35 +181,42 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                             'Skipping cron job '.$name,
                             $logInfo
                         );
-                }elseif (!$lock) {
-                    $this->getServiceLocator()->get('logService')
-                        ->log(
-                            \Log\Service\LogService::LEVEL_ERROR,
-                            'cron_locked',
-                            'Locked cron job '.$name,
-                            $logInfo
-                        );
                 }else{
-                    $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_DEBUG,
-                            'cron_run_'.substr($name, 0, 4),
-                            'Running cron job: '.$name.', begin '.date('H:i:s d/m/y'),
-                            $logInfo
-                        );
-                    $magelinkCron->cronRun();
-                    $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_DEBUG,
-                            'cron_run_'.substr($name, 0, 4),
-                            'Cron job '.$name.' finished at '.date('H:i:s d/m/y'),
-                            $logInfo
-                        );
+                    $lock = $this->acquireLock($name);
+                    if (!$lock) {
+                        $this->getServiceLocator()->get('logService')
+                            ->log(
+                                \Log\Service\LogService::LEVEL_ERROR,
+                                'cron_locked',
+                                'Locked cron job '.$name,
+                                $logInfo
+                            );
+                    }else {
+                        $this->getServiceLocator()->get('logService')
+                            ->log(
+                                \Log\Service\LogService::LEVEL_DEBUG,
+                                'cron_run_'.substr($name, 0, 4),
+                                'Running cron job: '.$name.', begin '.date('H:i:s d/m/y'),
+                                $logInfo
+                            );
+                        $magelinkCron->cronRun();
+                        $this->getServiceLocator()->get('logService')
+                            ->log(
+                                \Log\Service\LogService::LEVEL_DEBUG,
+                                'cron_run_'.substr($name, 0, 4),
+                                'Cron job '.$name.' finished at '.date('H:i:s d/m/y'),
+                                $logInfo
+                            );
+                    }
+
                     if (!$this->releaseLock($name)) {
                         $file = self::getLockFileName($name);
                         $this->getServiceLocator()->get('logService')
-                            ->log(\Log\Service\LogService::LEVEL_ERROR,
+                            ->log(
+                                \Log\Service\LogService::LEVEL_ERROR,
                                 'cron_unl_fail',
                                 'Cron job '.$name.' ('.$file.') still locked ',
-                                array('name'=>$name, 'file'=>$file)
+                                array('name' => $name, 'file' => $file)
                             );
                     }
                 }
