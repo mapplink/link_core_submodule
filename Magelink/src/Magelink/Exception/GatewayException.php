@@ -11,4 +11,4 @@
 namespace Magelink\Exception;
 
 
-class InvalidDataException extends SyncException {}
+class GatewayException extends NodeException {}
