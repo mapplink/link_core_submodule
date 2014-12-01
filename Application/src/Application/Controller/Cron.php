@@ -173,7 +173,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     $runCron = $magelinkCron->cronCheck($minutes);
                 }
 
-                $logInfo = array('cron start time'=>$time, 'name'=>$name, 'class'=>$class);
+                $logInfo = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$name, 'class'=>$class);
                 if (!$runCron) {
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_INFO,
@@ -194,7 +194,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     }else{
                         $this->getServiceLocator()->get('logService')
                             ->log(
-                                \Log\Service\LogService::LEVEL_DEBUG,
+                                \Log\Service\LogService::LEVEL_DEBUGEXTRA,
                                 'cron_run_'.substr($name, 0, 4),
                                 'Running cron job: '.$name.', begin '.date('H:i:s d/m/y'),
                                 $logInfo
@@ -214,7 +214,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                                     \Log\Service\LogService::LEVEL_ERROR,
                                     'cron_unl_fail',
                                     'Cron job '.$name.' ('.$file.') still locked ',
-                                    array('name' => $name, 'file' => $file)
+                                    array('name'=>$name, 'file'=>$file)
                                 );
                         }
                     }
