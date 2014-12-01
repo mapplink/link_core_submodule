@@ -132,7 +132,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         /** @var int $minutes Timestamp rounded to minutes */
         $time = time();
         $minutes = floor($time / 60);
-        $time = date('H:i:s d/m/y', $time * 60);
+        $time = date('H:i:s d/m/y', $time);
 
         $job = $request->getParam('job');
         if ($job == 'all') {
