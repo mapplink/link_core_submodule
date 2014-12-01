@@ -53,7 +53,7 @@ class Synchronizer implements CronRunnable, ServiceLocatorAwareInterface
      */
     public function cronCheck($minutes)
     {
-        $run = !($minutes % 30 == 0);
+        $run = $minutes % 30 == 0;
         return $run;
     }
 
@@ -62,9 +62,6 @@ class Synchronizer implements CronRunnable, ServiceLocatorAwareInterface
      */
     public function cronRun()
     {
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
-            'sync_run', 'Beginning synchronization run '.date('H:i:s d/m/y'), array());
-
         $appConfig = $this->getServiceLocator()->get('Config');
         $typeConfig = $appConfig['node_types'];
 
