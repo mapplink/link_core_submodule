@@ -191,7 +191,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                                 'Locked cron job '.$name,
                                 $logInfo
                             );
-                    }else {
+                    }else{
                         $this->getServiceLocator()->get('logService')
                             ->log(
                                 \Log\Service\LogService::LEVEL_DEBUG,
@@ -207,17 +207,16 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                                 'Cron job '.$name.' finished at '.date('H:i:s d/m/y'),
                                 $logInfo
                             );
-                    }
-
-                    if (!$this->releaseLock($name)) {
-                        $file = self::getLockFileName($name);
-                        $this->getServiceLocator()->get('logService')
-                            ->log(
-                                \Log\Service\LogService::LEVEL_ERROR,
-                                'cron_unl_fail',
-                                'Cron job '.$name.' ('.$file.') still locked ',
-                                array('name' => $name, 'file' => $file)
-                            );
+                        if (!$this->releaseLock($name)) {
+                            $file = self::getLockFileName($name);
+                            $this->getServiceLocator()->get('logService')
+                                ->log(
+                                    \Log\Service\LogService::LEVEL_ERROR,
+                                    'cron_unl_fail',
+                                    'Cron job '.$name.' ('.$file.') still locked ',
+                                    array('name' => $name, 'file' => $file)
+                                );
+                        }
                     }
                 }
             }
