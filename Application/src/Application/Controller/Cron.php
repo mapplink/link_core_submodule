@@ -188,7 +188,12 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     $runCron = $magelinkCron->cronCheck($minutes);
                 }
 
-                $logInfo = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$name, 'class'=>$class);
+                $logInfo = array(
+                    'time'=>date('H:i:s d/m/y', time()),
+                    'name'=>$name,
+                    'class'=>$class,
+                    'file'=>__FILE__
+                );
                 if (!$runCron) {
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_INFO,
