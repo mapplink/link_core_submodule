@@ -24,14 +24,14 @@ class Creditmemo extends AbstractWrapper
      */
     public function getItems()
     {
-        return $this->getCreditmemoItems();
+        return $this->getCreditmemoitems();
     }
 
     /**
      * Retrieve all the order items attached to this order
      * @return \Entity\Wrapper\Orderitem[]
      */
-    public function getCreditmemoItems()
+    public function getCreditmemoitems()
     {
         return $this->getChildren('creditmemoitem');
     }
