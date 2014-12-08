@@ -18,24 +18,22 @@ class Creditmemoitem extends AbstractWrapper
 {
 
     /**
-     * Get product name
+     * Get name of product from the creditmemoitem
      * @return string
      */
-    public function getProductName()
+    public function getName()
     {
-        if ($product = $this->getProduct()) {
-            $productName = $product->getData('name');
-            return $productName;
-        }
+        $name = $this->getData('name');
+        return $name;
     }
 
     /**
-     * Get quantity
-     * @return int
+     * Get orderitem
+     * @return Entity
      */
-    public function getQuantity()
+    public function getOrderitem()
     {
-        return (int) $this->getData('qty', 0);
+        return $this->resolve('order_item', 'orderitem');
     }
 
     /**
@@ -47,9 +45,28 @@ class Creditmemoitem extends AbstractWrapper
         return $this->resolve('product', 'product');
     }
 
-    public function getOrderitem()
+    /**
+     * Get product name
+     * @return string
+     */
+    public function getProductName()
     {
-        return $this->resolve('order_item', 'orderitem');
+        if ($product = $this->getProduct()) {
+            $productName = $product->getData('name');
+        }else{
+            $productName = $this->getName();
+        }
+
+        return $productName;
+    }
+
+    /**
+     * Get quantity
+     * @return int
+     */
+    public function getQuantity()
+    {
+        return (int) $this->getData('qty', 0);
     }
 
     /**
@@ -110,7 +127,5 @@ class Creditmemoitem extends AbstractWrapper
     {
         return $this->getCreditmemo()->getOriginalOrder();
     }
-
-
 
 }

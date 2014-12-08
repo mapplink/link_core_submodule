@@ -42,7 +42,7 @@ class Creditmemo extends AbstractWrapper
      */
     public function getCashRefund()
     {
-        $cashRefund = $this->getData('adjustment_positive'); // - $this->getData('adjustment_negative');
+        $cashRefund = $this->getData('adjustment_positive', 0) - $this->getData('adjustment_negative', 0);
         return (float) $cashRefund;
     }
 
