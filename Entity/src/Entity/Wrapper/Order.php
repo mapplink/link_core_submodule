@@ -21,6 +21,9 @@ class Order extends AbstractWrapper
     /** @var \Entity\Wrapper\Order[] $_cachedSegregatedOrders */
     protected $_cachedSegregatedOrders = array();
 
+    /** @var \Entity\Wrapper\Order[] $_cachedAllOrders */
+    protected $_cachedAllOrders = array();
+
     /** @var \Entity\Wrapper\Orderitem[] $_cachedOrderitems */
     protected $_cachedOrderitems = array();
 
@@ -32,7 +35,7 @@ class Order extends AbstractWrapper
 
 
     /**
-     * Retrieve all the order items attached to this order
+     * Alias of getOrderitems: Retrieve all the order items attached to this order
      * @return \Entity\Wrapper\Orderitem[]
      */
     public function getItems()
@@ -46,7 +49,7 @@ class Order extends AbstractWrapper
      */
     public function getOrderitems()
     {
-        if (!$this->_cachedOrderitems()) {
+        if (!$this->_cachedOrderitems) {
             $this->_cachedOrderitems = $this->getChildren('orderitem');
         }
 
@@ -59,7 +62,11 @@ class Order extends AbstractWrapper
      */
     public function getCreditmemos()
     {
-        return $this->getChildren('creditmemo');
+        if (!$this->_cachedCreditmemos) {
+            $this->_cachedCreditmemos = $this->getChildren('creditmemo');
+        }
+
+        return $this->_cachedCreditmemos;
     }
 
     /**
@@ -68,20 +75,14 @@ class Order extends AbstractWrapper
      */
     public function getCreditmemoitems()
     {
-        $items = array();
-        foreach ($this->getCreditmemos() as $creditmemo) {
-            $items = array_merge($items, $creditmemo->getCreditmemoitems());
+        if (!$this->_cachedCreditmemoitems) {
+            foreach ($this->getCreditmemos() as $creditmemo) {
+                $this->_cachedCreditmemoitems =
+                    array_merge($this->_cachedCreditmemoitems, $creditmemo->getCreditmemoitems());
+            }
         }
 
-        return $items;
-    }
-
-    public function getAllOrders()
-    {
-        $order = $this->getOriginalOrder();
-        $allOrders = array_merge(array($order), $order->getSegregatedOrders());
-
-        return $allOrders;
+        return $this->_cachedCreditmemoitems;
     }
 
     /**
@@ -153,13 +154,27 @@ class Order extends AbstractWrapper
     }
 
     /**
+     * Get all order which belong to the same original order inclusive this one
+     * @return array
+     */
+    public function getAllOrders()
+    {
+        if (!$this->_cachedAllOrders) {
+            $order = $this->getOriginalOrder();
+            $this->_cachedAllOrders = array_merge(array($order), $order->getSegregatedOrders());
+        }
+
+        return $this->_cachedAllOrders;
+    }
+
+    /**
      * Retrieves all order items of the original order and the segregated orders
      * @return \Entity\Wrapper\Orderitem[]
      */
-    public function getOriginalOrderItems()
+    public function getOriginalOrderitems()
     {
         $orderItems = array();
-        foreach ($this->getOriginalOrder()->getAllOrders() as $order) {
+        foreach ($this->getAllOrders() as $order) {
             $orderItems = array_merge($orderItems, $order->getOrderitems());
         }
 
@@ -167,22 +182,13 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * Alias of getOriginalOrderItems: retrieves all order items of the original order and the segregated orders
-     * @return \Entity\Wrapper\Orderitem[]
-     */
-    public function getAllOrderItems()
-    {
-        return $this->getOriginalOrderItems();
-    }
-
-    /**
-     * Retrieve all credit memo assigned to the order
+     * Retrieve all credit memos assigned to the original order and the segregated orders
      * @return \Entity\Wrapper\Creditmemo[]
      */
-    public function getAllCreditmemos()
+    public function getOriginalCreditmemos()
     {
-        $creditmemos = $this->getCreditmemos();
-        foreach ($this->getSegregatedOrders() as $order) {
+        $creditmemos = array();
+        foreach ($this->getAllOrders() as $order) {
             $creditmemos = array_merge($creditmemos, $order->getCreditmemos());
         }
 
@@ -190,13 +196,13 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * Retrieve all credit memo items assigned to the order
-     * @return array
+     * Retrieve all credit memo items assigned to the original order and the segregated orders
+     * @return \Entity\Wrapper\Creditmemoitems[]
      */
-    public function getAllCreditmemoitems()
+    public function getOriginalCreditmemoitems()
     {
         $creditmemoitems = array();
-        foreach ($this->getAllCreditmemos() as $creditmemo) {
+        foreach ($this->getOriginalCreditmemos() as $creditmemo) {
             $creditmemoitems = array_merge($creditmemoitems, $creditmemo->getCreditmemoitems());
         }
 
@@ -209,7 +215,8 @@ class Order extends AbstractWrapper
      */
     public function getBillingAddressEntity()
     {
-        return $this->resolve('billing_address', 'address');
+        $address = $this->resolve('billing_address', 'address');
+        return $address;
     }
 
     /**
@@ -218,7 +225,8 @@ class Order extends AbstractWrapper
      */
     public function getShippingAddressEntity()
     {
-        return $this->resolve('shipping_address', 'address');
+        $address = $this->resolve('shipping_address', 'address');
+        return $address;
     }
 
     /**
@@ -228,8 +236,13 @@ class Order extends AbstractWrapper
     public function getShippingAddressShort()
     {
         if ($address = $this->getShippingAddressEntity()) {
-            return $address->getAddressShort();
+            $addressShort = $address->getAddressShort();
+        }else{
+            $addressShort = '';
         }
+
+        return $addressShort;
+
     }
 
     /**
@@ -239,8 +252,12 @@ class Order extends AbstractWrapper
     public function getShippingAddressFull($separator="<br/>")
     {
         if ($address = $this->getShippingAddressEntity()) {
-            return $address->getAddressFull($separator);
+            $addressFull = $address->getAddressFull($separator);
+        }else{
+            $addressFull = '';
         }
+
+        return $addressFull;
     }
 
     /**
@@ -250,8 +267,12 @@ class Order extends AbstractWrapper
     public function getBillingAddressFull($separator="<br/>")
     {
         if ($address = $this->getBillingAddressEntity()) {
-            return $address->getAddressFull($separator);
+            $addressFull = $address->getAddressFull($separator);
+        }else{
+            $addressFull = '';
         }
+
+        return $addressFull;
     }
 
     /**
@@ -286,8 +307,12 @@ class Order extends AbstractWrapper
             array('PARENT_ID'=>'eq'));
         if (!array_key_exists('agg_quantity_sum', $totalItemAggregate)) {
             throw new MagelinkException('Invalid response from aggregateEntity');
+            $quantity = NULL;
+        }else{
+            $quantity = (int) $totalItemAggregate['agg_quantity_sum'];
         }
-        return (int) $totalItemAggregate['agg_quantity_sum'];
+
+        return $quantity;
     }
 
     /**
@@ -298,9 +323,9 @@ class Order extends AbstractWrapper
     public function getOrderitemsTotalDeliveryQuantity()
     {
         $quantities = $this->getOrderitemsDeliveryQuantities();
-        $quantity = array_sum($quantities);
+        $quantity = (int) array_sum($quantities);
 
-        return (int) $quantity;
+        return $quantity;
     }
 
     /**
@@ -310,22 +335,20 @@ class Order extends AbstractWrapper
      */
     public function getOrderitemsTotalRefundedQuantity()
     {
-        $quantity = $this->getOrderitemsTotalQuantity() - $this->getOrderitemsTotalDeliveryQuantity();
-        return (int) $quantity;
+        $quantity = intval($this->getOrderitemsTotalQuantity() - $this->getOrderitemsTotalDeliveryQuantity());
+        return $quantity;
     }
 
     /**
-     * Get Credit Memo Items Quantities of Order Items
-     * @param array $orderItems
+     * Get credit memo items quantities of order items
      * @return array
      */
     public function getCreditmemoitemsQuantityGroupedByOrderItemId()
     {
-        $orderItems = $this->getChildren('orderitem');
         $quantities = array();
-        foreach ($orderItems as $orderItem) {
-            $alreadyRefundedQuantity = $orderItem->getQuantityRefunded();
-            $quantities[$orderItem->getId()] = (int) $alreadyRefundedQuantity;
+        foreach ($this->getOrderitems() as $orderitem) {
+            $alreadyRefundedQuantity = $orderitem->getQuantityRefunded();
+            $quantities[$orderitem->getId()] = (int) $alreadyRefundedQuantity;
         }
 
         return $quantities;
@@ -338,11 +361,8 @@ class Order extends AbstractWrapper
     protected function getOrderitemsDeliveryQuantities()
     {
         $quantities = array();
-
-        $orderItems = $this->getOrderitems();
-        /** @var \Entity\Wrapper\Orderitem $orderItem */
-        foreach ($orderItems as $orderItem) {
-            $quantities[$orderItem->getId()] = $orderItem->getDeliveryQuantity();
+        foreach ($this->getOrderitems() as $orderitem) {
+            $quantities[$orderitem->getId()] = $orderitem->getDeliveryQuantity();
         }
 
         return $quantities;
@@ -350,10 +370,10 @@ class Order extends AbstractWrapper
 
     /**
      * Get quantities in an array[<item id>] = <quantity>
-     * @param $items
+     * @param array $items
      * @return int[]
      */
-    protected function getQuantities($items)
+    protected function getQuantities(array $items)
     {
         $quantities = array();
         foreach ($items as $item) {
@@ -369,16 +389,18 @@ class Order extends AbstractWrapper
      */
     public function getCreditmemoitemsQuantityGroupedByItemId()
     {
-        return $this->getQuantities($this->getAllCreditmemoitems());
+        $quantities = $this->getQuantities($this->getOriginalCreditmemoitems());
+        return $quantities;
     }
 
     /**
      * Get quantities of all credit memo items assigned to the order
      * @return int[]
      */
-    public function getAllCreditmemoitemsQuantityGroupedByItemId()
+    public function getOriginalCreditmemoitemsQuantityGroupedByItemId()
     {
-        return $this->getQuantities($this->getAllCreditmemoitems());
+        $quantities = $this->getQuantities($this->getOriginalCreditmemoitems());
+        return $quantities;
     }
 
     /**
@@ -406,8 +428,8 @@ class Order extends AbstractWrapper
             'Reward Points Total'=>'reward_total',
             'Store Credit Total'=>'storecredit_total'
         );
-        return $nonCashPaymentCodes;
 
+        return $nonCashPaymentCodes;
     }
 
     /**
@@ -434,12 +456,16 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * Get non-cash payments total on the original order
+     * Get non-cash payments total on the original order (and segregated orders)
      * @return float
      */
     public function getOriginalNonCashPayments()
     {
-        $nonCash = $this->getOriginalOrder()->getNonCashPayments();
+        $nonCash = 0;
+        foreach ($this->getAllOrders() as $order) {
+            $nonCash += $order->getNonCashPayments();
+        }
+
         return $nonCash;
     }
 
@@ -460,60 +486,11 @@ class Order extends AbstractWrapper
     public function getOriginalGrandTotal()
     {
         $grandTotal = 0;
-        foreach ($this->$this->getOriginalOrder()->getAllOrders() as $order) {
+        foreach ($this->getAllOrders() as $order) {
             $grandTotal += $order->getGrandTotal();
         }
 
         return $grandTotal;
-    }
-
-    /**
-     * Get order total excl. shipping
-     * @return float
-     */
-    public function getOrderTotal()
-    {
-        $orderTotal = 0;
-        foreach ($this->getOrderitems() as $item) {
-            $orderTotal += $item->getDiscountedPrice() * $item->getQuantity();
-        }
-
-        return $orderTotal;
-    }
-
-    /**
-     * Get order total excl. shipping
-     * @return float
-     */
-    public function getOriginalOrderTotal()
-    {
-        $orderTotal = $this->getOriginalGrandTotal() + $this->getNonCashPayments()
-            - $this->getOriginalDiscountedShippingTotal();
-        return $orderTotal;
-    }
-
-    /**
-     * Get order total incl. shipping
-     * @return float
-     */
-    public function getOrderTotalInclShipping()
-    {
-        $orderTotalInclShipping = $this->getOrderTotal() + $this->getDiscountedShippingTotal();
-        return $orderTotalInclShipping;
-    }
-
-    /**
-     * Get order total incl. shipping
-     * @return float
-     */
-    public function getOriginalOrderTotalInclShipping()
-    {
-        $orderTotalInclShipping = 0;
-        foreach ($this->getOriginalOrder()->getAllOrders() as $order) {
-            $orderTotalInclShipping += $order->getOrderTotalInclShipping();
-        }
-
-        return $orderTotalInclShipping;
     }
 
     /**
@@ -531,9 +508,11 @@ class Order extends AbstractWrapper
      */
     public function getOriginalDiscountTotal()
     {
+        $orderitems = $this->getOriginalOrderitems();
+
         $originalDiscountTotal = 0;
-        foreach ($this->getAllOrderItems() as $orderItem) {
-            $originalDiscountTotal += $orderItem->getTotalDiscount();
+        foreach ($orderitems as $orderitem) {
+            $originalDiscountTotal += $orderitem->getTotalDiscount();
         }
 
         return $originalDiscountTotal;
@@ -564,7 +543,61 @@ class Order extends AbstractWrapper
      */
     public function getOriginalDiscountedShippingTotal()
     {
-        return $this->getOriginalOrder()->getDiscountedShippingTotal();
+        $discountedShipping = 0;
+        foreach ($this->getAllOrders() as $order) {
+            $discountedShipping += $order->getDiscountedShippingTotal();
+        }
+
+        return $discountedShipping;
+    }
+
+    /**
+     * Get order total excl. shipping
+     * @return float
+     */
+    public function getOrderTotal()
+    {
+        $orderTotal = 0;
+        foreach ($this->getOrderitems() as $item) {
+            $orderTotal += $item->getDiscountedPrice() * $item->getQuantity();
+        }
+
+        return $orderTotal;
+    }
+
+    /**
+     * Get order total excl. shipping
+     * @return float
+     */
+    public function getOriginalOrderTotal()
+    {
+        $orderTotal = $this->getOriginalGrandTotal() + $this->getOriginalNonCashPayments()
+            - $this->getOriginalDiscountedShippingTotal();
+        return $orderTotal;
+    }
+
+    /**
+     * Get order total incl. shipping
+     * @return float
+     */
+    public function getOrderTotalInclShipping()
+    {
+        $orderTotalInclShipping = $this->getOrderTotal() + $this->getDiscountedShippingTotal();
+        return $orderTotalInclShipping;
+    }
+
+    /**
+     * Get order total incl. shipping
+     * @return float
+     */
+    public function getOriginalOrderTotalInclShipping()
+    {
+        $orderTotalInclShipping = 0;
+        foreach ($this->getAllOrders() as $order) {
+            $orderTotalInclShipping += $order->getOrderTotalInclShipping();
+        }
+
+        return $orderTotalInclShipping;
     }
 
     /**
@@ -660,7 +693,7 @@ class Order extends AbstractWrapper
      */
     public function getShippingRefunds()
     {
-        $creditmemos = $this->getAllCreditmemos();
+        $creditmemos = $this->getOriginalCreditmemos();
 
         $shippingRefundAmount = 0;
         foreach ($creditmemos as $creditmemo) {
@@ -674,7 +707,7 @@ class Order extends AbstractWrapper
      * Get aggregated items refunds of the order and all segregated orders
      * @return float
      */
-    public function getAllItemsRefunds()
+    public function getOriginalItemsRefunds()
     {
         $itemsRefundsAmount = 0;
         foreach ($this->getAllOrders() as $order) {
@@ -685,10 +718,10 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * Get aggregated cash refunds of the order and all segregated orders
+     * Alias of getOriginalCashRefunds: Get aggregated cash refunds of the order and all segregated orders
      * @return float
      */
-    public function getAllCashRefunds()
+    public function getOriginalCashRefunds()
     {
         $cashRefundsAmount = 0;
         foreach ($this->getAllOrders() as $order) {
@@ -702,7 +735,7 @@ class Order extends AbstractWrapper
      * Get aggregated non cash refunds of the order and all segregated orders
      * @return float
      */
-    public function getAllNonCashRefunds()
+    public function getOriginalNonCashRefunds()
     {
         $nonCash = 0;
         foreach ($this->getAllOrders() as $order) {
@@ -716,7 +749,7 @@ class Order extends AbstractWrapper
      * Get aggregated shipping refunds of the order and all segregated orders
      * @return float
      */
-    public function getAllShippingRefunds()
+    public function getOriginalShippingRefunds()
     {
         $shippingRefundAmount = 0;
         foreach ($this->getAllOrders() as $order) {
@@ -724,6 +757,42 @@ class Order extends AbstractWrapper
         }
 
         return $shippingRefundAmount;
+    }
+
+    /**
+     * Alias of getOriginalItemsRefunds: get aggregated items refunds of the order and all segregated orders
+     * @return float
+     */
+    public function getAllItemsRefunds()
+    {
+        return $this->getOriginalItemsRefunds();
+    }
+
+    /**
+     * Get aggregated cash refunds of the order and all segregated orders
+     * @return float
+     */
+    public function getAllCashRefunds()
+    {
+        return $this->getOriginalCashRefunds();
+    }
+
+    /**
+     * Alias of getOriginalNonCashRefunds: Get aggregated non cash refunds of the order and all segregated orders
+     * @return float
+     */
+    public function getAllNonCashRefunds()
+    {
+        return $this->getOriginalNonCashRefunds();
+    }
+
+    /**
+     * Alias of getOriginalShippingRefunds: Get aggregated shipping refunds of the order and all segregated orders
+     * @return float
+     */
+    public function getAllShippingRefunds()
+    {
+        return $this->getOriginalShippingRefunds();
     }
 
 }
