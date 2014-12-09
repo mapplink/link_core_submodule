@@ -98,7 +98,7 @@ class EntityConfigService implements ServiceLocatorAwareInterface
             $type = 'int';
         }
 
-        if (!in_array($type, self::entityAttributeTypes)) {
+        if (!in_array($type, self::$entityAttributeTypes)) {
             throw new \Magelink\Exception\MagelinkException('Invalid attribute type for '.$code.' - '.$type);
         }
 
