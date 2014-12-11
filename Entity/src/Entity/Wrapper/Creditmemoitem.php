@@ -93,7 +93,8 @@ class Creditmemoitem extends AbstractWrapper
      */
     public function getDiscountedRowTotal()
     {
-        if (!($discountedTotal = $this->getData('row_total', FALSE))) {
+        if (!($discountedTotal = $this->getData('row_total', 0) - $this->getData('discount_amount', 0))) {
+            /** @var \HOPS\Wrapper\Orderitem $orderItem */
             $orderItem = $this->getOrderitem();
             $discountedTotal = $this->getQuantity() * $orderItem->getDiscountedPrice();
         }
