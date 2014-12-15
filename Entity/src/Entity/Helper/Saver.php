@@ -184,7 +184,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
 
             $oldValue = $entity->getData($code);
-            if ($oldValue !== NULL) {
+            if ($oldValue !== NULL && $newValue !== NULL) {
                 settype($newValue, gettype($oldValue));
             }
 
