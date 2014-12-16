@@ -122,7 +122,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      */
     protected function escape($value)
     {
-        return $this->getAdapter()->platform->quoteValue($value);
+        $quotedValue = $this->getAdapter()->platform->quoteValue($value);
+        return $quotedValue;
     }
 
     /**
@@ -134,10 +135,36 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     {
         $escapedColumnValueArray = array();
         foreach ($columnValueArray as $column=>$value) {
-            $escapedColumn = $this->getAdapter()->getPlatform()->quoteIdentifier($column);
-            $escapedValue = $this->escape($value);
-            if (strlen($escapedColumn) && strlen(strval($escapedValue))) {
-                $escapedColumnValueArray[$escapedColumn] = $escapedValue;
+            try{
+                $escapedColumn = $this->getAdapter()->getPlatform()->quoteIdentifier($column);
+                $escapedValue = $this->escape($value);
+                if (strlen($escapedColumn) && strlen(strval($escapedValue))) {
+                    $escapedColumnValueArray[$escapedColumn] = $escapedValue;
+                }
+            }catch (\Exception $exception) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'escape_error',
+                        'Exception during the column/value escaping',
+                        array(
+                            'exception message'=>$exception->getMessage(),
+                            'columnValueArray'=>$columnValueArray,
+                            'column'=>$column,
+                            'value'=>$value,
+                            'escapedColumnValueArray'=>$escapedColumnValueArray,
+                            'escaped column'=>$escapedColumn,
+                            'value'=>$escapedValue
+                        ),
+                        array('exception object'=>$exception)
+                    );
+                // ToDo: Remove temporary fallback, till the real issue is found
+                if ($escapedColumn && is_array($value)) {
+                    $value = array_shift($value);
+                    $escapedValue = $this->escape($value);
+                    if (strlen($escapedColumn) && strlen(strval($escapedValue))) {
+                        $escapedColumnValueArray[$escapedColumn] = $escapedValue;
+                    }
+                }
             }
         }
 
