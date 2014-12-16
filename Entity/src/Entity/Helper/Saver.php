@@ -247,7 +247,32 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 throw new NodeException('Invalid attribute ' . $att);
             }
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - create ' . $att, array('type'=>'create', 'att'=>$att, 'new'=>$updatedData[$att]), array('entity'=>$entity));
+            try{
             $sql[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+            }catch (\Exception $exception) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'insert_sql_error',
+                        'Exception during the insert',
+                        array(
+                            'entity data'=>$entity->getFullArrayCopy(),
+                            'att'=>$att,
+                            'attribute[$att]'=>$attribute[$att],
+                            'attribute[att]'=>$attribute[$att],
+                            'updatedData[att]'=>$updatedData[$att],
+                        ),
+                        array(
+                            'exception object'=>$exception,
+                            'attribute'=>$attribute,
+                            'updatedData'=>$updatedData,
+                            'attributesToUpdate'=>$attributesToUpdate,
+                            'attributesToMerge'=>$attributesToMerge,
+                            'attributesToCreate'=>$attributesToCreate,
+                            'attributesToDelete'=>$attributesToDelete
+                        )
+                    );
+                throw new $exception;
+            }
         }
         foreach($attributesToDelete as $att){
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
@@ -262,7 +287,32 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - update ' . $att, array('type'=>'update', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]), array('entity'=>$entity));
             $sql[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
+            try {
             $sql[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+            }catch (\Exception $exception) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'insert_sql_error',
+                        'Exception during the insert',
+                        array(
+                            'entity data'=>$entity->getFullArrayCopy(),
+                            'att'=>$att,
+                            'attribute[$att]'=>$attribute[$att],
+                            'attribute[att]'=>$attribute[$att],
+                            'updatedData[att]'=>$updatedData[$att],
+                        ),
+                        array(
+                            'exception object'=>$exception,
+                            'attribute'=>$attribute,
+                            'updatedData'=>$updatedData,
+                            'attributesToUpdate'=>$attributesToUpdate,
+                            'attributesToMerge'=>$attributesToMerge,
+                            'attributesToCreate'=>$attributesToCreate,
+                            'attributesToDelete'=>$attributesToDelete
+                        )
+                    );
+                throw new $exception;
+            }
         }
         foreach($attributesToMerge as $att){
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
