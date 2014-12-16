@@ -198,7 +198,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 if (is_array($oldValue) && $merge === TRUE) {
                     $attributesToMerge[] = $code;
                 }elseif (is_array($merge)) {
-                    if (isset($merge[$code]) && $merge[$code] == TRUE) {
+                    if (isset($merge[$code]) && $merge[$code] === TRUE) {
                         $attributesToMerge[] = $code;
                     }else{
                         $attributesToUpdate[] = $code;
