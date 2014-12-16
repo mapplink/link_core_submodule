@@ -318,8 +318,17 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
                 throw new NodeException('Invalid attribute ' . $att);
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - merge ' . $att, array('type'=>'merge', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]), array('entity'=>$entity));
-            $sql = array_merge($sql, $this->getValueMergeSql($entity->getId(), $attribute[$att], $updatedData[$att], $entity->getData($att)));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'sav_update_att',
+                    'updateData - '.$entity->getId().' - merge '.$att,
+                    array('type'=>'merge', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]),
+                    array('entity'=>$entity)
+                );
+            $sql = array_merge(
+                $sql,
+                $this->getValueMergeSql($entity->getId(), $attribute[$att], $updatedData[$att], $entity->getData($att))
+            );
         }
         $sql = array_merge($sql, $extraSql);
 
@@ -333,10 +342,22 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     throw new MagelinkException('Unknown error executing attribute update query: ' . $s);
                 }
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_commit', 'updateData - ' . $entity->getId() . ' committed, ' . count($sql) . ' queries ran', array('sql'=>$sql), array('entity'=>$entity));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'sav_update_commit',
+                    'updateData - '.$entity->getId().' committed, '.count($sql).' queries ran',
+                    array('sql'=>$sql),
+                    array('entity'=>$entity)
+                );
             $this->commitTransaction('save-'.$entity->getId());
         }catch(\Exception $e){
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'sav_update_err', 'updateData - ' . $entity->getId() . ' - Exception in processing, rolling back', array('message'=>$e->getMessage()), array('entity'=>$entity, 'exception'=>$e));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    'sav_update_err',
+                    'updateData - '.$entity->getId().' - Exception in processing, rolling back',
+                    array('message'=>$e->getMessage()),
+                    array('entity'=>$entity, 'exception'=>$e)
+                );
             $this->rollbackTransaction('save-'.$entity->getId());
             throw $e;
         }
