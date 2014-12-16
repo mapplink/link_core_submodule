@@ -135,7 +135,10 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
         $escapedColumnValueArray = array();
         foreach ($columnValueArray as $column=>$value) {
             $escapedColumn = $this->getAdapter()->getPlatform()->quoteIdentifier($column);
-            $escapedColumnValueArray[$escapedColumn] = $this->escape($value);
+            $escapedValue = $this->escape($value);
+            if (strlen($escapedColumn) && strlen(strval($escapedValue))) {
+                $escapedColumnValueArray[$escapedColumn] = $escapedValue;
+            }
         }
 
         return $escapedColumnValueArray;
