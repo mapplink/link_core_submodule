@@ -109,7 +109,12 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      */
     protected function rollbackTransactionInternal()
     {
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_rollback_int', 'rollbackTransactionInternal', array('stack'=>self::$_transactionStack));
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                'trans_rollback_int',
+                'rollbackTransactionInternal',
+                array('stack'=>self::$_transactionStack)
+            );
         $adapter = $this->getAdapter();
         $adapter->getDriver()->getConnection()->rollback();
     }
@@ -122,7 +127,44 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      */
     protected function escape($value)
     {
-        $quotedValue = $this->getAdapter()->platform->quoteValue($value);
+        // ToDo (maybe): Remove if the source is found
+        if (is_array($value)) {
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    'escape_array',
+                    'Tries to escape an array',
+                    array(
+                        'debug backtrace'=>debug_backtrace(),
+                        'value'=>$value
+                    )
+                );
+        }
+
+        try{
+            $quotedValue = $this->getAdapter()->platform->quoteValue($value);
+        }catch (\Exception $exception) {
+            // ToDo (maybe): Remove if the source is found
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    'escape_array',
+                    'Tried to escape an array',
+                    array(
+                        'exception message'=>$exception->getMessage(),
+
+                        'debug backtrace'=>debug_backtrace(),
+                        'exception message'=>$exception->getMessage(),
+                        'value'=>$value,
+                        'quoted value'=>isset($quotedValue) ? $quotedValue : 'NULL'
+                    ),
+                    array('exception object'=>$exception)
+                );
+            // ToDo: Remove temporary fallback, till the real issue is found
+            if (is_array($value)) {
+                $value = array_shift($value);
+                $quotedValue = $this->escape($value);
+            }
+
+        }
         return $quotedValue;
     }
 
