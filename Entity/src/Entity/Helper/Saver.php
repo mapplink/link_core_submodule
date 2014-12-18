@@ -389,6 +389,13 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 $success = TRUE;
             }catch( \Exception $exception ){
                 $this->rollbackTransaction('save-'.$entity->getId());
+
+                if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK) {
+                    sleep(2);
+                }else {
+                    $maxTries = 0;
+                }
+
                 $this->getServiceLocator()->get('logService')
                     ->log(
                         \Log\Service\LogService::LEVEL_ERROR,
@@ -401,12 +408,6 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                         ),
                         array('entity' => $entity, 'exception' => $exception)
                     );
-
-                if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK) {
-                    sleep(2);
-                }else {
-                    $maxTries = 0;
-                }
             }
         }while (!$success && $maxTries - $try++ > 0);
 
