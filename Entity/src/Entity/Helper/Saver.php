@@ -14,7 +14,10 @@ use Magelink\Exception\NodeException;
 /**
  * Responsible for updating entities in the database
  */
-class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface {
+class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
+{
+
+    const MYSQL_ER_LOCK_DEADLOCK = 40001;
 
     /**
      * Deletes an Entity from the system along with any attached data (comments, identifiers, etc).
@@ -286,14 +289,26 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
                 throw new NodeException('Invalid attribute ' . $att);
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - delete ' . $att, array('type'=>'delete', 'att'=>$att), array('entity'=>$entity));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'sav_update_att',
+                    'updateData - '.$entity->getId().' - delete '.$att,
+                    array('type'=>'delete', 'att'=>$att),
+                    array('entity'=>$entity)
+                );
             $sql[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
         }
         foreach($attributesToUpdate as $att){
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
                 throw new NodeException('Invalid attribute ' . $att);
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - update ' . $att, array('type'=>'update', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]), array('entity'=>$entity));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'sav_update_att',
+                    'updateData - '.$entity->getId().' - update '.$att,
+                    array('type'=>'update', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]),
+                    array('entity'=>$entity)
+                );
             $sql[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
             try {
             $sql[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
@@ -344,7 +359,13 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         $this->beginTransaction('save-'.$entity->getId());
         try{
             foreach($sql as $s){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_sql', 'updateData - ' . $entity->getId() . ' SQL: ' . $s, array('sql'=>$s), array('entity'=>$entity));
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                        'sav_update_sql',
+                        'updateData - '.$entity->getId().' SQL: '.$s,
+                        array('sql'=>$s),
+                        array('entity'=>$entity)
+                    );
                 $res = $adapter->query($s, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
                 if(!$res){
                     throw new MagelinkException('Unknown error executing attribute update query: ' . $s);
@@ -358,16 +379,43 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     array('entity'=>$entity)
                 );
             $this->commitTransaction('save-'.$entity->getId());
-        }catch(\Exception $e){
-            $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_ERROR,
-                    'sav_update_err',
-                    'updateData - '.$entity->getId().' - Exception in processing, rolling back',
-                    array('message'=>$e->getMessage(), 'code'=>$e->getCode()),
-                    array('entity'=>$entity, 'exception'=>$e)
-                );
+        }catch(\Exception $exception){
+            if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK) {
+                $maxTries = 3;
+            }else{
+                $maxTries = 0;
+            }
+
+            $try = 1;
+            do {
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'sav_update_err'.($maxTries ? '_'.$try : ''),
+                        'updateData - '.$entity->getId().' - Exception in processing, rolling back',
+                        array(
+                            'entity id'=>$entity->getId(),
+                            'message'=>$exception->getMessage(),
+                            'code'=>$exception->getCode()),
+                        array('entity'=>$entity, 'exception'=>$exception)
+                    );
+                if ($maxTries > 0) {
+                    try {
+                        sleep(2);
+                        $this->commitTransaction('save-'.$entity->getId());
+                        $maxTries = 0;
+                        $this->getServiceLocator()->get('logService')
+                            ->log(\Log\Service\LogService::LEVEL_ERROR,
+                                'sav_update_err_retry',
+                                $try.' re-try successful',
+                                array('entity id'=>$entity->getId())
+                            );
+                    }catch (\Exception $exception) {}
+                }
+            }while ($maxTries - $try++ > 0);
+
             $this->rollbackTransaction('save-'.$entity->getId());
-            throw $e;
+
+            throw new MagelinkException($exception->getMessage(), $exception->getCode(), $exception->getPrevious());
         }
     }
     
