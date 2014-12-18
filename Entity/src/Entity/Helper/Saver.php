@@ -361,12 +361,12 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         $adapter = $this->getAdapter();
 
         do {
-            $this->beginTransaction('save-'.$entity->getId());
+            $transactionLabel = 'save-'.$entity->getId().'-'.$try;
+            $this->beginTransaction($transactionLabel);
             try{
                 foreach ($sql as $s) {
                     $this->getServiceLocator()->get('logService')
-                        ->log(
-                            \Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                        ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
                             'sav_update_sql',
                             'updateData - '.$entity->getId().' SQL: '.$s,
                             array('sql' => $s),
@@ -378,8 +378,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     }
                 }
                 $this->getServiceLocator()->get('logService')
-                    ->log(
-                        \Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
                         'sav_update_commit',
                         'updateData - '.$entity->getId().' committed, '.count($sql).' queries ran',
                         array('sql' => $sql),
@@ -387,8 +386,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     );
                 $this->commitTransaction('save-'.$entity->getId());
                 $success = TRUE;
-            }catch( \Exception $exception ){
-                $this->rollbackTransaction('save-'.$entity->getId());
+            }catch (\Exception $exception){
+                $this->rollbackTransaction($transactionLabel);
 
                 if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK) {
                     sleep(2);
@@ -397,8 +396,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 }
 
                 $this->getServiceLocator()->get('logService')
-                    ->log(
-                        \Log\Service\LogService::LEVEL_ERROR,
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
                         'sav_update_err'.($maxTries ? '_'.$try : ''),
                         'updateData - '.$entity->getId().' - Exception in processing, rolling back',
                         array(
