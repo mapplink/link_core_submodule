@@ -353,68 +353,62 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 $this->getValueMergeSql($entity->getId(), $attribute[$att], $updatedData[$att], $entity->getData($att))
             );
         }
-        $sql = array_merge($sql, $extraSql);
-
+        $try = 1;
+        $maxTries = 3;
+        $success = FALSE;
         $adapter = $this->getAdapter();
-        $this->beginTransaction('save-'.$entity->getId());
-        try{
-            foreach($sql as $s){
-                $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
-                        'sav_update_sql',
-                        'updateData - '.$entity->getId().' SQL: '.$s,
-                        array('sql'=>$s),
-                        array('entity'=>$entity)
-                    );
-                $res = $adapter->query($s, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
-                if(!$res){
-                    throw new MagelinkException('Unknown error executing attribute update query: ' . $s);
-                }
-            }
-            $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
-                    'sav_update_commit',
-                    'updateData - '.$entity->getId().' committed, '.count($sql).' queries ran',
-                    array('sql'=>$sql),
-                    array('entity'=>$entity)
-                );
-            $this->commitTransaction('save-'.$entity->getId());
-        }catch(\Exception $exception){
-            if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK) {
-                $maxTries = 3;
-            }else{
-                $maxTries = 0;
-            }
 
-            $try = 1;
-            do {
+        do {
+            $this->beginTransaction('save-'.$entity->getId());
+            try{
+                foreach ($sql as $s) {
+                    $this->getServiceLocator()->get('logService')
+                        ->log(
+                            \Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                            'sav_update_sql',
+                            'updateData - '.$entity->getId().' SQL: '.$s,
+                            array('sql' => $s),
+                            array('entity' => $entity)
+                        );
+                    $res = $adapter->query($s, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+                    if (!$res) {
+                        throw new MagelinkException('Unknown error executing attribute update query: '.$s);
+                    }
+                }
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    ->log(
+                        \Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                        'sav_update_commit',
+                        'updateData - '.$entity->getId().' committed, '.count($sql).' queries ran',
+                        array('sql' => $sql),
+                        array('entity' => $entity)
+                    );
+                $this->commitTransaction('save-'.$entity->getId());
+                $success = TRUE;
+            }catch( \Exception $exception ){
+                $this->rollbackTransaction('save-'.$entity->getId());
+                $this->getServiceLocator()->get('logService')
+                    ->log(
+                        \Log\Service\LogService::LEVEL_ERROR,
                         'sav_update_err'.($maxTries ? '_'.$try : ''),
                         'updateData - '.$entity->getId().' - Exception in processing, rolling back',
                         array(
-                            'entity id'=>$entity->getId(),
-                            'message'=>$exception->getMessage(),
-                            'code'=>$exception->getCode()),
-                        array('entity'=>$entity, 'exception'=>$exception)
+                            'entity id' => $entity->getId(),
+                            'message' => $exception->getMessage(),
+                            'code' => $exception->getCode()
+                        ),
+                        array('entity' => $entity, 'exception' => $exception)
                     );
-                if ($maxTries > 0) {
-                    try {
-                        sleep(2);
-                        $this->commitTransaction('save-'.$entity->getId());
-                        $maxTries = 0;
-                        $this->getServiceLocator()->get('logService')
-                            ->log(\Log\Service\LogService::LEVEL_ERROR,
-                                'sav_update_err_retry',
-                                $try.' re-try successful',
-                                array('entity id'=>$entity->getId())
-                            );
-                    }catch (\Exception $exception) {}
+
+                if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK) {
+                    sleep(2);
+                }else {
+                    $maxTries = 0;
                 }
-            }while ($maxTries - $try++ > 0);
+            }
+        }while (!$success && $maxTries - $try++ > 0);
 
-            $this->rollbackTransaction('save-'.$entity->getId());
-
+        if (!$success) {
             throw new MagelinkException($exception->getMessage(), $exception->getCode(), $exception->getPrevious());
         }
     }
