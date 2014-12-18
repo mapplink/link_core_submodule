@@ -384,7 +384,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                         array('sql' => $sql),
                         array('entity' => $entity)
                     );
-                $this->commitTransaction('save-'.$entity->getId());
+                $this->commitTransaction($transactionLabel);
                 $success = TRUE;
             }catch (\Exception $exception){
                 $this->rollbackTransaction($transactionLabel);
