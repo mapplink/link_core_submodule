@@ -238,7 +238,9 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      * @param array $extraSql Any extra SQL queries to be ran at the same time, in the same transaction (i.e. updated_at changes)
      * @throws \Exception
      */
-    protected function updateData(\Entity\Entity $entity, $updatedData, $attributesToUpdate, $attributesToMerge, $attributesToCreate, $attributesToDelete, $attribute, $extraSql=array()){
+    protected function updateData(\Entity\Entity $entity, array $updatedData, array $attributesToUpdate,
+        array $attributesToMerge, array $attributesToCreate, array $attributesToDelete, array $attribute,
+        array $extraSql = array()){
 
         $sql = array();
 
@@ -246,7 +248,13 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
                 throw new NodeException('Invalid attribute ' . $att);
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - create ' . $att, array('type'=>'create', 'att'=>$att, 'new'=>$updatedData[$att]), array('entity'=>$entity));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'sav_update_att',
+                    'updateData - '.$entity->getId().' - create '.$att,
+                    array('type'=>'create', 'att'=>$att, 'new'=>$updatedData[$att]),
+                    array('entity'=>$entity)
+                );
             try{
             $sql[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
             }catch (\Exception $exception) {
@@ -355,7 +363,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 ->log(\Log\Service\LogService::LEVEL_ERROR,
                     'sav_update_err',
                     'updateData - '.$entity->getId().' - Exception in processing, rolling back',
-                    array('message'=>$e->getMessage()),
+                    array('message'=>$e->getMessage(), 'code'=>$e->getCode()),
                     array('entity'=>$entity, 'exception'=>$e)
                 );
             $this->rollbackTransaction('save-'.$entity->getId());
