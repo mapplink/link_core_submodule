@@ -20,7 +20,7 @@ class ErrorHandler {
 
     // ToDo: Move client data to the config
     const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
-    const ERROR_TO_CLIENT_CODE = 'accsync_';
+    const ERROR_TO_CLIENT_CODE = 'cno_';
 
     protected static $allowEx = NULL;
 
