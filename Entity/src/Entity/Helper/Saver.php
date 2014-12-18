@@ -353,6 +353,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 $this->getValueMergeSql($entity->getId(), $attribute[$att], $updatedData[$att], $entity->getData($att))
             );
         }
+        $sql = array_merge($sql, $extraSql);
+
         $try = 1;
         $maxTries = 3;
         $success = FALSE;
