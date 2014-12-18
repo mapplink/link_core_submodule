@@ -204,7 +204,6 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                 }elseif (!self::checkIfUnlocked($name)) {
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_ERROR,
-                            'cron_locked',
                             'cnot_cron_locked',
                             'Cron job '.$name.' locked.'
                                 .' Don\'t take action, before this error appears for a 2nd time in a row.',
