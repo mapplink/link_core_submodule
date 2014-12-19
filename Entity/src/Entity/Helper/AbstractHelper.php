@@ -21,11 +21,10 @@ use Magelink\Exception\NodeException;
 abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
 {
 
+    const MYSQL_ER_LOCK_DEADLOCK = 40001;
+
     protected static $_transactionStack = array();
-
-
     protected $_attributeCache = array();
-
     protected $_attributeCodeCache = array();
 
     /** @var \Zend\ServiceManager\ServiceLocatorInterface The service locator */
@@ -40,12 +39,21 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     {
         self::$_transactionStack[] = $id;
         if(count(self::$_transactionStack) == 1){
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_begin_actual', 'beginTransaction - actual - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'trans_begin_actual',
+                    'beginTransaction - actual - '.$id,
+                    array('id'=>$id, 'stack'=>self::$_transactionStack)
+                );
             // This is our only transaction, so start one in MySQL.
             $adapter = $this->getAdapter();
             $adapter->getDriver()->getConnection()->beginTransaction();
         }else{
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_begin_fake', 'beginTransaction - fake - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'trans_begin_fake',
+                    'beginTransaction - fake - '.$id, array('id'=>$id, 'stack'=>self::$_transactionStack)
+                );
         }
     }
 

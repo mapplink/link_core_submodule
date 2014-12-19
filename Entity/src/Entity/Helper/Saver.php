@@ -17,8 +17,6 @@ use Magelink\Exception\NodeException;
 class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
 {
 
-    const MYSQL_ER_LOCK_DEADLOCK = 40001;
-
     /**
      * Deletes an Entity from the system along with any attached data (comments, identifiers, etc).
      * @param \Entity\Entity $entity
