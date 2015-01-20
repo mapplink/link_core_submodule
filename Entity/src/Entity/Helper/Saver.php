@@ -378,8 +378,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 $this->getServiceLocator()->get('logService')
                     ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
                         'sav_update_commit',
-                        'updateData - '.$entity->getId().' committed, '.count($sql).' queries ran',
-                        array('sql'=>$sql),
+                        'updateData - '.$entity->getId().' committed, '.count($sqls).' queries ran',
+                        array('sqls'=>$sqls),
                         array('entity'=>$entity)
                     );
                 $this->commitTransaction($transactionLabel);
@@ -402,7 +402,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                             'message'=>$exception->getMessage(),
                             'code'=>$exception->getCode(),
                             'sqls'=>implode(';', $sqls),
-                            'sql'=>$sql
+                            'sql'=>(isset($sql) ? $sql : '')
                         ),
                         array('entity'=>$entity, 'exception'=>$exception)
                     );
