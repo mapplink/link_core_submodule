@@ -379,7 +379,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
                         'sav_update_commit',
                         'updateData - '.$entity->getId().' committed, '.count($sqls).' queries ran',
-                        array('sqls'=>$sqls),
+                        array('sqls'=>implode(';', $sqls)),
                         array('entity'=>$entity)
                     );
                 $this->commitTransaction($transactionLabel);
