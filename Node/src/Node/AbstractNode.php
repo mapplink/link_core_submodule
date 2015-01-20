@@ -212,10 +212,11 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
             }
 
             foreach ($updates as $entityId=>$update) {
+                $message = $entityId.' to '.$this->getNodeId();
                 $this->getServiceLocator()->get('logService')
                     ->log(\Log\Service\LogService::LEVEL_INFO,
                         'push_update',
-                        'Pushing update for '.$entityId.' to '.$this->getNodeId(),
+                        'Pushing update for '.$message,
                         array(
                             'attributes'=>$update['attributes'],
                             'type'=>$update['type'],
@@ -231,8 +232,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                         $update['type']
                     );
                 }catch (GatewayException $gatewayException) {
-                    $message = 'Uncaught exception during update processing for '.$entityId.' to '.$this->getNodeId()
-                        .': '.$gatewayException->getMessage();
+                    $message = 'Exception during update processing for '.$message.': '.$gatewayException->getMessage();
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_ERROR,
                             'update_ex_gw',
@@ -240,13 +240,10 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                             array($gatewayException->getMessage(), $gatewayException->getTraceAsString()),
                             array('exception'=>$gatewayException)
                         );
-                    $message = 'Error applying updates: '.$gatewayException->getMessage();
-
                     unset($this->_gateway[$entityType]);
                     break;
-                }catch (\Magelink\Exception\MagelinkException $exception) {
-                    $message = 'Uncaught exception during update processing for '.$entityId.' to '.$this->getNodeId()
-                        .': '.$exception->getMessage();
+                }catch (MagelinkException $exception) {
+                    $message = 'Exception during update processing for '.$message.': '.$exception->getMessage();
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_ERROR,
                             'update_ex_ml',
@@ -254,7 +251,6 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                             array($exception->getMessage(), $exception->getTraceAsString()),
                             array('exception'=>$exception)
                         );
-                    $message = 'Error applying updates: '.$exception->getMessage();
                     throw new \Magelink\Exception\NodeException($message, 0, $exception);
                     break;
                 }
@@ -275,9 +271,10 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
             try{
                 $result = TRUE;
                 if ($this->_gateway[$entityType]) {
+                    $message = $action->getId().' to '.$this->getNodeId().' ('.$action->getEntity()->getUniqueId().')';
                     $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
                         'send_action',
-                        'Sending action '.$action->getId().' to '.$this->getNodeId().' ('.$action->getEntity()->getUniqueId().')',
+                        'Sending action '.$message,
                         array($action->getId()),
                         array('entity'=>$action->getEntity(), 'node'=>$this)
                     );
@@ -286,14 +283,24 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                 if ($result) {
                     $nodeService->setActionStatus($this->_entity, $action, 1);
                 }
-            }catch(\Magelink\Exception\MagelinkException $e){
+            }catch (GatewayException $gatewayException) {
+                $message = 'Exception during action processing for '.$message.': '.$gatewayException->getMessage();
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
-                    'action_ex',
-                    'Uncaught exception during action processing for '.$action->getId().' to '.$this->getNodeId().': '.$e->getMessage(),
-                    array($e->getMessage(), $e->getTraceAsString()),
-                    array('exception'=>$e)
+                    'action_ex_gw',
+                    $message,
+                    array($gatewayException->getMessage(), $gatewayException->getTraceAsString()),
+                    array('exception'=>$gatewayException)
                 );
-                throw new \Magelink\Exception\NodeException('Error applying actions: '.$e->getMessage(), 0, $e);
+                unset($this->_gateway[$entityType]);
+            }catch (MagelinkException $exception) {
+                $message = 'Exception during action processing for '.$message.': '.$exception->getMessage();
+                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
+                    'action_ex_ml',
+                    $message,
+                    array($exception->getMessage(), $exception->getTraceAsString()),
+                    array('exception'=>$exception)
+                );
+                throw new \Magelink\Exception\NodeException($message, 0, $exception);
             }
         }
     }
@@ -303,16 +310,17 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
      * @param string|null $key
      * @return null
      */
-    public function getConfig($key=null){
-        if($key == null){
-            return $this->_config;
+    public function getConfig($key = NULL)
+    {
+        if ($key == NULL) {
+            $config = $this->_config;
+        }elseif (isset($this->_config[$key])) {
+            $config = $this->_config[$key];
         }else{
-            if(isset($this->_config[$key])){
-                return $this->_config[$key];
-            }else{
-                return null;
-            }
+            $config = NULL;
         }
+
+        return $config;
     }
 
     /**
