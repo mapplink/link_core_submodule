@@ -243,7 +243,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         array $attributesToMerge, array $attributesToCreate, array $attributesToDelete, array $attribute,
         array $extraSql = array()){
 
-        $sql = array();
+        $sqls = array();
 
         foreach($attributesToCreate as $att){
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
@@ -257,7 +257,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     array('entity'=>$entity)
                 );
             try{
-            $sql[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+            $sqls[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
             }catch (\Exception $exception) {
                 $this->getServiceLocator()->get('logService')
                     ->log(\Log\Service\LogService::LEVEL_ERROR,
@@ -294,7 +294,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     array('type'=>'delete', 'att'=>$att),
                     array('entity'=>$entity)
                 );
-            $sql[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
+            $sqls[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
         }
         foreach($attributesToUpdate as $att){
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
@@ -307,9 +307,9 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     array('type'=>'update', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]),
                     array('entity'=>$entity)
                 );
-            $sql[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
+            $sqls[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
             try {
-            $sql[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+            $sqls[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
             }catch (\Exception $exception) {
                 $this->getServiceLocator()->get('logService')
                     ->log(\Log\Service\LogService::LEVEL_ERROR,
@@ -346,12 +346,12 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     array('type'=>'merge', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]),
                     array('entity'=>$entity)
                 );
-            $sql = array_merge(
-                $sql,
+            $sqls = array_merge(
+                $sqls,
                 $this->getValueMergeSql($entity->getId(), $attribute[$att], $updatedData[$att], $entity->getData($att))
             );
         }
-        $sql = array_merge($sql, $extraSql);
+        $sqls = array_merge($sqls, $extraSql);
 
         $try = 1;
         $maxTries = 3;
@@ -362,25 +362,25 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             $transactionLabel = 'save-'.$entity->getId().'-'.$try;
             $this->beginTransaction($transactionLabel);
             try{
-                foreach ($sql as $s) {
+                foreach ($sqls as $sql) {
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
                             'sav_update_sql',
-                            'updateData - '.$entity->getId().' SQL: '.$s,
-                            array('sql' => $s),
+                            'updateData - '.$entity->getId().' SQL: '.$sql,
+                            array('sql' => $sql),
                             array('entity' => $entity)
                         );
-                    $res = $adapter->query($s, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+                    $res = $adapter->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
                     if (!$res) {
-                        throw new MagelinkException('Unknown error executing attribute update query: '.$s);
+                        throw new MagelinkException('Unknown error executing attribute update query: '.$sql);
                     }
                 }
                 $this->getServiceLocator()->get('logService')
                     ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
                         'sav_update_commit',
                         'updateData - '.$entity->getId().' committed, '.count($sql).' queries ran',
-                        array('sql' => $sql),
-                        array('entity' => $entity)
+                        array('sql'=>$sql),
+                        array('entity'=>$entity)
                     );
                 $this->commitTransaction($transactionLabel);
                 $success = TRUE;
@@ -398,11 +398,13 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                         'sav_update_err'.($maxTries ? '_'.$try : ''),
                         'updateData - '.$entity->getId().' - Exception in processing, rolling back',
                         array(
-                            'entity id' => $entity->getId(),
-                            'message' => $exception->getMessage(),
-                            'code' => $exception->getCode()
+                            'entity id'=>$entity->getId(),
+                            'message'=>$exception->getMessage(),
+                            'code'=>$exception->getCode(),
+                            'sqls'=>implode(';', $sqls),
+                            'sql'=>$sql
                         ),
-                        array('entity' => $entity, 'exception' => $exception)
+                        array('entity'=>$entity, 'exception'=>$exception)
                     );
             }
         }while (!$success && $maxTries - $try++ > 0);
