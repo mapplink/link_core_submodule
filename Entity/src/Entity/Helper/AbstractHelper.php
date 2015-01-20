@@ -21,11 +21,10 @@ use Magelink\Exception\NodeException;
 abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
 {
 
+    const MYSQL_ER_LOCK_DEADLOCK = 40001;
+
     protected static $_transactionStack = array();
-
-
     protected $_attributeCache = array();
-
     protected $_attributeCodeCache = array();
 
     /** @var \Zend\ServiceManager\ServiceLocatorInterface The service locator */
@@ -40,12 +39,21 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     {
         self::$_transactionStack[] = $id;
         if(count(self::$_transactionStack) == 1){
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_begin_actual', 'beginTransaction - actual - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'trans_begin_actual',
+                    'beginTransaction - actual - '.$id,
+                    array('id'=>$id, 'stack'=>self::$_transactionStack)
+                );
             // This is our only transaction, so start one in MySQL.
             $adapter = $this->getAdapter();
             $adapter->getDriver()->getConnection()->beginTransaction();
         }else{
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_begin_fake', 'beginTransaction - fake - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'trans_begin_fake',
+                    'beginTransaction - fake - '.$id, array('id'=>$id, 'stack'=>self::$_transactionStack)
+                );
         }
     }
 
@@ -109,7 +117,12 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      */
     protected function rollbackTransactionInternal()
     {
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_rollback_int', 'rollbackTransactionInternal', array('stack'=>self::$_transactionStack));
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                'trans_rollback_int',
+                'rollbackTransactionInternal',
+                array('stack'=>self::$_transactionStack)
+            );
         $adapter = $this->getAdapter();
         $adapter->getDriver()->getConnection()->rollback();
     }
@@ -122,7 +135,45 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      */
     protected function escape($value)
     {
-        return $this->getAdapter()->platform->quoteValue($value);
+        // ToDo (maybe): Remove if the source is found
+        if (is_array($value)) {
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    'escape_array',
+                    'Tries to escape an array',
+                    array(
+                        'debug backtrace'=>debug_backtrace(),
+                        'value'=>$value
+                    )
+                );
+        }
+
+        try{
+            $quotedValue = $this->getAdapter()->platform->quoteValue($value);
+        }catch (\Exception $exception) {
+            // ToDo (maybe): Remove if the source is found
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    'escape_array',
+                    'Tried to escape an array',
+                    array(
+                        'exception message'=>$exception->getMessage(),
+
+                        'debug backtrace'=>debug_backtrace(),
+                        'exception message'=>$exception->getMessage(),
+                        'value'=>$value,
+                        'quoted value'=>isset($quotedValue) ? $quotedValue : 'NULL'
+                    ),
+                    array('exception object'=>$exception)
+                );
+            // ToDo: Remove temporary fallback, till the real issue is found
+            if (is_array($value)) {
+                $value = array_shift($value);
+                $quotedValue = $this->escape($value);
+            }
+
+        }
+        return $quotedValue;
     }
 
     /**
@@ -134,8 +185,37 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     {
         $escapedColumnValueArray = array();
         foreach ($columnValueArray as $column=>$value) {
-            $escapedColumn = $this->getAdapter()->getPlatform()->quoteIdentifier($column);
-            $escapedColumnValueArray[$escapedColumn] = $this->escape($value);
+            try{
+                $escapedColumn = $this->getAdapter()->getPlatform()->quoteIdentifier($column);
+                $escapedValue = $this->escape($value);
+                if (strlen($escapedColumn) && strlen(strval($escapedValue))) {
+                    $escapedColumnValueArray[$escapedColumn] = $escapedValue;
+                }
+            }catch (\Exception $exception) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'escape_error',
+                        'Exception during the column/value escaping',
+                        array(
+                            'exception message'=>$exception->getMessage(),
+                            'columnValueArray'=>$columnValueArray,
+                            'column'=>$column,
+                            'value'=>$value,
+                            'escapedColumnValueArray'=>$escapedColumnValueArray,
+                            'escaped column'=>$escapedColumn,
+                            'value'=>$escapedValue
+                        ),
+                        array('exception object'=>$exception)
+                    );
+                // ToDo: Remove temporary fallback, till the real issue is found
+                if ($escapedColumn && is_array($value)) {
+                    $value = array_shift($value);
+                    $escapedValue = $this->escape($value);
+                    if (strlen($escapedColumn) && strlen(strval($escapedValue))) {
+                        $escapedColumnValueArray[$escapedColumn] = $escapedValue;
+                    }
+                }
+            }
         }
 
         return $escapedColumnValueArray;

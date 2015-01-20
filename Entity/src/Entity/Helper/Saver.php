@@ -14,7 +14,8 @@ use Magelink\Exception\NodeException;
 /**
  * Responsible for updating entities in the database
  */
-class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface {
+class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
+{
 
     /**
      * Deletes an Entity from the system along with any attached data (comments, identifiers, etc).
@@ -184,7 +185,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
 
             $oldValue = $entity->getData($code);
-            if ($oldValue !== NULL) {
+            if ($oldValue !== NULL && $newValue !== NULL) {
                 settype($newValue, gettype($oldValue));
             }
 
@@ -198,7 +199,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 if (is_array($oldValue) && $merge === TRUE) {
                     $attributesToMerge[] = $code;
                 }elseif (is_array($merge)) {
-                    if (isset($merge[$code]) && $merge[$code] == TRUE) {
+                    if (isset($merge[$code]) && $merge[$code] === TRUE) {
                         $attributesToMerge[] = $code;
                     }else{
                         $attributesToUpdate[] = $code;
@@ -238,57 +239,178 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      * @param array $extraSql Any extra SQL queries to be ran at the same time, in the same transaction (i.e. updated_at changes)
      * @throws \Exception
      */
-    protected function updateData(\Entity\Entity $entity, $updatedData, $attributesToUpdate, $attributesToMerge, $attributesToCreate, $attributesToDelete, $attribute, $extraSql=array()){
+    protected function updateData(\Entity\Entity $entity, array $updatedData, array $attributesToUpdate,
+        array $attributesToMerge, array $attributesToCreate, array $attributesToDelete, array $attribute,
+        array $extraSql = array()){
 
-        $sql = array();
+        $sqls = array();
 
         foreach($attributesToCreate as $att){
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
                 throw new NodeException('Invalid attribute ' . $att);
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - create ' . $att, array('type'=>'create', 'att'=>$att, 'new'=>$updatedData[$att]), array('entity'=>$entity));
-            $sql[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'sav_update_att',
+                    'updateData - '.$entity->getId().' - create '.$att,
+                    array('type'=>'create', 'att'=>$att, 'new'=>$updatedData[$att]),
+                    array('entity'=>$entity)
+                );
+            try{
+            $sqls[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+            }catch (\Exception $exception) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'insert_sql_error',
+                        'Exception during the insert',
+                        array(
+                            'entity data'=>$entity->getFullArrayCopy(),
+                            'att'=>$att,
+                            'attribute[$att]'=>$attribute[$att],
+                            'attribute[att]'=>$attribute[$att],
+                            'updatedData[att]'=>$updatedData[$att],
+                        ),
+                        array(
+                            'exception object'=>$exception,
+                            'attribute'=>$attribute,
+                            'updatedData'=>$updatedData,
+                            'attributesToUpdate'=>$attributesToUpdate,
+                            'attributesToMerge'=>$attributesToMerge,
+                            'attributesToCreate'=>$attributesToCreate,
+                            'attributesToDelete'=>$attributesToDelete
+                        )
+                    );
+                throw new $exception;
+            }
         }
         foreach($attributesToDelete as $att){
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
                 throw new NodeException('Invalid attribute ' . $att);
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - delete ' . $att, array('type'=>'delete', 'att'=>$att), array('entity'=>$entity));
-            $sql[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'sav_update_att',
+                    'updateData - '.$entity->getId().' - delete '.$att,
+                    array('type'=>'delete', 'att'=>$att),
+                    array('entity'=>$entity)
+                );
+            $sqls[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
         }
         foreach($attributesToUpdate as $att){
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
                 throw new NodeException('Invalid attribute ' . $att);
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - update ' . $att, array('type'=>'update', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]), array('entity'=>$entity));
-            $sql[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
-            $sql[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'sav_update_att',
+                    'updateData - '.$entity->getId().' - update '.$att,
+                    array('type'=>'update', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]),
+                    array('entity'=>$entity)
+                );
+            $sqls[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
+            try {
+            $sqls[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+            }catch (\Exception $exception) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'insert_sql_error',
+                        'Exception during the insert',
+                        array(
+                            'entity data'=>$entity->getFullArrayCopy(),
+                            'att'=>$att,
+                            'attribute[$att]'=>$attribute[$att],
+                            'attribute[att]'=>$attribute[$att],
+                            'updatedData[att]'=>$updatedData[$att],
+                        ),
+                        array(
+                            'exception object'=>$exception,
+                            'attribute'=>$attribute,
+                            'updatedData'=>$updatedData,
+                            'attributesToUpdate'=>$attributesToUpdate,
+                            'attributesToMerge'=>$attributesToMerge,
+                            'attributesToCreate'=>$attributesToCreate,
+                            'attributesToDelete'=>$attributesToDelete
+                        )
+                    );
+                throw new $exception;
+            }
         }
         foreach($attributesToMerge as $att){
             if(!array_key_exists($att, $attribute) || !$attribute[$att]){
                 throw new NodeException('Invalid attribute ' . $att);
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_att', 'updateData - ' . $entity->getId() . ' - merge ' . $att, array('type'=>'merge', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]), array('entity'=>$entity));
-            $sql = array_merge($sql, $this->getValueMergeSql($entity->getId(), $attribute[$att], $updatedData[$att], $entity->getData($att)));
+            $this->getServiceLocator()->get('logService')
+                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                    'sav_update_att',
+                    'updateData - '.$entity->getId().' - merge '.$att,
+                    array('type'=>'merge', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]),
+                    array('entity'=>$entity)
+                );
+            $sqls = array_merge(
+                $sqls,
+                $this->getValueMergeSql($entity->getId(), $attribute[$att], $updatedData[$att], $entity->getData($att))
+            );
         }
-        $sql = array_merge($sql, $extraSql);
+        $sqls = array_merge($sqls, $extraSql);
 
+        $try = 1;
+        $maxTries = 3;
+        $success = FALSE;
         $adapter = $this->getAdapter();
-        $this->beginTransaction('save-'.$entity->getId());
-        try{
-            foreach($sql as $s){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_sql', 'updateData - ' . $entity->getId() . ' SQL: ' . $s, array('sql'=>$s), array('entity'=>$entity));
-                $res = $adapter->query($s, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
-                if(!$res){
-                    throw new MagelinkException('Unknown error executing attribute update query: ' . $s);
+
+        do {
+            $transactionLabel = 'save-'.$entity->getId().'-'.$try;
+            $this->beginTransaction($transactionLabel);
+            try{
+                foreach ($sqls as $sql) {
+                    $this->getServiceLocator()->get('logService')
+                        ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                            'sav_update_sql',
+                            'updateData - '.$entity->getId().' SQL: '.$sql,
+                            array('sql' => $sql),
+                            array('entity' => $entity)
+                        );
+                    $res = $adapter->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+                    if (!$res) {
+                        throw new MagelinkException('Unknown error executing attribute update query: '.$sql);
+                    }
                 }
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                        'sav_update_commit',
+                        'updateData - '.$entity->getId().' committed, '.count($sql).' queries ran',
+                        array('sql'=>$sql),
+                        array('entity'=>$entity)
+                    );
+                $this->commitTransaction($transactionLabel);
+                $success = TRUE;
+            }catch (\Exception $exception){
+                $this->rollbackTransaction($transactionLabel);
+
+                if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK) {
+                    sleep(2);
+                }else {
+                    $maxTries = 0;
+                }
+
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'sav_update_err'.($maxTries ? '_'.$try : ''),
+                        'updateData - '.$entity->getId().' - Exception in processing, rolling back',
+                        array(
+                            'entity id'=>$entity->getId(),
+                            'message'=>$exception->getMessage(),
+                            'code'=>$exception->getCode(),
+                            'sqls'=>implode(';', $sqls),
+                            'sql'=>$sql
+                        ),
+                        array('entity'=>$entity, 'exception'=>$exception)
+                    );
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_update_commit', 'updateData - ' . $entity->getId() . ' committed, ' . count($sql) . ' queries ran', array('sql'=>$sql), array('entity'=>$entity));
-            $this->commitTransaction('save-'.$entity->getId());
-        }catch(\Exception $e){
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'sav_update_err', 'updateData - ' . $entity->getId() . ' - Exception in processing, rolling back', array('message'=>$e->getMessage()), array('entity'=>$entity, 'exception'=>$e));
-            $this->rollbackTransaction('save-'.$entity->getId());
-            throw $e;
+        }while (!$success && $maxTries - $try++ > 0);
+
+        if (!$success) {
+            throw new MagelinkException($exception->getMessage(), $exception->getCode(), $exception->getPrevious());
         }
     }
     

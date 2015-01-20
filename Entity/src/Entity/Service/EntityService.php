@@ -749,7 +749,8 @@ class EntityService implements ServiceLocatorAwareInterface
                         $replaces[$field] = $field." = ".$value;
                     }
 
-                    $sql = "REPLACE INTO entity_flat_".$entityType." SET ".implode(', ', $replaces).";";
+                    $sql = "INSERT INTO entity_flat_".$entityType." SET ".implode(', ', $replaces)
+                        ." ON DUPLICATE KEY UPDATE ".implode(', ', $replaces).";";
                     try {
                         $response = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
                         $success = (bool) $response;

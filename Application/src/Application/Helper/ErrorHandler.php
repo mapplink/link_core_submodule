@@ -20,7 +20,7 @@ class ErrorHandler {
 
     // ToDo: Move client data to the config
     const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
-    const ERROR_TO_CLIENT_CODE = 'accsync_';
+    const ERROR_TO_CLIENT_CODE = 'cno_';
 
     protected static $allowEx = NULL;
 
@@ -150,7 +150,9 @@ EOF;
         }
 
         mail(self::ERROR_TO, 'MageLink Error Handler: '.$errorType, $content, 'From: ' . self::ERROR_FROM);
-        if (self::ERROR_TO_CLIENT && strpos($errorText, self::ERROR_TO_CLIENT_CODE) !== FALSE) {
+        $clientEmail = self::ERROR_TO_CLIENT && strpos($errorText, self::ERROR_TO_CLIENT_CODE) !== FALSE;
+        $daytime = (date('H') > 7) && (date('H') < 20);
+        if ($clientEmail && $daytime) {
             mail(self::ERROR_TO_CLIENT, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);
         }
 
