@@ -213,15 +213,18 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
 
             foreach ($updates as $entityId=>$update) {
                 $message = $entityId.' to '.$this->getNodeId();
+                $data =  array(
+                    'entity id'=>$entityId,
+                    'entity type'=>$update['type'],
+                    'attributes'=>$update['attributes'],
+                    'combined'=>$update['combined']
+                );
+
                 $this->getServiceLocator()->get('logService')
                     ->log(\Log\Service\LogService::LEVEL_INFO,
                         'push_update',
                         'Pushing update for '.$message,
-                        array(
-                            'attributes'=>$update['attributes'],
-                            'type'=>$update['type'],
-                            'combined'=>$update['combined']
-                        ),
+                        $data,
                         array('entity'=>$entityId, 'node'=>$this)
                     );
 
@@ -233,23 +236,31 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                     );
                 }catch (GatewayException $gatewayException) {
                     $message = 'Exception during update processing for '.$message.': '.$gatewayException->getMessage();
+                    $data = array_merge($data, array(
+                        'exception message'=>$gatewayException->getMessage(),
+                        'exception trace'=>$gatewayException->getTraceAsString()
+                    ));
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_ERROR,
                             'update_ex_gw',
                             $message,
-                            array($gatewayException->getMessage(), $gatewayException->getTraceAsString()),
-                            array('exception'=>$gatewayException)
+                            $data,
+                            array('update'=>$update, 'exception'=>$gatewayException)
                         );
                     unset($this->_gateway[$entityType]);
                     break;
                 }catch (MagelinkException $exception) {
                     $message = 'Exception during update processing for '.$message.': '.$exception->getMessage();
+                    $data = array_merge($data, array(
+                        'exception message'=>$exception->getMessage(),
+                        'exception trace'=>$exception->getTraceAsString()
+                    ));
                     $this->getServiceLocator()->get('logService')
                         ->log(\Log\Service\LogService::LEVEL_ERROR,
                             'update_ex_ml',
                             $message,
-                            array($exception->getMessage(), $exception->getTraceAsString()),
-                            array('exception'=>$exception)
+                            $data,
+                            array('update'=>$update, 'exception'=>$exception)
                         );
                     throw new \Magelink\Exception\NodeException($message, 0, $exception);
                     break;
@@ -275,7 +286,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                     $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
                         'send_action',
                         'Sending action '.$message,
-                        array($action->getId()),
+                        array('action id'=>$action->getId()),
                         array('entity'=>$action->getEntity(), 'node'=>$this)
                     );
                     $result = $this->_gateway[$entityType]->writeAction($action);
@@ -288,8 +299,12 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
                     'action_ex_gw',
                     $message,
-                    array($gatewayException->getMessage(), $gatewayException->getTraceAsString()),
-                    array('exception'=>$gatewayException)
+                    array(
+                        'action id'=>$action->getId(),
+                        'exception message'=>$gatewayException->getMessage(),
+                        'exception trace', $gatewayException->getTraceAsString()
+                    ),
+                    array('action'=>$action, 'exception'=>$gatewayException)
                 );
                 unset($this->_gateway[$entityType]);
             }catch (MagelinkException $exception) {
@@ -297,8 +312,12 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
                     'action_ex_ml',
                     $message,
-                    array($exception->getMessage(), $exception->getTraceAsString()),
-                    array('exception'=>$exception)
+                    array(
+                        'action id'=>$action->getId(),
+                        'exception message'=>$exception->getMessage(),
+                        'exception trace'=>$exception->getTraceAsString()
+                    ),
+                    array('action'=>$action, 'exception'=>$exception)
                 );
                 throw new \Magelink\Exception\NodeException($message, 0, $exception);
             }

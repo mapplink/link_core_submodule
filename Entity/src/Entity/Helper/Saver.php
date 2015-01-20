@@ -370,8 +370,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                             array('sql' => $sql),
                             array('entity' => $entity)
                         );
-                    $res = $adapter->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
-                    if (!$res) {
+                    $result = $adapter->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+                    if (!$result) {
                         throw new MagelinkException('Unknown error executing attribute update query: '.$sql);
                     }
                 }
