@@ -142,29 +142,6 @@ class Orderitem extends AbstractWrapper
     }
 
     /**
-     * Returns whether this order item is "in stock"
-     * @return bool
-     */
-    public function isInStock()
-    {
-        if (!$this->getProduct()) {
-            return FALSE;
-        }
-        $stockitem = $this->getEavService()->loadEntity(
-            $this->getLoadedNodeId(),
-            'stockitem',
-            $this->getProduct()->getStoreId(),
-            $this->getProduct()->getUniqueId()
-        );
-
-        if(!$stockitem){
-            return FALSE;
-        }
-
-        return ($stockitem->getData('available', 0) >= $this->getData('quantity', 0));
-    }
-
-    /**
      * Get an accumulated quantity of the associated credit memo items
      * @return
      */

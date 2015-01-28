@@ -404,20 +404,6 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * Returns whether or not this order is fully in stock
-     * @return bool
-     */
-    public function isInStock()
-    {
-        foreach ($this->getOrderitems() as $item) {
-            if (!$item->isInStock()) {
-                return FALSE;
-            }
-        }
-        return TRUE;
-    }
-
-    /**
      * Get non-cash payments total
      * @return float
      */
