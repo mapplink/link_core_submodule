@@ -14,6 +14,8 @@ use \Zend\ServiceManager\ServiceLocatorInterface;
 abstract class AbstractTransform implements ServiceLocatorAwareInterface
 {
 
+    /** @var ServiceLocatorInterface The service locator */
+    protected $_serviceLocator;
     /** @var  \Node\Service\NodeService */
     protected $_nodeService;
     /** @var  \Entity\Service\EntityService */
@@ -28,6 +30,7 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
 
     /** @var array The entity data, accounting for new changes */
     protected $_newData = array();
+
 
     /**
      * @param \Entity\Entity $entity
@@ -57,6 +60,24 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
         $this->_entityService->enhanceEntity($sourceNodeId, $this->_entity, $attributes);
 
         return $this->_init();
+    }
+
+    /**
+     * Set service locator
+     * @param ServiceLocatorInterface $serviceLocator
+     */
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+    }
+
+    /**
+     * Get service locator
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
     }
 
     /**
@@ -150,31 +171,6 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
         }
         $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
         return $this->_tgCache[$table];
-    }
-
-    /**
-     * @var ServiceLocatorInterface The service locator
-     */
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     *
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     *
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
     }
 
 }
