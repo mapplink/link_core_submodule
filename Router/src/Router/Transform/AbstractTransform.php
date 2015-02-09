@@ -2,14 +2,17 @@
 
 namespace Router\Transform;
 
-use \Router\Filter\AbstractFilter;
-use \Node\Service\NodeService;
+use \Entity\Entity;
 use \Entity\Service\EntityService;
 use \Entity\Service\EntityConfigService;
+use \Node\Service\NodeService;
+use \Router\Entity\RouterTransform;
+use \Router\Filter\AbstractFilter;
 use \Zend\ServiceManager\ServiceLocatorAwareInterface;
 use \Zend\ServiceManager\ServiceLocatorInterface;
 
-abstract class AbstractTransform implements ServiceLocatorAwareInterface {
+abstract class AbstractTransform implements ServiceLocatorAwareInterface
+{
 
     /** @var  \Node\Service\NodeService */
     protected $_nodeService;
@@ -33,26 +36,37 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface {
      * @param array $updated_data The newly updated data
      * @return boolean Whether this transform is eligible to run
      */
-    public function init(\Entity\Entity $entity, $source_node_id, \Router\Entity\RouterTransform $transform, $updated_data){
+    public function init(Entity $entity, $sourceNodeId, RouterTransform $transform, array $updatedData)
+    {
         $this->_nodeService = $this->getServiceLocator()->get('nodeService');
         $this->_entityService = $this->getServiceLocator()->get('entityService');
         $this->_entityConfigService = $this->getServiceLocator()->get('entityConfigService');
         $this->_transformEntity = $transform;
         $this->_entity = $entity;
 
-        $this->_newData = $updated_data;
-        foreach($entity->getAllSetData() as $k=>$v){
-            if(!array_key_exists($k, $this->_newData)){
-                $this->_newData[$k] = $v;
+        $this->_newData = $updatedData;
+        foreach ($entity->getAllSetData() as $code=>$value) {
+            if (!array_key_exists($code, $this->_newData)) {
+                $this->_newData[$code] = $value;
             }
         }
 
         $this->_transformEntity->loadSimpleData();
 
         $attributes = $this->_entityConfigService->getAttributesCode($this->_entity->getType());
-        $this->_entityService->enhanceEntity($source_node_id, $this->_entity, $attributes);
+        $this->_entityService->enhanceEntity($sourceNodeId, $this->_entity, $attributes);
 
         return $this->_init();
+    }
+
+    /**
+     * Return data from the entity before the change is applied
+     * @param string $key The key to return
+     * @return mixed The value
+     */
+    protected function getOldData($key)
+    {
+        return $this->_entity->getData($key, NULL);
     }
 
     /**
@@ -61,7 +75,8 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface {
      * @param mixed|null $default The default value, if the key is not set or is null
      * @return mixed The value or the default value
      */
-    protected function getNewData($key, $default=null){
+    protected function getNewData($key, $default = NULL)
+    {
         if(!isset($this->_newData[$key])){
             return $default;
         }
@@ -73,7 +88,8 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface {
      * @param string|null $key
      * @return array|null
      */
-    protected function getConfig($key=null){
+    protected function getConfig($key = NULL)
+    {
         return $this->_transformEntity->getSimpleData($key);
     }
 
@@ -81,7 +97,8 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface {
      * Get attribute data for the source attribute
      * @return array|null
      */
-    protected function getSourceAttribute(){
+    protected function getSourceAttribute()
+    {
        return $this->_entityConfigService->getAttribute($this->_transformEntity->getSrcAttribute());
     }
 
@@ -89,7 +106,8 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface {
      * Get attribute data for the destination attribute
      * @return array|null
      */
-    protected function getDestAttribute(){
+    protected function getDestAttribute()
+    {
         return $this->_entityConfigService->getAttribute($this->_transformEntity->getDestAttribute());
     }
 
@@ -109,7 +127,8 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface {
      * Return the database adapter to be used to communicate with Entity storage.
      * @return \Zend\Db\Adapter\Adapter
      */
-    protected function getAdapter(){
+    protected function getAdapter()
+    {
         return $this->getServiceLocator()->get('zend_db');
     }
 
@@ -124,7 +143,8 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface {
      * @param string $table
      * @return \Zend\Db\TableGateway\TableGateway
      */
-    protected function getTableGateway($table){
+    protected function getTableGateway($table)
+    {
         if(isset($this->_tgCache[$table])){
             return $this->_tgCache[$table];
         }
