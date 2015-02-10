@@ -28,6 +28,8 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
     /** @var  \Router\Entity\RouterTransform */
     protected $_transformEntity;
 
+    /** @var array The update data  */
+    protected $_updateData = array();
     /** @var array The entity data, accounting for new changes */
     protected $_newData = array();
 
@@ -39,7 +41,7 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
      * @param array $updated_data The newly updated data
      * @return boolean Whether this transform is eligible to run
      */
-    public function init(Entity $entity, $sourceNodeId, RouterTransform $transform, array $updatedData)
+    public function init(Entity $entity, $sourceNodeId, RouterTransform $transform, array $updateData)
     {
         $this->_nodeService = $this->getServiceLocator()->get('nodeService');
         $this->_entityService = $this->getServiceLocator()->get('entityService');
@@ -47,7 +49,7 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
         $this->_transformEntity = $transform;
         $this->_entity = $entity;
 
-        $this->_newData = $updatedData;
+        $this->_newData = $this->_updateData = $updateData;
         foreach ($entity->getAllSetData() as $code=>$value) {
             if (!array_key_exists($code, $this->_newData)) {
                 $this->_newData[$code] = $value;
@@ -85,9 +87,25 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
      * @param string $key The key to return
      * @return mixed The value
      */
-    protected function getOldData($key)
+    protected function getCurrentData($key)
     {
         return $this->_entity->getData($key, NULL);
+    }
+
+    /**
+     * Return the raw update data, if not set NULL
+     * @param string $key The key to return
+     * @return mixed The value or the default value
+     */
+    protected function getUpdateData($key)
+    {
+        if (isset($this->_updateData[$key])){
+            $updateData = $this->_updateData[$key];
+        }else{
+            $updateData = NULL;
+        }
+
+        return $updateData;
     }
 
     /**
@@ -98,10 +116,13 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
      */
     protected function getNewData($key, $default = NULL)
     {
-        if(!isset($this->_newData[$key])){
-            return $default;
+        if (isset($this->_newData[$key])) {
+            $newData = $this->_newData[$key];
+        }else{
+            $newData = $default;
         }
-        return $this->_newData[$key];
+
+        return $newData;
     }
 
     /**
