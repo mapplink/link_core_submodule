@@ -543,40 +543,37 @@ class EntityService implements ServiceLocatorAwareInterface
 
 
     /**
-     * Ensure all the attributes for the given node are loaded into the provided Entity, and if provided, also the attributes identified by $additional_attributes.
-     * 
-     * Used if Entities are passed around or if passed to core code that needs more data.
-     * The original Entity instance should not be modified, instead it should be cloned and the new Entity returned.
-     * 
+     * Ensure all the attributes for the given node are loaded into the provided Entity and if provided, also additional
+     * attributes identified by $additional_attributes.  Used if Entities are passed around or if passed to core code
+     * that needs more data. The original Entity instance should not be modified, instead it should be cloned and the new Entity returned.
+     *
      * @param int $nodeId
      * @param \Entity\Entity $entity
      * @param array $additional_attributes
      * @return \Entity\Entity
      */
-    public function enhanceEntity ($nodeId, \Entity\Entity $entity, $additional_attributes = array())
+    public function enhanceEntity($nodeId, \Entity\Entity $entity, $additionalAttributes = array())
     {
-        if($nodeId !== false){
+        if ($nodeId !== FALSE) {
             $this->verifyNodeId($nodeId);
 
-            $attributes = $this->getServiceLocator()->get('nodeService')->getSubscribedAttributeCodes($nodeId, $entity->getType());
-            $attributes = array_unique(array_merge($additional_attributes, $attributes));
+            $attributes = $this->getServiceLocator()->get('nodeService')
+                ->getSubscribedAttributeCodes($nodeId, $entity->getType());
+            $attributes = array_unique(array_merge($additionalAttributes, $attributes));
         }else{
-            $attributes = $additional_attributes;
+            $attributes = $additionalAttributes;
         }
 
         // Remove already loaded attributes
-        foreach($attributes as $k=>$v){
-            if(!$v || !strlen($v)){
-                unset($attributes[$k]);
-                continue;
-            }
-            if($entity->hasAttribute($v)){
-                unset($attributes[$k]);
-                continue;
+        foreach ($attributes as $key=>$value) {
+            if (!$value || !strlen($value)) {
+                unset($attributes[$key]);
+            }elseif ($entity->hasAttribute($value)) {
+                unset($attributes[$key]);
             }
         }
 
-        if(count($attributes)){
+        if (count($attributes)) {
             $this->getLoader()->enhanceEntity($entity, $attributes);
         }
 
