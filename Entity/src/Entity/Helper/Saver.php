@@ -387,7 +387,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }catch (\Exception $exception){
                 $this->rollbackTransaction($transactionLabel);
 
-                if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK) {
+                if (self::isRestartTransaction($exception)) {
                     sleep(2);
                 }else {
                     $maxTries = 0;
@@ -410,7 +410,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         }while (!$success && $maxTries - $try++ > 0);
 
         if (!$success) {
-            throw new MagelinkException($exception->getMessage(), $exception->getCode(), $exception->getPrevious());
+            throw new MagelinkException($exception->getMessage(), $exception->getCode(), $exception);
         }
     }
     

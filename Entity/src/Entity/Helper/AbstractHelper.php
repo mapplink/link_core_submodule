@@ -21,7 +21,7 @@ use Magelink\Exception\NodeException;
 abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
 {
 
-    const MYSQL_ER_LOCK_DEADLOCK = 40001;
+    const MYSQL_ER_LOCK_DEADLOCK = '40001';
 
     protected static $_transactionStack = array();
     protected $_attributeCache = array();
@@ -30,6 +30,19 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     /** @var \Zend\ServiceManager\ServiceLocatorInterface The service locator */
     protected $_serviceLocator = null;
 
+
+
+    protected static function isRestartTransaction(\Exception $exception)
+    {
+        if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK
+            || strpos($exception->getMessage(), 'try restarting transaction')) {
+            $restart = TRUE;
+        }else{
+            $restart = FALSE;
+        }
+
+        return $restart;
+    }
 
     /**
      * Starts a transaction with the given ID
