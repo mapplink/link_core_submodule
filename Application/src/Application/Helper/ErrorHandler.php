@@ -13,7 +13,8 @@
 namespace Application\Helper;
 
 
-class ErrorHandler {
+class ErrorHandler
+{
 
     const ERROR_TO = 'forms@lero9.co.nz';
     const ERROR_FROM = 'noreply@lero9.co.nz';
@@ -24,33 +25,43 @@ class ErrorHandler {
 
     protected static $allowEx = NULL;
 
-    public function __construct($allowEx=NULL){
-        if(self::$allowEx === NULL){
+    protected $_lastErr = FALSE;
+
+
+    public function __construct($allowEx = NULL)
+    {
+        if (self::$allowEx === NULL) {
             register_shutdown_function(array($this, 'shutdownhandler'));
         }
-        if($allowEx === NULL && self::$allowEx !== NULL){
+
+        if ($allowEx === NULL && self::$allowEx !== NULL) {
             $allowEx = self::$allowEx;
-        }else if($allowEx !== NULL){
+        }elseif ($allowEx !== NULL) {
             self::$allowEx = $allowEx;
         }else{
             self::$allowEx = FALSE;
             $allowEx = FALSE;
         }
+
         set_error_handler(array($this, 'errorhandler'));
-        if($allowEx){
+
+        if ($allowEx) {
             set_exception_handler(array($this, 'exceptionhandler'));
         }
     }
 
-    function shutdownhandler(){
-        $err = error_get_last();
-        if($err == NULL){
-            return;
+    public function shutdownhandler()
+    {
+        $error = error_get_last();
+
+        if (!is_null($error) && $error['type'] === E_NOTICE) {
+            $this->errorhandler(
+                $error['type'],
+                $error['message'],
+                isset($error['file']) ? $error['file'] : NULL,
+                isset($error['line']) ? $error['line'] : NULL
+            );
         }
-        if($err['type'] === E_NOTICE){
-            return; // Don't email shutdown notices
-        }
-        $this->errorhandler($err['type'], $err['message'], isset($err['file']) ? $err['file'] : NULL, isset($err['line']) ? $err['line'] : NULL);
     }
 
     /**
@@ -68,8 +79,6 @@ class ErrorHandler {
         print $ex->getTraceAsString();
     }
 
-    protected $_lastErr = FALSE;
-
     /**
      * Error handler callback
      * @param int $errorNo
@@ -83,6 +92,12 @@ class ErrorHandler {
     {
         if ($errorFile != NULL && stripos($errorFile, 'ErrorHandler') !== FALSE) {
             return FALSE; // Error occured here!
+        }
+
+        if ($errorContext) {
+            $errorContext = PHP_EOL.'Error Context: '.implode(PHP_EOL.$errorContext);
+        }else{
+            $errorContext = '';
         }
 
         switch ($errorNo) {
@@ -140,7 +155,7 @@ class ErrorHandler {
 [{$errorType}] {$errorText}
 
 Line {$errorLine} in file {$errorFile}.
-
+{$errorContext}
 EOF;
 
         if ($this->_lastErr == $content) {
