@@ -491,7 +491,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      * @return string
      * @throws MagelinkException
      */
-    protected function getValueInsertSql($entityId, array $attributes, $value)
+    protected function getValueInsertSql($entityId, $attributes, $value)
     {
         $values = array();
         if (!is_array($value)) {
