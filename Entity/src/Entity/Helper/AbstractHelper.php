@@ -480,4 +480,5 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                 throw new NodeException('Unknown search type: `'.$searchType.'`');
         }
     }
+
 }
