@@ -1,28 +1,34 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Responsible for updating entities in the database
+ *
+ * @category Entity
+ * @package Entity\Helper
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity\Helper;
 
-use Magelink\Exception\MagelinkException;
-use Magelink\Exception\NodeException;
+use \Entity\Entity;
+use \Log\Service\LogService;
+use \Magelink\Exception\MagelinkException;
+use \Magelink\Exception\NodeException;
+use \Zend\Db\Adapter\Adapter;
 
-/**
- * Responsible for updating entities in the database
- */
+
 class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
 {
 
     /**
      * Deletes an Entity from the system along with any attached data (comments, identifiers, etc).
-     * @param \Entity\Entity $entity
+     * @param Entity $entity
      * @throws \Exception Passes on any exceptions thrown while executing SQL.
      */
-    public function deleteEntity( \Entity\Entity $entity ){
+    public function deleteEntity(Entity $entity)
+    {
         $this->beginTransaction('delete-'.$entity->getId());
         $sql = array(
             'DELETE FROM entity_value_datetime WHERE entity_id = :eid',
@@ -41,133 +47,168 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         );
 
         try{
-            foreach($sql as $s){
-                $this->getAdapter()->query(str_replace(':eid', $entity->getId(), $s), \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+            foreach ($sql as $s) {
+                $this->getAdapter()->query(str_replace(':eid', $entity->getId(), $s), Adapter::QUERY_MODE_EXECUTE);
             }
             $this->commitTransaction('delete-'.$entity->getId());
-        }catch(\Exception $e){
+        }catch (\Exception $exception) {
             $this->rollbackTransaction('delete-'.$entity->getId());
-            throw $e;
+            throw $exception;
         }
     }
 
     /**
      * Update just an entities unique ID, without touching any other data or the updated_at
-     * @param int $entity_id
-     * @param string $unique_id
+     * @param int $entityId
+     * @param string $uniqueId
      */
-    public function setEntityUnique( $entity_id, $unique_id ){
-        $this->getAdapter()->query('UPDATE entity AS e SET e.unique_id = ' . $this->escape($unique_id) . ' WHERE e.entity_id = ' . $this->escape($entity_id), \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+    public function setEntityUnique($entityId, $uniqueId)
+    {
+        $sql = "UPDATE entity AS e SET e.unique_id = ".$this->escape($uniqueId)
+            ." WHERE e.entity_id = ".$this->escape($entityId).";";
+        $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
     }
 
     /**
      * Update just an entities parent, without touching any other data or the updated_at
-     * @param $child_id
-     * @param $parent_id
+     * @param $childId
+     * @param $parentId
      */
-    public function setEntityParent ( $child_id, $parent_id ){
-        $this->getAdapter()->query('UPDATE entity AS e SET e.parent_id = ' . $this->escape($parent_id) . ' WHERE e.entity_id = ' . $this->escape($child_id), \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+    public function setEntityParent($childId, $parentId)
+    {
+        $sql = "UPDATE entity AS e SET e.parent_id = ".$this->escape($parentId)
+            ." WHERE e.entity_id = ".$this->escape($childId).";";
+        $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
     }
 
     /**
      * Updates the updated_at timestamp on an entity and optionally some attributes
-     * @param \Entity\Entity $entity
-     * @param string[] $attributes
+     * @param Entity $entity
+     * @param string[] $attributeCodes
      * @throws \Exception
      */
-    public function touchEntity ( \Entity\Entity $entity, $attributes=array() ){
-        $ts = date('Y-m-d H:i:s');
+    public function touchEntity(Entity $entity, array $attributeCodes = array())
+    {
+        $timestamp = date('Y-m-d H:i:s');
+        $sqls = array(
+            "UPDATE entity AS e SET e.updated_at = ".$this->escape($timestamp)
+                ." WHERE e.entity_id = ".$this->escape($entity->getId()).";"
+        );
 
-        $sql = array('UPDATE entity AS e SET e.updated_at = ' . $this->escape($ts) . ' WHERE e.entity_id = ' . $this->escape($entity->getId()));
-
-        foreach($attributes as $att){
-            $attData = $this->getAttribute($att, $entity->getType());
-            $sql[] = 'UPDATE entity_value_' . $attData['type'] . ' AS ev SET ev.updated_at = ' . $this->escape($ts) . ' WHERE ev.entity_id = ' . $this->escape($entity->getId()) . ' AND ev.attribute_id = ' . $this->escape($attData['attribute_id']);
+        foreach ($attributeCodes as $attributeCode) {
+            $attData = $this->getAttribute($attributeCode, $entity->getType());
+            $sqls[] = "UPDATE entity_value_".$attData['type']." AS ev SET ev.updated_at = ".$this->escape($timestamp)
+                ." WHERE ev.entity_id = ".$this->escape($entity->getId())
+                    ." AND ev.attribute_id = ".$this->escape($attData['attribute_id']);
         }
 
         $adapter = $this->getAdapter();
-        $this->beginTransaction('touch-'.$entity->getId());
-        try{
-            foreach($sql as $s){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_touch_sql', 'touchEntity - ' . $entity->getId() . ' SQL: ' . $s, array('sql'=>$s), array('entity'=>$entity));
-                $res = $adapter->query($s, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
-                if(!$res){
-                    throw new MagelinkException('Unknown error executing attribute update query: ' . $s);
+        $transactionId = 'touch-'.$entity->getId();
+        $this->beginTransaction($transactionId);
+        try {
+            foreach ($sqls as $sql) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(LogService::LEVEL_DEBUGEXTRA,
+                        'sav_touch_sql',
+                        'touchEntity - '.$entity->getId().' SQL: '.$sql,
+                        array('sql'=>$sql),
+                        array('entity'=>$entity)
+                    );
+
+                $response = $adapter->query($sql, Adapter::QUERY_MODE_EXECUTE);
+                if (!$response) {
+                    throw new MagelinkException('Unknown error executing attribute update query: '.$sql);
                 }
             }
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_touch_commit', 'touchEntity - ' . $entity->getId() . ' committed, ' . count($sql) . ' queries ran', array('sql'=>$s), array('entity'=>$entity));
-            $this->commitTransaction('touch-'.$entity->getId());
-        }catch(\Exception $e){
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'sav_touch_err', 'touchEntity - ' . $entity->getId() . ' - Exception in processing, rolling back', array('message'=>$e->getMessage()), array('entity'=>$entity, 'exception'=>$e));
-            $this->rollbackTransaction('touch-'.$entity->getId());
-            throw $e;
+
+            $this->getServiceLocator()->get('logService')
+                ->log(LogService::LEVEL_DEBUGEXTRA,
+                    'sav_touch_commit',
+                    'touchEntity - '.$entity->getId().' committed, '.count($sql).' queries ran',
+                    array('sql'=>$sql),
+                    array('entity'=>$entity)
+                );
+            $this->commitTransaction($transactionId);
+        }catch (\Exception $exception) {
+            $this->getServiceLocator()->get('logService')
+                ->log(LogService::LEVEL_DEBUGEXTRA, 
+                    'sav_touch_err', 
+                    'touchEntity - '.$entity->getId().' - Exception in processing, rolling back', 
+                    array('message'=>$exception->getMessage()), 
+                    array('entity'=>$entity, 'exception'=>$exception)
+                );
+            $this->rollbackTransaction($transactionId);
+            throw $exception;
         }
     }
 
     /**
      * Create new entity in the database. Does not update any logging or distribution tables, or cause any routing.
      *
-     * @param int $entity_type_id
-     * @param int $store_id
-     * @param string $unique_id
-     * @param int $parent_id
+     * @param int $entityTypeId
+     * @param int $storeId
+     * @param string $uniqueId
+     * @param int $parentId
      * @param array $data
      * @throws MagelinkException
      * @return int The entity ID of the newly created entity
      */
-    public function createEntity( $entity_type_id, $store_id, $unique_id, $parent_id, $data ){
-
-        $dataArr = array(
-            'type_id'=>$entity_type_id,
-            'store_id'=>$store_id,
-            'unique_id'=>$unique_id,
-            'parent_id'=>($parent_id ? $parent_id : null),
+    public function createEntity($entityTypeId, $storeId, $uniqueId, $parentId, array $data)
+    {
+        $dataArray = array(
+            'type_id'=>$entityTypeId,
+            'store_id'=>$storeId,
+            'unique_id'=>$uniqueId,
+            'parent_id'=>($parentId ? $parentId : NULL),
             'updated_at'=>date('Y-m-d H:i:s')
-        );
+       );
 
-        $val = $this->getTableGateway('entity')->insert($dataArr);
-        $ent_id = $this->getAdapter()->getDriver()->getLastGeneratedValue();//$this->getTableGateway('entity')->getLastInsertValue();
-        $dataArr['entity_id'] = intval($ent_id);
-        if(!$val || !$ent_id){
+        $affectedRows = $this->getTableGateway('entity')->insert($dataArray);
+        $entityId = $this->getAdapter()->getDriver()->getLastGeneratedValue();
+        //$entityId = $this->getTableGateway('entity')->getLastInsertValue();
+        $dataArray['entity_id'] = intval($entityId);
+
+        if (!$affectedRows || !$entityId) {
             throw new MagelinkException('Unknown error inserting entity record');
-        }
-
-        foreach($data as $k=>$v){
-            if(is_object($v) && $v instanceof \Entity\Entity){
-                if(!$v->getId()){
-                    throw new NodeException('Invalid ID for Entity-type value');
+            $entityId = NULL;
+        }else {
+            foreach ($data as $code=>$value) {
+                if (is_object($value) && $value instanceof Entity) {
+                    if (!$value->getId()) {
+                        throw new NodeException('Invalid ID for Entity-type value');
+                    }
+                    $data[$code] = $value->getId();
+                }elseif (!$value) { // ToDo: Check if is_null($value) would be better
+                    unset($data[$code]);
                 }
-                $data[$k] = $v->getId();
             }
-            if($v == null){
-                unset($data[$k]);
+
+            $attributes = array();
+            $attributeCodes = array_keys($data);
+
+            foreach ($attributeCodes as $code) {
+                $attributes[$code] = $this->getAttribute($code, $entityTypeId);
             }
+
+            $entity = new Entity($dataArray, $attributes, 0);
+            $this->updateData($entity, $data, array(), array(), $attributeCodes, array(), $code);
+
+            $entityId = $dataArray['entity_id'];
         }
 
-        $attributeKeys = array_keys($data);
-
-        $attribute = array();
-        foreach($attributeKeys as $att){
-            $attribute[$att] = $this->getAttribute($att, $entity_type_id);
-        }
-
-        $ent = new \Entity\Entity($dataArr, $attribute, 0);
-
-        $this->updateData($ent, $data, array(), array(), $attributeKeys, array(), $attribute);
-
-        return $dataArr['entity_id'];
+        return $entityId;
     }
 
     /**
      * Save new entity data into the database. Does not update any logging or distribution tables (i.e. entity_update)
      * 
-     * @param \Entity\Entity $entity The Entity to update.
+     * @param Entity $entity The Entity to update.
      * @param array $updatedData
      * @param array $merge
      * @param bool $forcedUpdate
      * @return string[] A list of all attribute codes that were updated
      */
-    public function saveEntity(\Entity\Entity $entity, $updatedData, $merge = array(), $forcedUpdate = FALSE)
+    public function saveEntity(Entity $entity, array $updatedData, array $merge = array(), $forcedUpdate = FALSE)
     {
         $attributesToUpdate = array();
         $attributesToMerge = array();
@@ -176,7 +217,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         
         foreach ($updatedData as $code=>$newValue) {
 
-            if (is_object($newValue) && $newValue instanceof \Entity\Entity){
+            if (is_object($newValue) && $newValue instanceof Entity) {
                 if (!$newValue->getId()) {
                     throw new NodeException('Invalid ID for Entity-type value');
                 }else{
@@ -185,14 +226,14 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
 
             $oldValue = $entity->getData($code);
-            if ($oldValue !== NULL && $newValue !== NULL) {
+            if (!is_null($oldValue) && !is_null($newValue)) {
                 settype($newValue, gettype($oldValue));
             }
 
             if ($newValue === NULL && $oldValue !== NULL) {
                 $attributesToDelete[] = $code;
 
-            }elseif ($oldValue === NULL && $newValue !== NULL) {
+            }elseif (is_null($oldValue) && !is_null($newValue)) {
                 $attributesToCreate[] = $code;
 
             }elseif ($oldValue !== $newValue || $forcedUpdate) {
@@ -212,146 +253,168 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
         }
 
-        $attribute = array();
-        foreach (array_merge($attributesToUpdate, $attributesToMerge, $attributesToCreate, $attributesToDelete) as $att) {
-            $attribute[$att] = $this->getAttribute($att, $entity->getType());
+        $attributes = array();
+        $attributeCodes = array_merge($attributesToUpdate, $attributesToMerge, $attributesToCreate, $attributesToDelete);
+        foreach ($attributeCodes as $code) {
+            $attributes[$code] = $this->getAttribute($code, $entity->getType());
         }
 
-        if(count($attribute)){
-            $extraSql = array('UPDATE entity AS e SET e.updated_at = NOW() WHERE e.entity_id = ' . $this->escape($entity->getId()) . ';');
+        if (count($attributes)) {
+            $sql = "UPDATE entity AS e SET e.updated_at = NOW() WHERE e.entity_id = ".$this->escape($entity->getId()).";";
+            $extraSqls = array($sql);
 
-            $this->updateData($entity, $updatedData, $attributesToUpdate, $attributesToMerge, $attributesToCreate, $attributesToDelete, $attribute, $extraSql);
+            $this->updateData($entity, $updatedData, $attributesToUpdate, $attributesToMerge, $attributesToCreate,
+                $attributesToDelete, $attributes, $extraSqls);
         }
 
-        return array_keys($attribute);
+        return array_keys($attributes);
 
     }
 
     /**
      * Updates actual attribute values in DB. Used internally by both createEntity and saveEntity
-     * @param \Entity\Entity $entity The entity to update
+     * @param Entity $entity The entity to update
      * @param array $updatedData An array of data being updated
      * @param string[] $attributesToUpdate
      * @param string[] $attributesToMerge
      * @param string[] $attributesToCreate
      * @param string[] $attributesToDelete
-     * @param array $attribute Array of attribute rows, key is attribute code
-     * @param array $extraSql Any extra SQL queries to be ran at the same time, in the same transaction (i.e. updated_at changes)
+     * @param array $attributes Array of attribute rows, key is attribute code
+     * @param array $extraSqls Any extra SQL queries to be run in the same transaction (i.e. updated_at changes)
      * @throws \Exception
      */
-    protected function updateData(\Entity\Entity $entity, array $updatedData, array $attributesToUpdate,
-        array $attributesToMerge, array $attributesToCreate, array $attributesToDelete, array $attribute,
-        array $extraSql = array()){
-
+    protected function updateData(Entity $entity, array $updatedData, array $attributesToUpdate,
+        array $attributesToMerge, array $attributesToCreate, array $attributesToDelete, array $attributes,
+        array $extraSqls = array())
+    {
         $sqls = array();
 
-        foreach($attributesToCreate as $att){
-            if(!array_key_exists($att, $attribute) || !$attribute[$att]){
-                throw new NodeException('Invalid attribute ' . $att);
+        foreach ($attributesToCreate as $code) {
+            if (!array_key_exists($code, $attributes) || !$attributes[$code]) {
+                throw new NodeException('Invalid attribute '.$code);
+                // ToDo: Stop further processing even the exception is commented out
             }
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                ->log(LogService::LEVEL_DEBUGEXTRA,
                     'sav_update_att',
-                    'updateData - '.$entity->getId().' - create '.$att,
-                    array('type'=>'create', 'att'=>$att, 'new'=>$updatedData[$att]),
+                    'updateData - '.$entity->getId().' - create '.$code,
+                    array('type'=>'create', 'attribute code'=>$code, 'new'=>$updatedData[$code]),
                     array('entity'=>$entity)
-                );
+               );
+
             try{
-            $sqls[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+                $sqls[] = $this->getValueInsertSql($entity->getId(), $attributes[$code], $updatedData[$code]);
             }catch (\Exception $exception) {
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    ->log(LogService::LEVEL_ERROR,
                         'insert_sql_error',
                         'Exception during the insert',
                         array(
                             'entity data'=>$entity->getFullArrayCopy(),
-                            'att'=>$att,
-                            'attribute[$att]'=>$attribute[$att],
-                            'attribute[att]'=>$attribute[$att],
-                            'updatedData[att]'=>$updatedData[$att],
-                        ),
+                            'attribute code'=>$code,
+                            'attributes['.$code.']'=>$attributes[$code],
+                            'updatedData['.$code.']'=>$updatedData[$code],
+                       ),
                         array(
                             'exception object'=>$exception,
-                            'attribute'=>$attribute,
+                            'attribute'=>$attributes,
                             'updatedData'=>$updatedData,
                             'attributesToUpdate'=>$attributesToUpdate,
                             'attributesToMerge'=>$attributesToMerge,
                             'attributesToCreate'=>$attributesToCreate,
                             'attributesToDelete'=>$attributesToDelete
-                        )
-                    );
+                       )
+                   );
                 throw new $exception;
             }
         }
-        foreach($attributesToDelete as $att){
-            if(!array_key_exists($att, $attribute) || !$attribute[$att]){
-                throw new NodeException('Invalid attribute ' . $att);
+
+        foreach ($attributesToDelete as $code) {
+            if (!array_key_exists($code, $attributes) || !$attributes[$code]) {
+                throw new NodeException('Invalid attribute ' . $code);
+                // ToDo: Stop further processing even the exception is commented out
             }
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                ->log(LogService::LEVEL_DEBUGEXTRA,
                     'sav_update_att',
-                    'updateData - '.$entity->getId().' - delete '.$att,
-                    array('type'=>'delete', 'att'=>$att),
+                    'updateData - '.$entity->getId().' - delete '.$code,
+                    array('type'=>'delete', 'att'=>$code),
                     array('entity'=>$entity)
-                );
-            $sqls[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
+               );
+
+            $sqls[] = $this->getValueDeleteSql($entity->getId(), $attributes[$code]);
         }
-        foreach($attributesToUpdate as $att){
-            if(!array_key_exists($att, $attribute) || !$attribute[$att]){
-                throw new NodeException('Invalid attribute ' . $att);
+
+        foreach ($attributesToUpdate as $code) {
+            if (!array_key_exists($code, $attributes) || !$attributes[$code]) {
+                throw new NodeException('Invalid attribute '.$code);
+                // ToDo: Stop further processing even the exception is commented out
             }
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                ->log(LogService::LEVEL_DEBUGEXTRA,
                     'sav_update_att',
-                    'updateData - '.$entity->getId().' - update '.$att,
-                    array('type'=>'update', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]),
+                    'updateData - '.$entity->getId().' - update '.$code,
+                    array(
+                        'type'=>'update',
+                        'attribute code'=>$code,
+                        'old'=>$entity->getData($code),
+                        'new'=>$updatedData[$code]
+                    ),
                     array('entity'=>$entity)
-                );
-            $sqls[] = $this->getValueDeleteSql($entity->getId(), $attribute[$att]);
+               );
+
+            $sqls[] = $this->getValueDeleteSql($entity->getId(), $attributes[$code]);
             try {
-            $sqls[] = $this->getValueInsertSql($entity->getId(), $attribute[$att], $updatedData[$att]);
+                $sqls[] = $this->getValueInsertSql($entity->getId(), $attributes[$code], $updatedData[$code]);
             }catch (\Exception $exception) {
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    ->log(LogService::LEVEL_ERROR,
                         'insert_sql_error',
                         'Exception during the insert',
                         array(
                             'entity data'=>$entity->getFullArrayCopy(),
-                            'att'=>$att,
-                            'attribute[$att]'=>$attribute[$att],
-                            'attribute[att]'=>$attribute[$att],
-                            'updatedData[att]'=>$updatedData[$att],
-                        ),
+                            'attribute code'=>$code,
+                            'attributes['.$code.']'=>$attributes[$code],
+                            'updatedData['.$code.']'=>$updatedData[$code],
+                       ),
                         array(
                             'exception object'=>$exception,
-                            'attribute'=>$attribute,
+                            'attribute'=>$attributes,
                             'updatedData'=>$updatedData,
                             'attributesToUpdate'=>$attributesToUpdate,
                             'attributesToMerge'=>$attributesToMerge,
                             'attributesToCreate'=>$attributesToCreate,
                             'attributesToDelete'=>$attributesToDelete
-                        )
-                    );
+                       )
+                   );
                 throw new $exception;
+                // ToDo: Stop further processing even the exception is commented out
             }
         }
-        foreach($attributesToMerge as $att){
-            if(!array_key_exists($att, $attribute) || !$attribute[$att]){
-                throw new NodeException('Invalid attribute ' . $att);
+
+        foreach ($attributesToMerge as $code) {
+            if (!array_key_exists($code, $attributes) || !$attributes[$code]) {
+                throw new NodeException('Invalid attribute ' . $code);
+                // ToDo: Stop further processing even the exception is commented out
             }
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                ->log(LogService::LEVEL_DEBUGEXTRA,
                     'sav_update_att',
-                    'updateData - '.$entity->getId().' - merge '.$att,
-                    array('type'=>'merge', 'att'=>$att, 'old'=>$entity->getData($att), 'new'=>$updatedData[$att]),
+                    'updateData - '.$entity->getId().' - merge '.$code,
+                    array(
+                        'type'=>'merge',
+                        'attribute code'=>$code,
+                        'old'=>$entity->getData($code),
+                        'new'=>$updatedData[$code]
+                    ),
                     array('entity'=>$entity)
-                );
-            $sqls = array_merge(
-                $sqls,
-                $this->getValueMergeSql($entity->getId(), $attribute[$att], $updatedData[$att], $entity->getData($att))
-            );
+               );
+            $sqls = array_merge($sqls,
+                $this->getValueMergeSql($entity->getId(), $attributes[$code], $updatedData[$code], $entity->getData($code))
+           );
         }
-        $sqls = array_merge($sqls, $extraSql);
+
+        $sqls = array_merge($sqls, $extraSqls);
 
         $try = 1;
         $maxTries = 3;
@@ -364,50 +427,56 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             try{
                 foreach ($sqls as $sql) {
                     $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                        ->log(LogService::LEVEL_DEBUGEXTRA,
                             'sav_update_sql',
                             'updateData - '.$entity->getId().' SQL: '.$sql,
-                            array('sql' => $sql),
-                            array('entity' => $entity)
-                        );
-                    $res = $adapter->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
-                    if (!$res) {
+                            array('sql'=>$sql),
+                            array('entity'=>$entity)
+                       );
+                    $result = $adapter->query($sql, Adapter::QUERY_MODE_EXECUTE);
+                    if (!$result) {
                         throw new MagelinkException('Unknown error executing attribute update query: '.$sql);
                     }
                 }
+
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
-                        'sav_update_commit',
+                    ->log(LogService::LEVEL_DEBUGEXTRA,
+                        'sav_update_commit_'.$try,
                         'updateData - '.$entity->getId().' committed, '.count($sqls).' queries ran',
-                        array('sqls'=>implode(';', $sqls)),
+                        array('sqls'=>implode('; ', $sqls)),
                         array('entity'=>$entity)
-                    );
+                   );
                 $this->commitTransaction($transactionLabel);
                 $success = TRUE;
-            }catch (\Exception $exception){
+            }catch (\Exception $exception) {
                 $this->rollbackTransaction($transactionLabel);
 
                 if (self::isRestartTransaction($exception)) {
                     sleep(2);
-                }else {
-                    $maxTries = 0;
+                    $isLast = $try >= $maxTries;
+                }else{
+                    $isLast = TRUE;
                 }
 
+                $logLevel = $isLast ? LogService::LEVEL_ERROR : LogService::LEVEL_WARN;
+                $logCode = 'sav_update_err'.($isLast ? '' : '_'.$try);
+                $logMessage = 'updateData of entity '.$entity->getId().' - Exception in processing, rolling back'
+                    .' ('.$try.'/'.$maxTries.')';
+
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_ERROR,
-                        'sav_update_err'.($maxTries ? '_'.$try : ''),
-                        'updateData - '.$entity->getId().' - Exception in processing, rolling back',
+                    ->log($logLevel, $logCode, $logMessage,
                         array(
                             'entity id'=>$entity->getId(),
                             'message'=>$exception->getMessage(),
                             'code'=>$exception->getCode(),
-                            'sqls'=>implode(';', $sqls),
+                            'sqls'=>implode('; ', $sqls),
                             'sql'=>(isset($sql) ? $sql : '')
-                        ),
+                       ),
                         array('entity'=>$entity, 'exception'=>$exception)
-                    );
+                   );
             }
-        }while (!$success && $maxTries - $try++ > 0);
+            $try++;
+        }while (!$success && !$isLast);
 
         if (!$success) {
             throw new MagelinkException($exception->getMessage(), $exception->getCode(), $exception);
@@ -416,19 +485,19 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
     
     /**
      * Returns SQL to insert new value for attribute
-     * @param int $entity_id
-     * @param array $attribute
+     * @param int $entityId
+     * @param array $attributes
      * @param mixed $value
      * @return string
      * @throws MagelinkException
      */
-    protected function getValueInsertSql( $entity_id, $attribute, $value ) {
+    protected function getValueInsertSql($entityId, array $attributes, $value)
+    {
         $values = array();
-        if(!is_array($value)){
+        if (!is_array($value)) {
             $values = array($value);
-        }else if($attribute['type'] == 'multi'){
-            if(!isset($value[0])){
-                // Correct format, associative
+        }elseif ($attributes['type'] == 'multi') {
+            if (!isset($value[0])) { // Correct format, associative
                 $values = $value;
             }else{
                 throw new NodeException('Invalid format for multi data');
@@ -437,76 +506,81 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             $values = $value;
         }
         
-        $template = '(' . $this->escape($entity_id) . ', ' . $this->escape($attribute['attribute_id']) . ', NOW(), {})';
+        $template = ' ('.$this->escape($entityId).', '.$this->escape($attributes['attribute_id']).', NOW(), {})';
         
         $valuesSql = array();
-        foreach($values as $k=>$val){
-            if($attribute['type'] == 'multi'){
-                $valuesSql[] = str_replace('{}', $this->escape($k) . ', ' . $this->escape($val), $template);
-            }else if($attribute['type'] == 'entity' && is_object($val)){
-                $valuesSql[] = str_replace('{}', $this->escape($val->getId()), $template);
-            } else{
-                $valuesSql[] = str_replace('{}', $this->escape($val), $template);
+        foreach ($values as $key=>$value) {
+            if ($attributes['type'] == 'multi') {
+                $valuesSql[] = str_replace('{}', $this->escape($key).', '.$this->escape($value), $template);
+            }elseif ($attributes['type'] == 'entity' && is_object($value)) {
+                $valuesSql[] = str_replace('{}', $this->escape($value->getId()), $template);
+            }else{
+                $valuesSql[] = str_replace('{}', $this->escape($value), $template);
             }
         }
-        
-        $sql = 'INSERT INTO entity_value_' . $attribute['type'] . ' (entity_id, attribute_id, updated_at, ';
-        if($attribute['type'] == 'multi'){
-            $sql .= '`key`, ';
+
+        if ($valuesSql) {
+            $sql = "INSERT INTO entity_value_".$attributes['type']." (entity_id, attribute_id, updated_at,"
+                .($attributes['type'] == 'multi' ? " `key`," : "")." value) VALUES ".implode(', ', $valuesSql).";";
+        }else{
+            $sql = NULL;
         }
-        $sql .= 'value) VALUES ';
-        
-        $sql .= implode(', ', $valuesSql);
-        
-        $sql .= ';';
         
         return $sql;
     }
     
     /**
      * Returns array of SQL to update attribute with new merged data
-     * @param int $entity_id
-     * @param array $attribute
+     * @param int $entityId
+     * @param array $attributes
      * @param mixed $value
      * @param mixed $oldValue
      * @return array
      * @throws MagelinkException
      */
-    protected function getValueMergeSql( $entity_id, $attribute, $value, $oldValue ) {
-        
-        if($attribute['type'] == 'multi'){
+    protected function getValueMergeSql($entityId, $attributes, $value, $oldValue)
+    {
+        if ($attributes['type'] == 'multi') {
             throw new MagelinkException('multi attribute merging not yet supported - TODO');
+            $sqls = array();
+        }else{
+            $values = array();
+            if (is_array($oldValue) && !is_array($value)) {
+                $values = $oldValue;
+                $values[] = $value;
+            }else {
+                if (!is_array($oldValue) && is_array($value)) {
+                    $values = $value;
+                    array_unshift($values, $oldValue);
+                }else {
+                    if (!is_array($oldValue) && !is_array($value)) {
+                        $values = array($oldValue, $value);
+                    }else { // Both arrays
+                        $values = array_merge($oldValue, $value);
+                    }
+                }
+            }
+
+            $sqls = array(
+                $this->getValueDeleteSql($entityId, $attributes),
+                $this->getValueInsertSql($entityId, $attributes, $values),
+            );
         }
-        
-        $values = array();
-        
-        if(is_array($oldValue) && !is_array($value)){
-            $values = $oldValue;
-            $values[] = $value;
-        }else if(!is_array($oldValue) && is_array($value)){
-            $values = $value;
-            array_unshift($values, $oldValue);
-        }else if(!is_array($oldValue) && !is_array($value)){
-            $values = array($oldValue, $value);
-        }else{ // Both arrays
-            $values = array_merge($oldValue, $value);
-        }
-        
-        return array(
-            $this->getValueDeleteSql($entity_id, $attribute),
-            $this->getValueInsertSql($entity_id, $attribute, $values),
-        );
-        
+
+        return $sqls;
     }
     
     /**
      * Returns SQL to delete value from attribute
-     * @param int $entity_id
-     * @param array $attribute
+     * @param int $entityId
+     * @param array $attributes
      * @return string
      */
-    protected function getValueDeleteSql( $entity_id, $attribute ) {
-        return 'DELETE FROM entity_value_' . $attribute['type'] . ' WHERE entity_id = ' . $this->escape($entity_id) . ' AND attribute_id = ' . $this->escape($attribute['attribute_id']) . ';';
+    protected function getValueDeleteSql($entityId, array $attributes)
+    {
+        $sql = "DELETE FROM entity_value_".$attributes['type']." WHERE entity_id = ".$this->escape($entityId)
+            ." AND attribute_id = ".$this->escape($attributes['attribute_id']).";";
+        return $sql;
     }
     
 }

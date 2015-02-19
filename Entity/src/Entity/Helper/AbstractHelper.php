@@ -1,37 +1,42 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Class AbstractHelper provides standard functionality for use by the various Entity helpers (Saver/Loader/Querier)
+ *
+ * @category Entity
+ * @package Entity\Helper
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity\Helper;
 
-use Magelink\Exception\MagelinkException;
-use Zend\Db\RowGateway\RowGateway;
-use Zend\Db\TableGateway\TableGateway;
-use Magelink\Exception\NodeException;
+use \Magelink\Exception\MagelinkException;
+use \Magelink\Exception\NodeException;
+use \Zend\Db\RowGateway\RowGateway;
+use \Zend\Db\TableGateway\TableGateway;
 
-/**
- * Class AbstractHelper provides standard functionality for use by the various Entity helpers (Saver/Loader/Querier)
- *
- * @package Entity\Helper
- */
+
 abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
 {
 
     const MYSQL_ER_LOCK_DEADLOCK = '40001';
 
     protected static $_transactionStack = array();
+
     protected $_attributeCache = array();
     protected $_attributeCodeCache = array();
 
     /** @var \Zend\ServiceManager\ServiceLocatorInterface The service locator */
-    protected $_serviceLocator = null;
+    protected $_serviceLocator = NULL;
 
 
-
+    /**
+     * Static method which check if the transaction should be retried
+     * @param \Exception $exception
+     * @return bool
+     */
     protected static function isRestartTransaction(\Exception $exception)
     {
         if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK
@@ -44,6 +49,42 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
         return $restart;
     }
 
+
+    /**
+     * @return \Zend\ServiceManager\ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
+    }
+
+    /**
+     * @param \Zend\ServiceManager\ServiceLocatorInterface $serviceLocator
+     */
+    public function setServiceLocator(\Zend\ServiceManager\ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+    }
+
+    /**
+     * Return the database adapter to be used to communicate with Entity storage.
+     * @return \Zend\Db\Adapter\Adapter
+     */
+    protected function getAdapter()
+    {
+        return $this->getServiceLocator()->get('zend_db');
+    }
+
+    /**
+     * Returns a new TableGateway instance for the requested table
+     * @param string $table
+     * @return \Zend\Db\TableGateway\TableGateway
+     */
+    protected function getTableGateway($table)
+    {
+        return new TableGateway($table, \Zend\Db\TableGateway\Feature\GlobalAdapterFeature::getStaticAdapter());
+    }
+
     /**
      * Starts a transaction with the given ID
      * @param string $id
@@ -51,7 +92,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     public function beginTransaction($id)
     {
         self::$_transactionStack[] = $id;
-        if(count(self::$_transactionStack) == 1){
+        if (count(self::$_transactionStack) == 1) {
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
                     'trans_begin_actual',
@@ -77,16 +118,17 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      */
     public function rollbackTransaction($id)
     {
-        if(!in_array($id, self::$_transactionStack)){
+        if (!in_array($id, self::$_transactionStack)) {
             $this->rollbackTransactionInternal();
             throw new MagelinkException('Invalid transaction to roll back - ' . $id);
         }
         $top = array_pop(self::$_transactionStack);
-        if($top != $id){
+        if ($top != $id) {
             $this->rollbackTransactionInternal();
             throw new MagelinkException('Transaction not at top of stack (top was ' . $top . ', we were ' . $id . ')!');
         }
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_rollback', 'rollbackTransaction - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_rollback', 'rollbackTransaction - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
 
         $this->rollbackTransactionInternal();
     }
@@ -98,7 +140,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      */
     public function commitTransaction($id)
     {
-        if(!in_array($id, self::$_transactionStack)){
+        if (!in_array($id, self::$_transactionStack)) {
             throw new MagelinkException('Invalid transaction to commit - ' . $id);
         }
         $top = array_pop(self::$_transactionStack);
@@ -139,10 +181,10 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
         $adapter = $this->getAdapter();
         $adapter->getDriver()->getConnection()->rollback();
     }
-    
+
     /**
      * Escape a value for use in raw SQL
-     * 
+     *
      * @param mixed $value Should be a scalar value or something that will automatically convert to a string.
      * @return string
      */
@@ -186,6 +228,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
             }
 
         }
+
         return $quotedValue;
     }
 
@@ -233,42 +276,49 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
 
         return $escapedColumnValueArray;
     }
-    
+
     /**
      * Get attribute data array, loading if necessary
      * @param int|string $code Numeric ID or code of attribute
-     * @param int $entity_type_id
+     * @param int $entityTypeId
      * @return array|false
      * @throws \Magelink\Exception\MagelinkException
      */
-    public function getAttribute($code, $entity_type_id)
+    public function getAttribute($code, $entityTypeId)
     {
-        if(!isset($this->_attributeCache[$entity_type_id])){
-            $this->_attributeCache[$entity_type_id] = array();
+        if (!isset($this->_attributeCache[$entityTypeId])) {
+            $this->_attributeCache[$entityTypeId] = array();
         }
-        if(!isset($this->_attributeCodeCache[$entity_type_id])){
-            $this->_attributeCodeCache[$entity_type_id] = array();
+
+        if (!isset($this->_attributeCodeCache[$entityTypeId])) {
+            $this->_attributeCodeCache[$entityTypeId] = array();
         }
-        $result = false;
-        if(is_string($code)){
-            if(isset($this->_attributeCodeCache[$entity_type_id][$code])){
-                return $this->_attributeCodeCache[$entity_type_id][$code];
+
+        $result = FALSE;
+        if (is_string($code)) {
+            if (isset($this->_attributeCodeCache[$entityTypeId][$code])) {
+                return $this->_attributeCodeCache[$entityTypeId][$code];
             }else{
-                $result = $this->loadAttribute($code, 'code', $entity_type_id);
-                $this->_attributeCodeCache[$entity_type_id][$code] = $result;
+                $result = $this->loadAttribute($code, 'code', $entityTypeId);
+                $this->_attributeCodeCache[$entityTypeId][$code] = $result;
+
                 return $result;
             }
-        }else if(!is_int($code)){
+        }elseif (!is_int($code)) {
             throw new NodeException('Invalid attribute name/ID');
         }
-        if(!$code){
+
+        if (!$code) {
             throw new NodeException('Invalid code ' . $code);
         }
-        if(isset($this->_attributeCache[$entity_type_id][$code])){
-            return $this->_attributeCache[$entity_type_id][$code];
+
+        if (isset($this->_attributeCache[$entityTypeId][$code])) {
+            return $this->_attributeCache[$entityTypeId][$code];
         }
-        $result = $this->loadAttribute($code, 'attribute_id', $entity_type_id);
-        $this->_attributeCache[$entity_type_id][$code] = $result;
+
+        $result = $this->loadAttribute($code, 'attribute_id', $entityTypeId);
+        $this->_attributeCache[$entityTypeId][$code] = $result;
+
         return $result;
     }
 
@@ -280,7 +330,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     {
         return array($this->_attributeCache, $this->_attributeCodeCache);
     }
-    
+
     /**
      * Load an attribute from DB storage
      * @param int|string $id
@@ -288,14 +338,14 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * @param int $entity_type
      * @return array
      */
-    protected function loadAttribute($id, $field, $entity_type = null){
+    protected function loadAttribute($id, $field, $entity_type = NULL)
+    {
         $rs = $this->getTableGateway('entity_attribute')->select(array($field=>$id, 'entity_type_id'=>$entity_type));
-        foreach($rs as $row){
+        foreach ($rs as $row) {
             return $row;
         }
-        return null;
+        return NULL;
     }
-
     /**
      * Create a WHERE clause for a given field using the locate-style search types.
      * @param string $field The field name to check (fully qualified with table name)
@@ -308,8 +358,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      */
     protected function generateFieldCriteria($field, $value, $searchType, $inverse=false, $escape=true)
     {
-        if(is_null($value)){
-            switch($searchType){
+        if (is_null($value)) {
+            switch($searchType) {
                 case 'neq':
                 case 'not_eq':
                 case '!=':
@@ -341,17 +391,17 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                     $searchType = 'impossible';
                     break;
             }
-        }else if(is_scalar($value) && $escape){
+        }else if (is_scalar($value) && $escape) {
             $value = $this->escape($value);
         }
 
-        switch($searchType){
+        switch($searchType) {
             case 'impossible':
                 return '1 != 1';
             case 'notnull':
                 $inverse = !$inverse;
             case 'null':
-                if($inverse){
+                if ($inverse) {
                     return $field . ' IS NOT NULL';
                 }
                 return $field . ' IS NULL';
@@ -362,7 +412,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
             case 'all_eq':
             case 'eq':
             case '=':
-                if($inverse){
+                if ($inverse) {
                     return $field . ' != ' . $value;
                 }
                 return $field . ' = ' . $value;
@@ -371,17 +421,17 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                 $inverse = !$inverse;
             case 'all_in':
             case 'in':
-                if($value instanceof \Zend\Db\Sql\Expression){
+                if ($value instanceof \Zend\Db\Sql\Expression) {
                     return $field . ' ' . ($inverse ? 'NOT IN' : 'IN') . ' (' . $value->getExpression() . ')';
                 }
-                if(!is_array($value)){
+                if (!is_array($value)) {
                     $value = array($value);
-                }else if(!count($value)){
+                }else if (!count($value)) {
                     return '0 = 1';
                 }
-                if(is_array($value)){
-                    foreach($value as $k=>&$v){
-                        if(is_null($v)){
+                if (is_array($value)) {
+                    foreach ($value as $k=>&$v) {
+                        if (is_null($v)) {
                             $v = 'NULL';
                         }else{
                             $v = $this->escape($v);
@@ -392,14 +442,14 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
             case 'all_gt':
             case 'gt':
             case '>':
-                if($inverse){
+                if ($inverse) {
                     return $field . ' <= ' . $value;
                 }
                 return $field . ' > ' . $value;
             case 'all_gteq':
             case 'gteq':
             case '>=':
-                if($inverse){
+                if ($inverse) {
                     return $field . ' < ' . $value;
                 }
                 return $field . ' >= ' . $value;
@@ -407,14 +457,14 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
             case 'all_lt':
             case 'lt':
             case '<':
-                if($inverse){
+                if ($inverse) {
                     return $field . ' >= ' . $value;
                 }
                 return $field . ' < ' . $value;
             case 'all_lteq':
             case 'lteq':
             case '<=':
-                if($inverse){
+                if ($inverse) {
                     return $field . ' > ' . $value;
                 }
                 return $field . ' <= ' . $value;
@@ -422,47 +472,12 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
             case '!like':
                 $inverse = !$inverse;
             case 'like':
-                if($inverse){
+                if ($inverse) {
                     return $field . ' NOT LIKE ' . $value;
                 }
                 return $field . ' LIKE ' . $value;
             default:
                 throw new NodeException('Unknown search type: `'.$searchType.'`');
         }
-    }
-    
-    /**
-     * Return the database adapter to be used to communicate with Entity storage.
-     * @return \Zend\Db\Adapter\Adapter
-     */
-    protected function getAdapter()
-    {
-        return $this->getServiceLocator()->get('zend_db');
-    }
-    
-    /**
-     * Returns a new TableGateway instance for the requested table
-     * @param string $table
-     * @return \Zend\Db\TableGateway\TableGateway
-     */
-    protected function getTableGateway($table)
-    {
-        return new TableGateway($table, \Zend\Db\TableGateway\Feature\GlobalAdapterFeature::getStaticAdapter());
-    }
-    
-    /**
-     * @return \Zend\ServiceManager\ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
-    }
-
-    /**
-     * @param \Zend\ServiceManager\ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(\Zend\ServiceManager\ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
     }
 }
