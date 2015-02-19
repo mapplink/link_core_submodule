@@ -576,7 +576,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      * @param array $attributes
      * @return string
      */
-    protected function getValueDeleteSql($entityId, array $attributes)
+    protected function getValueDeleteSql($entityId, $attributes)
     {
         $sql = "DELETE FROM entity_value_".$attributes['type']." WHERE entity_id = ".$this->escape($entityId)
             ." AND attribute_id = ".$this->escape($attributes['attribute_id']).";";
