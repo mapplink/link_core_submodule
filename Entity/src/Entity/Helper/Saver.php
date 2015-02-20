@@ -191,7 +191,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
 
             $entity = new Entity($dataArray, $attributes, 0);
-            $this->updateData($entity, $data, array(), array(), $attributeCodes, array(), $code);
+            $this->updateData($entity, $data, array(), array(), $attributeCodes, array(), $attributes);
 
             $entityId = $dataArray['entity_id'];
         }
