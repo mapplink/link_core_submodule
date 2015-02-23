@@ -458,8 +458,13 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     $isLast = TRUE;
                 }
 
-                $logLevel = $isLast ? LogService::LEVEL_ERROR : LogService::LEVEL_WARN;
-                $logCode = 'sav_update_err'.($isLast ? '' : '_'.$try);
+                $logCode = 'sav_update_err';
+                if ($isLast) {
+                    $logLevel = LogService::LEVEL_ERROR;
+                }else {
+                    $logLevel = LogService::LEVEL_WARN;
+                    $logCode .= '_'.$try;
+                }
                 $logMessage = 'updateData of entity '.$entity->getId().' - Exception in processing, rolling back'
                     .' ('.$try.'/'.$maxTries.')';
 
