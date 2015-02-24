@@ -1359,10 +1359,10 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param array $productsWithStockToUpdate
      * @throws \Exception
      */
-    public function updatePickableStockQuantities($nodeId, array $productsWithStockToUpdate)
+    public function updatePickableStockQuantities($nodeId, $storeId, array $productsWithStockToUpdate)
     {
         foreach ($productsWithStockToUpdate as $productId=>$quantity) {
-            $stockitemArray = $this->locateEntity($nodeId, 'stockitem', $this->getStoreId(),
+            $stockitemArray = $this->locateEntity($nodeId, 'stockitem', $storeId,
                 array('PARENT_ID'=>$productId), array(), array('limit'=>1));
             if (count($stockitemArray)) {
                 $stockitem = array_shift($stockitemArray);
