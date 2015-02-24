@@ -38,6 +38,48 @@ class EntityService implements ServiceLocatorAwareInterface
 
 
     /**
+     * Get service locator
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
+    }
+
+    /**
+     * Set service locator
+     * @param ServiceLocatorInterface $serviceLocator
+     */
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+    }
+
+    /**
+     * Return the database adapter to be used to communicate with Entity storage.
+     * @return \Zend\Db\Adapter\Adapter
+     */
+    protected function getAdapter()
+    {
+        return $this->getServiceLocator()->get('zend_db');
+    }
+
+    /**
+     * Returns a new TableGateway instance for the requested table
+     * @param string $table
+     * @return \Zend\Db\TableGateway\TableGateway
+     */
+    protected function getTableGateway($table)
+    {
+        if (isset($this->_tgCache[$table])) {
+            return $this->_tgCache[$table];
+        }
+        $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
+
+        return $this->_tgCache[$table];
+    }
+
+    /**
      * Retreive Saving helper
      * @see $_saver
      * @return \Entity\Helper\Saver
@@ -227,6 +269,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * >>> MOVE TO HopsService
      * Loads the entity flat data from the database
      * @param string $entityType
      * @param string $where
@@ -251,6 +294,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * >>> MOVE TO HopsService
      * @param string$entityType
      * @param array $set
      * @param string $where
@@ -541,7 +585,6 @@ class EntityService implements ServiceLocatorAwareInterface
         return $result;
     }
 
-
     /**
      * Ensure all the attributes for the given node are loaded into the provided Entity and if provided, also additional
      * attributes identified by $additional_attributes.  Used if Entities are passed around or if passed to core code
@@ -716,6 +759,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * >>> MOVE TO HopsService
      * @param \Entity\Entity $entity
      * @param bool $insert
      * @return bool $success
@@ -847,6 +891,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * >>> MOVE TO HopsService
      * @param int $nodeId
      * @param \Entity\Entity $entity
      * @param int $flatEntityId
@@ -891,6 +936,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * >>> MOVE TO HopsService
      * @param int $nodeId
      * @param int $storeId
      * @param string|NULL $flatEntityType
@@ -1305,6 +1351,47 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->getSaver()->setEntityUnique($entity->getId(), $new_unique_id);
         $this->getSaver()->touchEntity($entity);
     }
+
+    /**
+     * >>> MOVE TO HopsService
+     * Update on stockitem solely the pickable attribute from a productId-quantities array
+     * @param int $nodeId
+     * @param array $productsWithStockToUpdate
+     * @throws \Exception
+     */
+    public function updatePickableStockQuantities($nodeId, $storeId, array $productsWithStockToUpdate)
+    {
+        foreach ($productsWithStockToUpdate as $productId=>$quantity) {
+            $stockitemArray = $this->locateEntity($nodeId, 'stockitem', $storeId,
+                array('PARENT_ID'=>$productId), array(), array('limit'=>1));
+            if (count($stockitemArray)) {
+                $stockitem = array_shift($stockitemArray);
+                try{
+                    $pickable = $stockitem->getData('pickable', 0);
+                    $newPickable = $pickable - $quantity;
+                    $this->updateEntity($nodeId, $stockitem, array('pickable' => $newPickable));
+                }catch (\Exception $exception) {
+                    $this->getServiceLocator()->get('logService')
+                        ->log(\Log\Service\LogService::LEVEL_ERROR,
+                            'gen_upd_stock_fail',
+                            'Updated failed on stockitem '.$stockitem->getId().' ('.$stockitem->getUniqueId().').',
+                            array('stockitem'=>$stockitem->getId(), 'product'=>$productId, 'pickable'=>$pickable,
+                                'quantity'=>$quantity, 'new pickable'=>$newPickable),
+                            array('stockitem'=>$stockitem)
+                        );
+                    throw $exception;
+                }
+            }else{
+                $this->getServiceLocator()->get('logService')
+                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        'gen_upd_stock_not_ex',
+                        'Stockitem of product '.$productId.' does not exist.',
+                        array('product'=>$productId, 'quantity'=>$quantity)
+                    );
+            }
+
+        }
+    }
     
     /**
      * Deletes the given Entity from the system.
@@ -1491,6 +1578,10 @@ class EntityService implements ServiceLocatorAwareInterface
         return $payments;
     }
 
+    /**
+     * @param $extendMethod
+     * @return array
+     */
     protected function getMethodCcType($extendMethod)
     {
         $findCcTypeRegEx = '#{{([^}]+)}}#ism';
@@ -1836,6 +1927,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * >>> MOVE TO HopsService
      * @param int|string $entityType
      * @return bool $hasFlatTable|string $entityType
      * @throws NodeException
@@ -1858,6 +1950,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * >>> MOVE TO HopsService
      * Get flat table column name from entity type and attribute
      * @param string $entityType
      * @param string $code
@@ -1883,6 +1976,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * >>> MOVE TO HopsService
      * Get entity type-attribute code array from flat table column
      * @param $flatColumn
      * @return array
@@ -1897,48 +1991,6 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         return array($entityType=>$attributeCode);
-    }
-
-    /**
-     * Return the database adapter to be used to communicate with Entity storage.
-     * @return \Zend\Db\Adapter\Adapter
-     */
-    protected function getAdapter()
-    {
-        return $this->getServiceLocator()->get('zend_db');
-    }
-
-    /**
-     * Set service locator
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
-    }
-
-    /**
-     * Returns a new TableGateway instance for the requested table
-     * @param string $table
-     * @return \Zend\Db\TableGateway\TableGateway
-     */
-    protected function getTableGateway($table)
-    {
-        if (isset($this->_tgCache[$table])) {
-            return $this->_tgCache[$table];
-        }
-        $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
-
-        return $this->_tgCache[$table];
     }
 
 }
