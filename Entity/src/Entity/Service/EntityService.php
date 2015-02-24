@@ -773,13 +773,23 @@ class EntityService implements ServiceLocatorAwareInterface
             $entityOnly = FALSE; // Create only
         }
 
-        $entityArray = array('flat entity'=>$entity, 'entity to update'=>$entityToUpdate);
+        $logMessage = ' - '.$entityToUpdate->getTypeStr().' '.$entityToUpdate->getUniqueId()
+            .' ('.$entityType.' '.$entity->getUniqueId().')';
+        $logData = array(
+            'entity_id'=>$entity->getId(),
+            'flat entity_type'=>$entityType,
+            'flat unique_id'=>$entity->getUniqueId(),
+            'to update entity_type'=>$entityToUpdate->getTypeStr(),
+            'to update unique_id'=>$entityToUpdate->getUniqueId()
+        );
+        $logEntities = array('flat entity'=>$entity, 'entity to update'=>$entityToUpdate);
 
         $flatFields = $this->getServiceLocator()->get('entityConfigService')
             ->getFlatEntityTypeFields($entityType);
         $flatData = $entity->getFlatDataFromEav($flatFields, $entityToUpdate, $entityOnly);
 
         if (is_array($flatData) && count($flatData)) {
+            $try = 0;
             $maxTries = 3;
             do {
                 $replaceData = $flatData;
@@ -800,55 +810,45 @@ class EntityService implements ServiceLocatorAwareInterface
                         $success = FALSE;
                     }
 
-                    $message = ' replaceFlat query: '.$sql;
-                    $dataArray = array(
-                        'entity_id'=>$entity->getId(),
-                        'flat entity_type'=>$entityType,
-                        'to update entity_type'=>$entityToUpdate->getTypeStr(),
-                        'to update unique_id'=>$entity->getUniqueId(),
+                    $extendedLogMessage = ' replaceFlat query: '.$sql.$logMessage;
+                    $extendedLogData = array_merge($logData, array(
                         'data'=>$data,
                         'sql'=>$sql,
                         'response'=>$response
-                    );
+                    ));
 
+                    $isLast = ++$try >= $maxTries;
                     if ($success) {
                         $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
-                            'rpl_flat_row', 'Successful'.$message, $dataArray, $entityArray);
+                            'rpl_flat_row', 'Successful'.$extendedLogMessage, $extendedLogData, $logEntities);
                         unset($flatData[$key]);
-                    }else{
+                    }elseif (!$isLast) {
                         $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_WARN,
-                            'failed_rpl_flat_row', 'Failure of'.$message, $dataArray, $entityArray);
+                            'rpl_flat_row_err_'.$try, 'Failure of'.$extendedLogMessage, $extendedLogData, $logEntities);
                     }
                 }
-            }while (count($flatData) && --$maxTries > 0);
+            }while (count($flatData) && !$isLast);
 
             $allSuccessful = !count($flatData);
-            unset($dataArray['data'], $dataArray['sql'], $dataArray['response']);
-
             if ($allSuccessful) {
+                $logMessage = 'Successful replacement of flat data rows'.$logMessage;
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG,
-                    'rpl_flat', 'Successful replacement of flat data rows.', $dataArray, $entityArray);
+                    'rpl_flat', $logMessage, $logData, $logEntities);
             }else{
-                $dataArray['not replaced'] = $flatData;
+                $logMessage = 'Replacing of '.count($flatData).' flat rows failed'.$logMessage;
+                $logData['not replaced'] = $flatData;
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
-                    'failed_rpl_flat', 'Replacing of '.count($flatData).' flat rows failed.', $dataArray, $entityArray);
+                    'rpl_flat_fail_part', $logMessage, $logData, $logEntities);
             }
         }else{
-            $message = 'Creation of flat data on '.$entity->getId().' ('.$entity->getUniqueId().') failed completely.';
+            $logMessage = 'Creation of flat data failed completely'.$logMessage;
+            $logData = array_merge($logData, array(
+                'flat fields'=>$flatFields,
+                'flat data'=>$flatData
+            ));
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
-                'failed_rpl_flat',
-                $message,
-                array(
-                    'entity_id'=>$entity->getId(),
-                    'flat entity_type'=>$entityType,
-                    'to update entity_type'=>$entityToUpdate->getTypeStr(),
-                    'to update unique_id'=>$entity->getUniqueId(),
-                    'flat fields'=>$flatFields,
-                    'flat data'=>$flatData,
-                ),
-                $entityArray
-            );
-            throw new MagelinkException($message);
+                'rpl_flat_fail', $logMessage, $logData, $logEntities);
+            throw new MagelinkException($logMessage);
         }
 
         return $allSuccessful;
