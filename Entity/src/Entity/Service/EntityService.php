@@ -824,7 +824,7 @@ class EntityService implements ServiceLocatorAwareInterface
                         unset($flatData[$key]);
                     }elseif (!$isLast) {
                         $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_WARN,
-                            'rpl_flat_row_err_'.$try, 'Failure of'.$extendedLogMessage, $extendedLogData, $logEntities);
+                            'rpl_flat_err_'.$try.'_row', 'Failure of'.$extendedLogMessage, $extendedLogData, $logEntities);
                     }
                 }
             }while (count($flatData) && !$isLast);
@@ -838,7 +838,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 $logMessage = 'Replacing of '.count($flatData).' flat rows failed'.$logMessage;
                 $logData['not replaced'] = $flatData;
                 $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
-                    'rpl_flat_fail_part', $logMessage, $logData, $logEntities);
+                    'rpl_flat_err', $logMessage, $logData, $logEntities);
             }
         }else{
             $logMessage = 'Creation of flat data failed completely'.$logMessage;
