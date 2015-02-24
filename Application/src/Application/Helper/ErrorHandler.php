@@ -95,7 +95,7 @@ class ErrorHandler
         }
 
         if ($errorContext) {
-            $errorContext = PHP_EOL.'Error Context: '.implode(PHP_EOL.$errorContext);
+            $errorContext = PHP_EOL.'Error Context: '.implode(PHP_EOL, $errorContext);
         }else{
             $errorContext = '';
         }
