@@ -95,10 +95,7 @@ class ErrorHandler
         }
 
         if ($errorContext) {
-            if (is_object($errorContext)) {
-                $errorContext = iterator_to_array($errorContext);
-            }
-            $errorContext = PHP_EOL.'Error Context: '.implode(PHP_EOL, $errorContext);
+            $errorContext = PHP_EOL.'Error Context: '.var_export($errorContext, TRUE);
         }else{
             $errorContext = '';
         }
