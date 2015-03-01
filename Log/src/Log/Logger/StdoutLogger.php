@@ -2,7 +2,7 @@
 
 namespace Log\Logger;
 
-use \Log\Service\LogService;
+use Log\Service\LogService;
 
 class StdoutLogger extends AbstractLogger {
 

@@ -16,8 +16,8 @@
 
 namespace Magelink\Service;
 
-use \Zend\ServiceManager\ServiceLocatorInterface;
-use \Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
 
 class ConfigService implements ServiceLocatorAwareInterface {

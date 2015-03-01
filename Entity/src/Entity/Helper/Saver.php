@@ -1,7 +1,6 @@
 <?php
 /**
  * Responsible for updating entities in the database
- *
  * @category Entity
  * @package Entity\Helper
  * @author Matt Johnston
@@ -12,11 +11,11 @@
 
 namespace Entity\Helper;
 
-use \Entity\Entity;
-use \Log\Service\LogService;
-use \Magelink\Exception\MagelinkException;
-use \Magelink\Exception\NodeException;
-use \Zend\Db\Adapter\Adapter;
+use Entity\Entity;
+use Log\Service\LogService;
+use Magelink\Exception\MagelinkException;
+use Magelink\Exception\NodeException;
+use Zend\Db\Adapter\Adapter;
 
 
 class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface

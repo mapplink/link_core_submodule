@@ -12,7 +12,7 @@
 
 namespace Log\Logger;
 
-use \Log\Service\LogService;
+use Log\Service\LogService;
 use Application\Helper\ErrorHandler;
 
 

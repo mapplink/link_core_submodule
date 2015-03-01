@@ -2,8 +2,8 @@
 
 namespace Log\Logger;
 
-use \Zend\ServiceManager\ServiceLocatorAwareInterface;
-use \Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 /**
  * Class AbstractLogger represents a log output method. Child classes should implement the provided abstract methods to provide log output/persistence.

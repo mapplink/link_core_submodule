@@ -1,10 +1,21 @@
 <?php
+/**
+ * Entity\Comment
+ *
+ * @category Entity
+ * @package Entity
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Entity;
 
-use \Zend\ServiceManager\ServiceLocatorAwareInterface;
-use \Zend\ServiceManager\ServiceLocatorInterface;
-use \Entity\Service\EntityService;
+use Entity\Service\EntityService;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
+
 
 class Comment implements ServiceLocatorAwareInterface
 {

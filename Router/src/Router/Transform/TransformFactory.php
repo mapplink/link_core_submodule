@@ -2,8 +2,8 @@
 
 namespace Router\Transform;
 
-use \Zend\ServiceManager\ServiceLocatorAwareInterface;
-use \Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 class TransformFactory implements ServiceLocatorAwareInterface {
 

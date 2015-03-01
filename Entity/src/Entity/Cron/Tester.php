@@ -1,11 +1,43 @@
 <?php
+/**
+ * Entity\Cron\Tester
+ *
+ * @category Magelink
+ * @package Entity\Cron
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Entity\Cron;
 
-use \Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
+
 
 class Tester implements \Application\CronRunnable, \Zend\ServiceManager\ServiceLocatorAwareInterface
 {
+    /** @var ServiceLocatorInterface The service locator */
+    protected $_serviceLocator;
+
+    /**
+     * Set service locator
+     * @param ServiceLocatorInterface $serviceLocator
+     */
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+    }
+
+    /**
+     * Get service locator
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
+    }
+
     /**
      * Checks whether we should run the cron task this run through.
      * @param string $minutes
@@ -33,25 +65,23 @@ class Tester implements \Application\CronRunnable, \Zend\ServiceManager\ServiceL
         return;
 
 
-        $res = $entityService->locateEntity(
-            3, 5, false, array (
+        $response = $entityService->locateEntity(3, 5, FALSE,
+            array (
                 'PARENT_ID.hops_status' => 'new_pending',
-            ),array (
+            ),
+            array (
                 'PARENT_ID.hops_status' => 'eq',
-            ),array (
-                'limit' => 20,
-                'offset' => 0,
-                'order' =>
-                    array (
-                    ),
-                'fkey' =>
-                    array (
-                        'PARENT_ID' => 'order',
-                    ),
+            ),
+            array (
+                'limit'=>20,
+                'offset'=>0,
+                'order'=>array(),
+                'fkey'=>array('PARENT_ID' => 'order'),
             )
         );
-        foreach($res as $r){
-            echo 'Returned entity ' . $r->getId() . ' ('.$r->getUniqueId().')'.PHP_EOL;
+
+        foreach ($response as $entity) {
+            print 'Returned entity ' . $entity->getId() . ' ('.$entity->getUniqueId().')'.PHP_EOL;
         }
         die();
 
@@ -79,16 +109,10 @@ array (
 )
          */
 
-        var_export($entityService->locateEntity(1, 'orderitem', false,
-            array(
-                'PARENT_ID.hops_status'=>'new',
-            ),
-            array(
-                'PARENT_ID.hops_status'=>'eq',
-            ),
-            array('fkey'=>array(
-                'PARENT_ID'=>'order',
-            ))
+        var_export($entityService->locateEntity(1, 'orderitem', FALSE,
+            array('PARENT_ID.hops_status'=>'new'),
+            array('PARENT_ID.hops_status'=>'eq'),
+            array('fkey'=>array('PARENT_ID'=>'order'))
         ));
 
         return;
@@ -143,28 +167,4 @@ EOF
         ));
     }
 
-    /**
-     * @var ServiceLocatorInterface The service locator
-     */
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     *
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     *
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
-    }
 }

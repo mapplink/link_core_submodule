@@ -2,8 +2,8 @@
 
 namespace Router\Filter;
 
-use \Zend\ServiceManager\ServiceLocatorAwareInterface;
-use \Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 class FilterFactory implements ServiceLocatorAwareInterface {
 

@@ -11,12 +11,15 @@
 
 namespace Entity\Service;
 
-use \Zend\ServiceManager\ServiceLocatorAwareInterface;
-use \Zend\ServiceManager\ServiceLocatorInterface;
-use \Zend\Db\TableGateway\TableGateway;
+use Entity\Comment;
+use Entity\Helper\Loader;
+use Entity\Helper\Querier;
+use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
-use Entity\Comment;
+use Zend\Db\TableGateway\TableGateway;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 
 class EntityService implements ServiceLocatorAwareInterface
@@ -97,14 +100,14 @@ class EntityService implements ServiceLocatorAwareInterface
     /**
      * Retrieve Loading helper
      * @see $_loader
-     * @return \Entity\Helper\Loader
+     * @return Loader
      */
     protected function getLoader()
     {
         if($this->_loader){
             return $this->_loader;
         }
-        $this->_loader = new \Entity\Helper\Loader();
+        $this->_loader = new Loader();
         $this->_loader->setServiceLocator($this->getServiceLocator());
         return $this->_loader;
     }
@@ -112,13 +115,13 @@ class EntityService implements ServiceLocatorAwareInterface
     /**
      * Retrieve Querying helper
      * @see $_querier
-     * @return \Entity\Helper\Querier
+     * @return Querier
      */
     protected function getQuerier(){
         if($this->_querier){
             return $this->_querier;
         }
-        $this->_querier = new \Entity\Helper\Querier();
+        $this->_querier = new Querier();
         $this->_querier->setServiceLocator($this->getServiceLocator());
         return $this->_querier;
     }
@@ -143,7 +146,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $entityTypeId = $this->getLoader()->getEntityTypeId($entityId);
         $this->getServiceLocator()->get('logService')->log(
-            \Log\Service\LogService::LEVEL_DEBUG,
+            LogService::LEVEL_DEBUG,
             'loadeid',
             'loadEntityId - '.$nodeId.' - '.$entityId.' ('.$entityTypeId.')',
             array('node_id'=>$nodeId, 'entity_id'=>$entityId), array('entity'=>$entityId)
@@ -185,7 +188,7 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'loadeid',
                 'loadEntityId - '.$nodeId.' - '.$entity->getId().' ('.$entity->getTypeStr().')',
                 array('node_id'=>$nodeId, 'entity_id'=>$entity->getId()),
@@ -238,7 +241,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->verifyNodeId($nodeId);
         $this->verifyEntityType($entityType);
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'loade',
                 'loadEntity - '.$nodeId.' - '.$entityType.' - '.$storeId.' - '.$uniqueId,
                 array('node_id'=>$nodeId, 'entity_type'=>$entityType, 'store_id'=>$storeId, 'unique_id'=>$uniqueId)
@@ -284,7 +287,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 .";";
             $itemData = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
 
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA,
                 'ld_flat_ety', 'load flat entity: '.$sql, array('sql'=>$sql, 'response'=>$itemData));
         }else{
             $itemData = array();
@@ -319,7 +322,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
                 $success = (bool) $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
 
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA,
                         'upd_flat_ety', 'update flat entity: '.$sql, array('sql'=>$sql, 'success'=>$success));
             }
         }
@@ -342,7 +345,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->verifyEntityType($entityType);
 
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'loadeloc',
                 'loadEntityLocal - '.$nodeId.' - '.$entityType.' - '.$storeId.' - '.$localId,
                 array('node_id'=>$nodeId, 'entity_type'=>$entityType, 'store_id'=>$storeId, 'local_id'=>$localId)
@@ -384,7 +387,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->verifyNodeId($nodeId);
         $this->verifyEntityType($entityTypeId);
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'loadchildren',
                 'loadChildren - '.$nodeId.' - '.$parent->getId().' - '.$entityTypeId,
                 array('node_id'=>$nodeId, 'parent_id'=>$parent->getId(), 'entity_type_id'=>$entityTypeId),
@@ -420,7 +423,7 @@ class EntityService implements ServiceLocatorAwareInterface
     {
         $this->verifyNodeId($nodeId);
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'loadparent',
                 'loadParent - '.$nodeId.' - '.$child->getId(),
                 array('node_id'=>$nodeId, 'parent_id'=>$child->getId()),
@@ -488,7 +491,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->verifyEntityType($entityType);
 
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'locate',
                 'locateEntity - '.$nodeId.' - '.$entityType.' - '.$store_id.'. '.PHP_EOL.'SD: '.PHP_EOL.var_export($searchData, TRUE).PHP_EOL.'; ST: '.PHP_EOL.var_export($searchType, TRUE).PHP_EOL.'; OPT: '.PHP_EOL.var_export($options, TRUE).PHP_EOL,
                 array(),
@@ -534,7 +537,7 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'count',
                 'countEntity - '.$nodeId.' - '.$entityType.' - '.$store_id.'. '.PHP_EOL.'SD: '.PHP_EOL.var_export($searchData, TRUE).PHP_EOL.'; ST: '.PHP_EOL.var_export($searchType, TRUE).PHP_EOL.'; OPT: '.PHP_EOL.var_export($options, TRUE).PHP_EOL,
                 array(),
@@ -691,7 +694,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $id = $this->getSaver()->createEntity($entityType, $store_id, $unique_id, ($parent ? $parent : 0), $data);
 
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'create',
                 'createEntity - '.$nodeId.' - new entity '.$id.' is '.$entityType,
                 array('type'=>$entityType, 'store'=>$store_id, 'unique'=>$unique_id),
@@ -819,11 +822,11 @@ class EntityService implements ServiceLocatorAwareInterface
 
                     $isLast = ++$try >= $maxTries;
                     if ($success) {
-                        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA,
                             'rpl_flat_row', 'Successful'.$extendedLogMessage, $extendedLogData, $logEntities);
                         unset($flatData[$key]);
                     }elseif (!$isLast) {
-                        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_WARN,
+                        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_WARN,
                             'rpl_flat_err_'.$try.'_row', 'Failure of'.$extendedLogMessage, $extendedLogData, $logEntities);
                     }
                 }
@@ -832,12 +835,12 @@ class EntityService implements ServiceLocatorAwareInterface
             $allSuccessful = !count($flatData);
             if ($allSuccessful) {
                 $logMessage = 'Successful replacement of flat data rows'.$logMessage;
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG,
+                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUG,
                     'rpl_flat', $logMessage, $logData, $logEntities);
             }else{
                 $logMessage = 'Replacing of '.count($flatData).' flat rows failed'.$logMessage;
                 $logData['not replaced'] = $flatData;
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
+                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR,
                     'rpl_flat_err', $logMessage, $logData, $logEntities);
             }
         }else{
@@ -846,7 +849,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 'flat fields'=>$flatFields,
                 'flat data'=>$flatData
             ));
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR,
                 'rpl_flat_fail', $logMessage, $logData, $logEntities);
             throw new MagelinkException($logMessage);
         }
@@ -872,14 +875,14 @@ class EntityService implements ServiceLocatorAwareInterface
 
         if ($this->hasFlatTable($entity->getTypeStr())) {
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                ->log(LogService::LEVEL_DEBUG,
                     'cr_flat',
                     'createFlat - '.$nodeId.' - '.$entity->getTypeStr().' - '.$entity->getUniqueId(),
                     $logData
                 );
             $success = $this->replaceFlatFromEav($nodeId, $entity);
         }else{
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_WARN,
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_WARN,
                 'cr_no_flat',
                 'no flat table for '.$entity->getTypeStr().' - '.$entity->getUniqueId(),
                 $logData
@@ -918,14 +921,14 @@ class EntityService implements ServiceLocatorAwareInterface
         );
 
         if ($this->hasFlatTable($flatEntityType)) {
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUG,
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUG,
                 'upd_flat',
                 'updateFlat - '.$nodeId.' - '.$entity->getTypeStr().' ('.$flatEntityType.') - '.$entity->getUniqueId(),
                 $logData
             );
             $success = $this->replaceFlatFromEav($nodeId, $flatEntity, $entity, $entityOnly);
         }else{
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_WARN,
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_WARN,
                 'upd_no_flat',
                 'no flat table for '.$entity->getTypeStr().' ('.$flatEntityType.') - '.$entity->getUniqueId(),
                 $logData
@@ -975,7 +978,7 @@ class EntityService implements ServiceLocatorAwareInterface
         if ($flatEntityType === NULL || $flatUniqueId === NULL || !$isValidEntity) {
             $message = 'updateEavFromFlat failed: '.$nodeId.' - '
                 .var_export($flatEntityType, TRUE).' ('.var_export($flatUniqueId, TRUE).')';
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'upd_eav_fl_fail',
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR, 'upd_eav_fl_fail',
                     $message, $logData, array('entity'=>$entity)
             );
             //throw new MagelinkException($message);
@@ -984,7 +987,7 @@ class EntityService implements ServiceLocatorAwareInterface
             $flatEntityRows = $this->loadFlatEntity($flatEntityType, '*', $where);
 
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                ->log(LogService::LEVEL_DEBUG,
                     'upd_eav_flat', 'updateEavFromFlat - '.$nodeId.' - '.$flatEntityType.' - '.$flatUniqueId,
                     array(
                         'node_id'=>$nodeId,
@@ -1055,7 +1058,7 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'link',
                 'linkEntity - '.$nodeId.' - '.$entity->getId().': '.$localId,
                 array('local'=>$localId),
@@ -1085,7 +1088,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->verifyNodeId($nodeId);
 
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'unlink',
                 'unlinkEntity - '.$nodeId.' - '.$entity->getId(),
                 array(),
@@ -1203,7 +1206,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function touchEntity(\Entity\Entity $entity, $attributes = array())
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'touch',
                 'touchEntity - '.$entity->getId(),
                 array(),
@@ -1278,7 +1281,7 @@ class EntityService implements ServiceLocatorAwareInterface
             }
 
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                ->log(LogService::LEVEL_DEBUG,
                     'update_tf',
                     'updateEntity - transform gave '.count($transformedData).' updates for - '.$entity->getId(),
                     array('tfdata'=>$transformedData, 'predata'=>$preData),
@@ -1290,7 +1293,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         if (!count($attributes)) {
             $this->getServiceLocator()->get('logService')->log(
-                \Log\Service\LogService::LEVEL_WARN,
+                LogService::LEVEL_WARN,
                 'update_same',
                 'updateEntity - All data was the same - '.$nodeId.' - '.$entity->getId(),
                 array('data'=>$data),
@@ -1304,7 +1307,7 @@ class EntityService implements ServiceLocatorAwareInterface
             }
 
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_INFO,
+                ->log(LogService::LEVEL_INFO,
                     'update',
                     'updateEntity - Keys updated - '.$nodeId.' - '.$entity->getId(),
                     array('updated'=>$attributes, 'keys'=>array_keys($data), 'tfkeys'=>array_keys($transformedData)),
@@ -1342,7 +1345,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function updateEntityUnique($nodeId, \Entity\Entity $entity, $new_unique_id)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_INFO,
+            ->log(LogService::LEVEL_INFO,
                 'update_unique',
                 'updateEntityUnique - setting ID '.$new_unique_id.' for ' . $entity->getId(),
                 array('new_id'=>$new_unique_id),
@@ -1372,7 +1375,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     $this->updateEntity($nodeId, $stockitem, array('pickable' => $newPickable));
                 }catch (\Exception $exception) {
                     $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        ->log(LogService::LEVEL_ERROR,
                             'gen_upd_stock_fail',
                             'Updated failed on stockitem '.$stockitem->getId().' ('.$stockitem->getUniqueId().').',
                             array('stockitem'=>$stockitem->getId(), 'product'=>$productId, 'pickable'=>$pickable,
@@ -1383,7 +1386,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 }
             }else{
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    ->log(LogService::LEVEL_ERROR,
                         'gen_upd_stock_not_ex',
                         'Stockitem of product '.$productId.' does not exist.',
                         array('product'=>$productId, 'quantity'=>$quantity)
@@ -1424,7 +1427,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->getSaver()->deleteEntity($entity);
 
     }
-    
+
     /**
      * Dispatch an action on a provided entity.
      *
@@ -1659,7 +1662,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function parseQuery($mlql)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'parsemlql', 'parseQuery: ' . $mlql, array('query'=>$mlql));
+            ->log(LogService::LEVEL_DEBUG, 'parsemlql', 'parseQuery: ' . $mlql, array('query'=>$mlql));
 
         return $this->getQuerier()->parseQuery($mlql);
     }
@@ -1673,11 +1676,11 @@ class EntityService implements ServiceLocatorAwareInterface
     public function executeQuery($mlql)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'execmlql', 'executeQuery: '.$mlql, array('query'=>$mlql));
+            ->log(LogService::LEVEL_DEBUG, 'execmlql', 'executeQuery: '.$mlql, array('query'=>$mlql));
         try{
             $response = $this->getQuerier()->executeQuery($mlql);
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                ->log(LogService::LEVEL_DEBUG,
                     'execmlql_r',
                     'Result: '.var_export($response, TRUE),
                     array('querier response'=>$response)
@@ -1699,11 +1702,11 @@ class EntityService implements ServiceLocatorAwareInterface
     public function executeSqlQuery($sql)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG, 'execsql', 'executeQuery: '.$sql, array('query'=>$sql));
+            ->log(LogService::LEVEL_DEBUG, 'execsql', 'executeQuery: '.$sql, array('query'=>$sql));
         try{
             $response = $this->getQuerier()->executeSqlQuery($sql);
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                ->log(LogService::LEVEL_DEBUG,
                     'execsql_r',
                     'Result: '.var_export($response, TRUE),
                     array('return'=>$response)
@@ -1725,7 +1728,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function executeQueryColumn($mlql)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'execmlql_col',
                 'executeQueryColumn: '.$mlql,
                 array('query'=>$mlql)
@@ -1742,7 +1745,7 @@ class EntityService implements ServiceLocatorAwareInterface
             $return[] = array_shift($row);
         }
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'execmlql_col_r',
                 'Result: '.var_export($return, TRUE),
                 array('ret'=>$return)
@@ -1760,7 +1763,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function executeQueryAssoc($mlql)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'execmlql_assoc',
                 'executeQueryAssoc: '.$mlql,
                 array('query'=>$mlql)
@@ -1779,7 +1782,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 $message = 'Error during the data assignment. Row does not have k and/or v  as keys: '
                     .var_export(array_keys($row), TRUE).'.';
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    ->log(LogService::LEVEL_ERROR,
                         'execmlql_assoc_r',
                         $message,
                         array('results so far'=>$returnData)
@@ -1790,7 +1793,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         if (count($returnData)) {
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                ->log(LogService::LEVEL_DEBUG,
                     'execmlql_assoc_r',
                     'Result: '.var_export($returnData, TRUE),
                     array('result'=>$returnData)
@@ -1809,7 +1812,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function executeQueryScalar($mlql)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'execmlql_sca',
                 'executeQueryScalar: '.$mlql,
                 array('query'=>$mlql)
@@ -1817,7 +1820,7 @@ class EntityService implements ServiceLocatorAwareInterface
         try{
             $response = $this->getQuerier()->executeQueryScalar($mlql);
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUG,
+                ->log(LogService::LEVEL_DEBUG,
                     'execmlql_sca_r',
                     'Result: '.var_export($response, TRUE),
                     array('querier response'=>$response));
@@ -1841,7 +1844,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function executeQueryEntities($nodeId, $mlql)
     {
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'execmlql_col',
                 'executeQueryColumn: '.$mlql,
                 array('query'=>$mlql)
@@ -1865,7 +1868,7 @@ class EntityService implements ServiceLocatorAwareInterface
             }
         }
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUG,
+            ->log(LogService::LEVEL_DEBUG,
                 'execmlql_col_r',
                 'Result: '.var_export($ids, true),
                 array('ids'=>$ids)
