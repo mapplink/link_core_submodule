@@ -1,19 +1,23 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Responsible for updating entities in the database
+ * @category Entity
+ * @package Entity\Helper
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity\Helper;
 
+use Entity\Entity;
+use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
+use Zend\Db\Adapter\Adapter;
 
-/**
- * Responsible for updating entities in the database
- */
+
 class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
 {
 

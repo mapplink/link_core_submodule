@@ -2,14 +2,14 @@
 
 namespace Router\Transform;
 
-use \Entity\Entity;
-use \Entity\Service\EntityService;
-use \Entity\Service\EntityConfigService;
-use \Node\Service\NodeService;
-use \Router\Entity\RouterTransform;
-use \Router\Filter\AbstractFilter;
-use \Zend\ServiceManager\ServiceLocatorAwareInterface;
-use \Zend\ServiceManager\ServiceLocatorInterface;
+use Entity\Entity;
+use Entity\Service\EntityService;
+use Entity\Service\EntityConfigService;
+use Node\Service\NodeService;
+use Router\Entity\RouterTransform;
+use Router\Filter\AbstractFilter;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 abstract class AbstractTransform implements ServiceLocatorAwareInterface
 {

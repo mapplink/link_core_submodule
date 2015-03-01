@@ -1,38 +1,47 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Represents an instance of a Magelink Entity Update.
+ *
+ * @category Entity
+ * @package Entity
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity;
 
+use Entity\Entity;
 use Magelink\Exception\MagelinkException;
 
-/**
- * Represents an instance of a Magelink Entity Update.
- */
-class Update {
 
+class Update
+{
     const TYPE_CREATE = 0;
     const TYPE_UPDATE = 1;
     const TYPE_DELETE = 2;
     const TYPE_ACTION = 9;
 
+    /** @var int $_logId */
     protected $_logId;
+    /** @var Entity $_entity */
     protected $_entity;
+    /** @var string $_type */
     protected $_type;
+    /** @var int $_timestamp */
     protected $_timestamp;
+    /** @var int $ */
     protected $_sourceNode;
     protected $_affectedNodes;
     protected $_affectedAttributes;
 
-    public function init ($logId, Entity $entity, $type, $timestamp, $sourceNode, $affectedNodes, $affectedAttributes){
-        if(!is_array($affectedNodes)){
+    public function init($logId, Entity $entity, $type, $timestamp, $sourceNode, $affectedNodes, $affectedAttributes)
+    {
+        if (!is_array($affectedNodes)) {
             $affectedNodes = explode(',', $affectedNodes);
         }
-        if(!is_array($affectedAttributes)){
+        if (!is_array($affectedAttributes)) {
             $affectedAttributes = explode(',', $affectedAttributes);
         }
 
@@ -45,14 +54,19 @@ class Update {
         $this->_affectedAttributes = $affectedAttributes;
     }
 
-    public function getLogId(){
+    /**
+     * @return int
+     */
+    public function getLogId()
+    {
         return $this->_logId;
     }
 
     /**
      * @return Entity
      */
-    public function getEntity(){
+    public function getEntity()
+    {
         return $this->_entity;
     }
 

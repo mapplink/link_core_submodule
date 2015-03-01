@@ -12,8 +12,8 @@
 
 namespace Node;
 
-use \Zend\ServiceManager\ServiceLocatorAwareInterface;
-use \Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 abstract class AbstractNode implements ServiceLocatorAwareInterface {
 
@@ -162,7 +162,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
             $attributes = $nodeService->getSubscribedAttributeCodes($this->getNodeId(), $entityType);
 
             $updates = array();
-            if($this->_gateway[$entityType]){
+            if ($this->_gateway[$entityType]) {
                 // Combine all updates for one entity into a single update
                 foreach($entityTypeUpdates as $update){
                     $this->getServiceLocator()->get('logService')

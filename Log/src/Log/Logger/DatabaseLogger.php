@@ -3,8 +3,8 @@
 namespace Log\Logger;
 
 use Magelink\Exception\MagelinkException;
-use \Zend\Db\TableGateway\TableGateway;
-use \Zend\Db\Adapter\Adapter;
+use Zend\Db\TableGateway\TableGateway;
+use Zend\Db\Adapter\Adapter;
 
 class DatabaseLogger extends AbstractLogger {
 

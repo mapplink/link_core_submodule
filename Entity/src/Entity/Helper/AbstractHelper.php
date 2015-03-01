@@ -1,23 +1,22 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Class AbstractHelper provides standard functionality for use by the various Entity helpers (Saver/Loader/Querier)
+ * @category Entity
+ * @package Entity\Helper
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity\Helper;
 
 use Magelink\Exception\MagelinkException;
+use Magelink\Exception\NodeException;
 use Zend\Db\RowGateway\RowGateway;
 use Zend\Db\TableGateway\TableGateway;
-use Magelink\Exception\NodeException;
 
-/**
- * Class AbstractHelper provides standard functionality for use by the various Entity helpers (Saver/Loader/Querier)
- *
- * @package Entity\Helper
- */
+
 abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface
 {
 
@@ -34,12 +33,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
 
     protected static function isRestartTransaction(\Exception $exception)
     {
-        if ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK
-            || strpos($exception->getMessage(), 'try restarting transaction')) {
-            $restart = TRUE;
-        }else{
-            $restart = FALSE;
-        }
+        $restart = ($exception->getCode() == self::MYSQL_ER_LOCK_DEADLOCK
+            || strpos($exception->getMessage(), 'try restarting transaction'));
 
         return $restart;
     }
