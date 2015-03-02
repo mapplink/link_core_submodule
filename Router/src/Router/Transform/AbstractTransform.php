@@ -1,4 +1,11 @@
 <?php
+/**
+ * @category Router
+ * @package Router\Transform
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Router\Transform;
 
@@ -10,6 +17,7 @@ use Router\Entity\RouterTransform;
 use Router\Filter\AbstractFilter;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
+
 
 abstract class AbstractTransform implements ServiceLocatorAwareInterface
 {

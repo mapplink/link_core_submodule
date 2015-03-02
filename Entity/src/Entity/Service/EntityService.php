@@ -17,6 +17,7 @@ use Entity\Helper\Querier;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
+use Zend\Db\Adapter\Adapter;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
@@ -60,7 +61,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
     /**
      * Return the database adapter to be used to communicate with Entity storage.
-     * @return \Zend\Db\Adapter\Adapter
+     * @return Adapter
      */
     protected function getAdapter()
     {
@@ -285,7 +286,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 .($where ? " WHERE ".$where : "")
                 .($orderBy ? " ORDER BY ".$orderBy : "")
                 .";";
-            $itemData = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
+            $itemData = $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
 
             $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA,
                 'ld_flat_ety', 'load flat entity: '.$sql, array('sql'=>$sql, 'response'=>$itemData));
@@ -320,7 +321,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     ." WHERE ".$where
                     .";";
 
-                $success = (bool) $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
+                $success = (bool) $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
 
                 $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA,
                         'upd_flat_ety', 'update flat entity: '.$sql, array('sql'=>$sql, 'success'=>$success));
@@ -711,7 +712,7 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $sql = 'UPDATE router_stat_type SET `count` = `count` + 1 WHERE entity_type_id = '.$entityType.';';
-        $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+        $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
 
         if($nodeId !== 0){
             $this->getServiceLocator()->get('routerService')
@@ -806,7 +807,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     $sql = "INSERT INTO entity_flat_".$entityType." SET ".implode(', ', $replaces)
                         ." ON DUPLICATE KEY UPDATE ".implode(', ', $replaces).";";
                     try {
-                        $response = $this->getAdapter()->query($sql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
+                        $response = $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE); //$this->executeSqlQuery($sql);
                         $success = (bool) $response;
                     }catch(\Exception $exception) {
                         $response = NULL;
@@ -1392,7 +1393,6 @@ class EntityService implements ServiceLocatorAwareInterface
                         array('product'=>$productId, 'quantity'=>$quantity)
                     );
             }
-
         }
     }
     
