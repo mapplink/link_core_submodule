@@ -12,8 +12,12 @@
 
 namespace Node;
 
+use Log\Service\LogService;
+use Magelink\Exception\MagelinkException;
+use Magelink\Exception\NodeException;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
+
 
 abstract class AbstractNode implements ServiceLocatorAwareInterface {
 
@@ -202,18 +206,18 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
 
                 try{
                     $this->_gateway[$entityType]->writeUpdates($update['entity'], $update['attributes'], $update['type']);
-                }catch(\Magelink\Exception\MagelinkException $exception){
+                }catch(MagelinkException $exception){
                     $message = 'Uncaught exception during update processing for '.$entityId.' to '.$this->getNodeId()
                         .': '.$exception->getMessage();
                     $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        ->log(LogService::LEVEL_ERROR,
                             'update_ex',
                             $message,
                             array($exception->getMessage(), $exception->getTraceAsString()),
                             array('exception'=>$exception)
                         );
                     $message = 'Error applying updates: '.$exception->getMessage();
-                    throw new \Magelink\Exception\NodeException($message, 0, $exception);
+                    throw new NodeException($message, 0, $exception);
                 }
             }
 
@@ -232,7 +236,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
             try{
                 $result = true;
                 if($this->_gateway[$entityType]){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
+                    $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
                         'send_action',
                         'Sending action '.$action->getId().' to '.$this->getNodeId().' ('.$action->getEntity()->getUniqueId().')',
                         array($action->getId()),
@@ -243,14 +247,16 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                 if($result){
                     $nodeService->setActionStatus($this->_entity, $action, 1);
                 }
-            }catch(\Magelink\Exception\MagelinkException $e){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
+            }catch(MagelinkException $exception){
+                $message = 'Uncaught exception during action processing for '.$action->getId()
+                    .' to '.$this->getNodeId().': '.$exception->getMessage();
+                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR,
                     'action_ex',
-                    'Uncaught exception during action processing for '.$action->getId().' to '.$this->getNodeId().': '.$e->getMessage(),
-                    array($e->getMessage(), $e->getTraceAsString()),
-                    array('exception'=>$e)
+                    $message,
+                    array($exception->getMessage(), $exception->getTraceAsString()),
+                    array('exception'=>$exception)
                 );
-                throw new \Magelink\Exception\NodeException('Error applying actions: '.$e->getMessage(), 0, $e);
+                throw new NodeException('Error applying actions: '.$exception->getMessage(), 0, $exception);
             }
         }
     }
