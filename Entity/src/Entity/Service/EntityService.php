@@ -1072,6 +1072,7 @@ class EntityService implements ServiceLocatorAwareInterface
             'store_id'=>$entity->getStoreId(),
             'local_id'=>$localId,
         ));
+
         if (!$entityIdentifier) {
             throw new MagelinkException('Unknown error in linkEntity');
         }
