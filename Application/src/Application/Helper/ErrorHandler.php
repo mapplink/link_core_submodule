@@ -169,7 +169,7 @@ EOF;
         }
 
         mail(self::ERROR_TO, 'MageLink Error Handler: '.$errorType, $content, 'From: ' . self::ERROR_FROM);
-        $clientEmail = self::ERROR_TO_CLIENT && strpos($errorText, self::ERROR_TO_CLIENT_CODE) !== FALSE;
+        $clientEmail = self::ERROR_TO_CLIENT && strpos($errorType, self::ERROR_TO_CLIENT_CODE) !== FALSE;
         $daytime = (date('H') > 7) && (date('H') < 20);
         if ($clientEmail && $daytime) {
             mail(self::ERROR_TO_CLIENT, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);

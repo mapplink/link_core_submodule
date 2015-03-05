@@ -1119,10 +1119,8 @@ class EntityService implements ServiceLocatorAwareInterface
             $entity = $entity->getId();
         }
 
-        $result = $this->getTableGateway('entity_identifier')->select(array(
-            'entity_id'=>$entity,
-            'node_id'=>$nodeId,
-        ));
+        $result = $this->getTableGateway('entity_identifier')
+            ->select(array('entity_id'=>$entity, 'node_id'=>$nodeId,));
 
         $return = NULL;
         foreach ($result as $row) {
