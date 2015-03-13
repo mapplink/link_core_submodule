@@ -15,6 +15,7 @@
 
 namespace Application\Controller;
 
+use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Zend\Console\Request as ConsoleRequest;
 use Zend\Mvc\Controller\AbstractActionController;
@@ -158,7 +159,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
 
         if (!isset($config['magelink_cron'])) {
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                ->log(LogService::LEVEL_ERROR,
                     'cron_err',
                     'ERROR: No cron jobs configured',
                     array()
@@ -196,15 +197,15 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                 );
                 if (!$runCron) {
                     $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_INFO,
+                        ->log(LogService::LEVEL_INFO,
                             'cron_skip',
                             'Skipping cron job '.$name,
                             $logInfo
                         );
                 }elseif (!self::checkIfUnlocked($name)) {
                     $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_ERROR,
-                            'cnot_cron_locked',
+                        ->log(LogService::LEVEL_ERROR,
+                            'cno_cron_locked',
                             'Cron job '.$name.' locked.'
                                 .' Don\'t take action, before this error appears for a 2nd time in a row.',
                             $logInfo
@@ -212,7 +213,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                 }else{
                     $lock = $this->acquireLock($name);
                     $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
+                        ->log(LogService::LEVEL_DEBUGEXTRA,
                             'cron_run_'.substr($name, 0, 4),
                             'Running cron job: '.$name.', begin '.date('H:i:s d/m/y'),
                             $logInfo
@@ -220,7 +221,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     $magelinkCron->cronRun();
                     $this->getServiceLocator()->get('logService')
                         ->log(
-                            \Log\Service\LogService::LEVEL_DEBUG,
+                            LogService::LEVEL_DEBUG,
                             'cron_run_'.substr($name, 0, 4),
                             'Cron job '.$name.' finished at '.date('H:i:s d/m/y'),
                             $logInfo
@@ -228,7 +229,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     if (!$this->releaseLock($name)) {
                         $file = self::getLockFileName($name);
                         $this->getServiceLocator()->get('logService')
-                            ->log(\Log\Service\LogService::LEVEL_ERROR,
+                            ->log(LogService::LEVEL_ERROR,
                                 'cron_unl_fail',
                                 'Unlocking of cron job '.$name.' ('.$file.') failed',
                                 array('name'=>$name, 'file'=>$file)
@@ -240,14 +241,14 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
 
         if (!$ran && $job !== NULL) {
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                ->log(LogService::LEVEL_ERROR,
                     'cron_notfound',
                     'Could not find requested cron job '.$job,
                     array('job'=>$job)
                 );
         }
 
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
             'cron_done', 'Cron completed', array('start time'=>$time, 'end time'=>date('H:i:s d/m/y')));
         die();
     }

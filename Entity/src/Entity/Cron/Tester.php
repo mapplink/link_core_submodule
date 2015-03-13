@@ -56,6 +56,19 @@ class Tester implements \Application\CronRunnable, \Zend\ServiceManager\ServiceL
         /** @var \Entity\Service\EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
 
+
+        $response = $entityService->locateEntity(8, 'customer', FALSE,
+            array('billing_address'=>36061, 'shipping_address'=>36061),
+            array('billing_address'=>'all_eq', 'shipping_address'=>'all_eq'),
+            array('where_type'=>'OR'),
+            array('billing_address', 'shipping_address')
+        );
+
+        var_dump($response);
+
+        return;
+        die();
+
         $pickedRaw = $entityService->aggregateEntity(
             3, 'orderitem', FALSE,
             array('qty_picked'=>'SUM'),

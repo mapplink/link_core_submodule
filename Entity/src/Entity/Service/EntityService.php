@@ -14,6 +14,7 @@ namespace Entity\Service;
 use Entity\Comment;
 use Entity\Helper\Loader;
 use Entity\Helper\Querier;
+use Entity\Wrapper\Address;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
@@ -332,8 +333,7 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Loads the entity identified by the given local_id from the database for the given node.
-     * 
+     * Loads the entity identified by the given local id from the database for the given node.
      * @param int $nodeId
      * @param int|string $entityType
      * @param string $storeId
@@ -1560,6 +1560,18 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         return new \Entity\Comment($entity, $row);
+    }
+
+    public function getCustomerWithThisAddress(Address $addressEntity)
+    {
+        $customerType = $this->getTableGateway('entity_type')
+            ->select(array('billing_address'=>$addressEntity->getId(), 'type_id'=>2));
+        $billingCustomers = $this->getTableGateway('entity')
+            ->select(array('billing_address'=>$addressEntity->getId(), 'type_id'=>2));
+        $shippingCustomers = $this->getTableGateway('entity')
+            ->select(array('shipping_address'=>$addressEntity->getId(), 'type_id'=>2));
+
+        $customerIds = array();
     }
 
     /**

@@ -115,15 +115,15 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     {
         if (!in_array($id, self::$_transactionStack)) {
             $this->rollbackTransactionInternal();
-            throw new MagelinkException('Invalid transaction to roll back - ' . $id);
+            throw new MagelinkException('Invalid transaction to roll back - '.$id);
         }
         $top = array_pop(self::$_transactionStack);
         if ($top != $id) {
             $this->rollbackTransactionInternal();
-            throw new MagelinkException('Transaction not at top of stack (top was ' . $top . ', we were ' . $id . ')!');
+            throw new MagelinkException('Transaction not at top of stack (top was '.$top.', we were '.$id.')!');
         }
         $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_rollback', 'rollbackTransaction - ' . $id, array('id'=>$id, 'stack'=>self::$_transactionStack));
+            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_rollback', 'rollbackTransaction - '.$id, array('id'=>$id, 'stack'=>self::$_transactionStack));
 
         $this->rollbackTransactionInternal();
     }
@@ -136,11 +136,11 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     public function commitTransaction($id)
     {
         if (!in_array($id, self::$_transactionStack)) {
-            throw new MagelinkException('Invalid transaction to commit - ' . $id);
+            throw new MagelinkException('Invalid transaction to commit - '.$id);
         }
         $top = array_pop(self::$_transactionStack);
         if ($top != $id) {
-            throw new MagelinkException('Transaction not at top of stack (top was ' . $top . ', we were ' . $id . ')!');
+            throw new MagelinkException('Transaction not at top of stack (top was '.$top.', we were '.$id.')!');
         }
         if (count(self::$_transactionStack) == 0) {
             $this->getServiceLocator()->get('logService')
@@ -304,7 +304,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
         }
 
         if (!$code) {
-            throw new NodeException('Invalid code ' . $code);
+            throw new NodeException('Invalid code '.$code);
         }
 
         if (isset($this->_attributeCache[$entityTypeId][$code])) {
@@ -397,9 +397,9 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                 $inverse = !$inverse;
             case 'null':
                 if ($inverse) {
-                    return $field . ' IS NOT NULL';
+                    return $field.' IS NOT NULL';
                 }
-                return $field . ' IS NULL';
+                return $field.' IS NULL';
             case 'neq':
             case 'not_eq':
             case '!=':
@@ -408,16 +408,16 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
             case 'eq':
             case '=':
                 if ($inverse) {
-                    return $field . ' != ' . $value;
+                    return $field.' != '.$value;
                 }
-                return $field . ' = ' . $value;
+                return $field.' = '.$value;
             case 'not_in':
             case '!in':
                 $inverse = !$inverse;
             case 'all_in':
             case 'in':
                 if ($value instanceof \Zend\Db\Sql\Expression) {
-                    return $field . ' ' . ($inverse ? 'NOT IN' : 'IN') . ' (' . $value->getExpression() . ')';
+                    return $field.' '.($inverse ? 'NOT IN' : 'IN').' ('.$value->getExpression().')';
                 }
                 if (!is_array($value)) {
                     $value = array($value);
@@ -433,44 +433,44 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                         }
                     }
                 }
-                return $field . ' ' . ($inverse ? 'NOT IN' : 'IN') . ' (' . implode(', ', $value) . ')';
+                return $field.' '.($inverse ? 'NOT IN' : 'IN').' ('.implode(', ', $value).')';
             case 'all_gt':
             case 'gt':
             case '>':
                 if ($inverse) {
-                    return $field . ' <= ' . $value;
+                    return $field.' <= '.$value;
                 }
-                return $field . ' > ' . $value;
+                return $field.' > '.$value;
             case 'all_gteq':
             case 'gteq':
             case '>=':
                 if ($inverse) {
-                    return $field . ' < ' . $value;
+                    return $field.' < '.$value;
                 }
-                return $field . ' >= ' . $value;
+                return $field.' >= '.$value;
 
             case 'all_lt':
             case 'lt':
             case '<':
                 if ($inverse) {
-                    return $field . ' >= ' . $value;
+                    return $field.' >= '.$value;
                 }
-                return $field . ' < ' . $value;
+                return $field.' < '.$value;
             case 'all_lteq':
             case 'lteq':
             case '<=':
                 if ($inverse) {
-                    return $field . ' > ' . $value;
+                    return $field.' > '.$value;
                 }
-                return $field . ' <= ' . $value;
+                return $field.' <= '.$value;
 
             case '!like':
                 $inverse = !$inverse;
             case 'like':
                 if ($inverse) {
-                    return $field . ' NOT LIKE ' . $value;
+                    return $field.' NOT LIKE '.$value;
                 }
-                return $field . ' LIKE ' . $value;
+                return $field.' LIKE '.$value;
             default:
                 throw new NodeException('Unknown search type: `'.$searchType.'`');
         }
