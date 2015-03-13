@@ -32,10 +32,9 @@ class Address extends AbstractWrapper
             array('billing_address'=>$entityId));
         $customersWithThisShippingAddress = $entityService->locateEntity($nodeId, 'customer', FALSE,
             array('shipping_address'=>$entityId));
-
         $customers = array_merge($customersWithThisBillingAddress, $customersWithThisShippingAddress);
 
-
+        return $customers;
     }
 
     /**
