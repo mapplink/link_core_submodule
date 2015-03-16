@@ -1,15 +1,14 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * @category Magelink
+ * @package Magelink\Exception
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Magelink\Exception;
 
-class InconsistentStateException extends SyncException {
-    
-    
-    
-}
+
+class InconsistentStateException extends SyncException {}
