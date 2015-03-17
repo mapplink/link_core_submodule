@@ -96,7 +96,7 @@ class ErrorHandler
 
         if ($errorContext) {
             try{
-                $errorContext = PHP_EOL.'Error Context: '.var_export($errorContext, true);
+                $errorContext = PHP_EOL.'Error Context: '.serialize($errorContext);
             }catch (\Exception $exception) {
                 $errorContext = PHP_EOL.'Error occurred during the Error Context conversion.';
             }
