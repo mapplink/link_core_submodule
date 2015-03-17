@@ -1,0 +1,8 @@
+<?php foreach (array('error', 'success', 'info', 'default') as $nameSpace) : ?>
+    <?php foreach ($this->flashMessenger()->setNamespace($nameSpace)->getMessages() as $message) : ?>
+        <div class="alert alert-<?php echo $nameSpace ?>">
+            <button type="button" class="close" data-dismiss="alert">×</button>
+            <?php echo $this->escapeHtml($message) ?>
+        </div>
+    <?php endforeach ?>
+<?php endforeach ?>

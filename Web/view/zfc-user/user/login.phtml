@@ -1,0 +1,102 @@
+<?php $this->headLink()->appendStylesheet($this->basePath() . '/css/pages/signin.css') ?>
+<?php
+    $form = $this->loginForm;
+    $form->prepare();
+    $form->setAttribute('action', $this->url('zfcuser/login'));
+    $form->setAttribute('method', 'post');
+?>
+
+
+<div class="account-container">
+    <?php if ($errorMessage = $this->formElementErrors($form->get('identity'))) : ?>
+        <div class="alert alert-error">
+          <button type="button" class="close" data-dismiss="alert">×</button>
+          <?php echo $errorMessage?>
+        </div>
+    <?php endif ?>
+    <div class="content clearfix jsLoginForm" >
+
+        <?php echo $this->form()->openTag($form) ?>
+        
+            <h1>HOPS Login</h1>       
+            
+            <div class="login-fields">
+                
+                <p>Please provide your details</p>
+                
+                <div class="field">
+                    <label for="username">Email</label>
+                    <input type="text" id="identity" name="identity" value="" placeholder="Username / Email" class="login username-field jsFieldUsername">
+                </div> <!-- /field -->
+                
+                <div class="field">
+                    <label for="password">Password:</label>
+                    <input type="password" id="credential" name="credential" value="" placeholder="Password" class="login password-field">
+                </div> <!-- /password -->
+                
+            </div> <!-- /login-fields -->
+
+            <?php if ($this->redirect): ?>
+                <input type="hidden" name="redirect" value="<?php echo $this->escapeHtml($this->redirect) ?>" />
+            <?php endif ?>
+            
+            <div class="login-actions">
+                <!--
+                <span class="login-checkbox">
+                    <input id="Field" name="Field" type="checkbox" class="field login-checkbox" value="First Choice" tabindex="4">
+                    <label class="choice" for="Field">Keep me signed in</label>
+                </span>
+                -->
+
+                <span class="login-checkbox">
+                    <a href="#none" id="jsBtnShowPasswordRetrievalForm"> Forgot your password? </a>
+                </span>
+                                    
+                <button class="button btn btn-success btn-large">Sign In</button>
+                
+            </div> <!-- .actions -->
+
+        <?php echo $this->form()->closeTag() ?>
+        
+    </div> <!-- /content -->
+
+
+
+    <div class="content clearfix jsPasswordRetrievalForm" style="display:none">
+
+        <form method="POST" action="<?php echo $this->url('zfcuser/sendresetlink')?>">
+        
+            <h1>Password Retrieval</h1>  
+
+                <div class="login-fields jsSuccessMessage" style="display:none">
+                    <div class="alert alert-success" >
+                      <span></span>
+                    </div>
+                </div>     
+                
+                <div class="jsPasswordRetrievalFormFields">
+                    <div class="login-fields">
+                        
+                        <p>Please enter your email address or username</p>
+                        
+                        <div class="field">
+                            <div class="alert alert-error jsErrorMessage" style="display:none">
+                              <span></span>
+                            </div>
+                            <label for="username">Email</label>
+                            <input type="text" name="username" autocomplete="off"   value="" placeholder="Username / Email" class="login username-field jsFieldUsername">
+                        </div> <!-- /field -->
+                        
+                    </div> 
+                    
+                    <div class="login-actions">
+
+                        <button class="button btn btn-success btn-large jsSubmit">Submit</button>
+                        
+                    </div> <!-- .actions -->
+                </div>
+        </form>
+        
+    </div> <!-- /content -->
+    
+</div>

@@ -1,0 +1,21 @@
+<ul class="mainnav jsTopMenu" ?>
+    <?php foreach ($this->container as $page) : ?>
+        <?php if ($page instanceof \Zend\Navigation\Page\Mvc) : ?>
+            <li class="dropdown subnavbar-open-right <?php echo $page->isActive(true) ? 'active' : '' ?>">
+                <a class="jsMenuDropdown" href="<?php echo $this->url($page->getRoute()) ?>">
+                    <i class="<?php echo $page->get('iconClass') ?>"></i>
+                    <span><?php echo $page->getLabel() ?></span>
+                </a>
+                <?php echo $this->render('layout/headerSubmenu', array('pages' => $page->getPages())) ?>
+            </li> 
+        <?php elseif ($page instanceof \Zend\Navigation\Page\Uri) : ?>
+            <li class="dropdown subnavbar-open-right">
+                <a class="jsMenuDropdown" href="<?php echo $page->getUri() ?>">
+                    <i class="<?php echo $page->get('iconClass') ?>"></i>
+                    <span><?php echo $page->getLabel() ?></span>
+                </a>
+                <?php echo $this->render('layout/headerSubmenu', array('pages' => $page->getPages())) ?>
+            </li> 
+        <?php endif ?>
+    <?php endforeach ?>
+</ul>

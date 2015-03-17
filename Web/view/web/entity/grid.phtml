@@ -1,0 +1,179 @@
+<div id="mlgridresponse"
+  style="background:linear-gradient(to bottom,#F9F0E9 0px,#E9E0D9 100%);padding:5px 1%;font-weight:bold;color:#00A97A;">
+</div>
+<div id="mlgridactions">
+<?php
+
+foreach ($extraActions as $key=>$actionData) :
+    print '<div id="mlextaction-'.$key.'">'.$actionData['label'].'</div>';
+endforeach;
+
+?>
+</div>
+<div id="mlgridwrapper">
+    <div id="mlgridsearch"></div>
+    <input id="selectAll" type="button" value="Select All"
+        class ="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" />
+    <input id="clear" type="button" value="Clear Selection"
+        class ="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" />
+    <script>
+        $(document).ready(function() {
+            var grid = $("#mlgrid");
+            $("#selectAll").click(function() {
+                var ids = grid.getDataIDs();
+                for (var i=0; i < ids.length; i++) {
+                    $('#'+ids[i]+' input:first').prop('checked', true);
+                }
+            });
+            $("#clear").click(function() {
+                var ids = grid.getDataIDs();
+                for (var i=0; i < ids.length; i++) {
+                    $('#'+ids[i]+' input:first').prop('checked', false);
+                }
+            });
+        });
+    </script>
+    <table id="mlgrid" height="300px"><tr><td></td></tr></table>
+    <div id="mlpager"></div>
+    <div id="mlgridmassactions">
+<?php
+
+foreach ($massActions as $key=>$actionData) :
+?>
+        <div id="mlmassaction-<?php print $key; ?>"><?php print $actionData['label']; ?></div>
+<?php
+
+endforeach;
+
+?>
+    </div>
+</div>
+
+<div id="mlgridfiller"></div>
+
+<script type="text/javascript">
+    function executeSimpleAction(entity_id, action_url){
+        jQuery.ajax({
+            type: "POST",
+            url: action_url,
+            data: '',
+            error: function(jqXHR, textStatus, errorThrown){alert('Failed submitting action');location.reload(true);},
+            complete: function(data, textStatus){actionComplete(data.responseJSON, "simple");},
+            dataType: "json"
+        });
+    }
+
+    function simpleActionRedirect(entity_id, action_url){
+        location.href = action_url;
+    }
+
+    var mlgridresponsetimer = null;
+
+    function actionComplete(data, type){
+        if(data.action == "reload"){
+            $("#mlgrid").trigger("reloadGrid");
+        }else if(data.action == "refresh"){
+            location.reload(true);
+        }else if(data.action == "redirect"){
+            window.open(data.data.url);
+        }else if(data.action == "nothing"){
+            // Nothing
+        }else{
+            alert("ERROR: Invalid action response from server - " + data.action);
+        }
+
+        $("#mlgridresponse").show();
+        if(data.message == undefined || data.message == null){
+            $("#mlgridresponse").html("Mass Action executed without feedback. Please check result.");
+        }else{
+            $("#mlgridresponse").html(data.message);
+        }
+        if(mlgridresponsetimer != null){
+            clearTimeout(mlgridresponsetimer);
+        }
+        mlgridresponsetimer = setTimeout(function(){$("#mlgridresponse").hide()}, 5000);
+    }
+
+    $(function () {
+        $("#mlgridresponse").hide();
+        $("#mlgrid").jqGrid({
+            url: "<?php
+print $this->url($routeName, array('action'=>'data', 'type'=>$entityType)); ?>?<?php
+print http_build_query($queryData); ?>",
+            editurl: "<?php
+print $this->url($routeName, array('action'=>'edit', 'type'=>$entityType)) ?>?<?php
+print http_build_query($queryData); ?>",
+            datatype: "xml",
+            mtype: "GET",
+            colNames: <?php print $colLabels; ?>,
+            colModel: <?php print $colConfig; ?>,
+            pager: "#mlpager",
+            rowNum: 50,
+            rowList: [10, 25, 50, 75, 100, 200],
+            sortname: "ENTITY_ID",
+            sortorder: "<?php print $sortOrder; ?>",
+            viewrecords: true,
+            gridview: true,
+            autoencode: true,
+            caption: "<?php echo $title; ?>",
+            height: '100%'
+        });
+        $("#mlgrid").jqGrid('navGrid',"#mlpager",{edit:false,add:false,del:false});
+        $("#mlgrid").jqGrid('inlineNav',"#mlpager");
+        $("#mlgrid").jqGrid('filterToolbar',{
+            autosearch: true
+        });
+
+    });
+<?php
+
+foreach ($massActions as $key=>$actionData) :
+    print '$("#mlmassaction-'.$key.'").button('.json_encode(
+            isset($actionData['display']) ? $actionData['display'] : new stdClass()
+        ).');'.PHP_EOL;
+    $url = $this->url($routeName, array('action'=>$actionData['action'], 'type'=>$entityType), $queryData);
+    $target = isset($actionData['target']) ? $actionData['target'] : FALSE;
+?>
+    $("#mlmassaction-<?php print $key; ?>").click(function(){
+        var coldata = $("#mlgrid").jqGrid('getCol', 'massedit', true);
+        jQuery.ajax({
+            type: "POST",
+            url: "<?php print $url; ?>",
+            data: JSON.stringify(coldata),
+            error: function(jqXHR, textStatus, errorThrown){alert('Failed submitting mass action');location.reload(true);},
+            complete: function(data, textStatus){actionComplete(data.responseJSON, "massaction");},
+            dataType: "json",
+            contentType: "text/json"
+        });
+
+    });
+<?php
+
+endforeach;
+
+foreach ($extraActions as $key=>$actionData) :
+    print '$("#mlextaction-'.$key.'").button('.json_encode(
+            isset($actionData['display']) ? $actionData['display'] : new stdClass()
+        ).');'.PHP_EOL;
+    $url = $this->url($routeName, array('action'=>$actionData['action'], 'type'=>$entityType), $queryData);
+    $target = isset($actionData['target']) ? $actionData['target'] : FALSE;
+
+?>
+    $("#mlextaction-<?php print($key); ?>").click(function(){
+<?php
+    if ($target) :
+?>
+        window.open("<?php print $url; ?>", "<?php print $target; ?>");
+<?php
+    else :
+?>
+        location.href = "<?php print $url; ?>";
+<?php
+    endif;
+?>
+    });
+<?php
+
+endforeach;
+?>
+</script>

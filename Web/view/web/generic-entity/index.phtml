@@ -1,0 +1,11 @@
+<h1>Entity Editor</h1>
+Please select a type from the below list to browse and edit entities.
+<ul>
+<?php
+
+foreach($types as $row){
+    echo '<li><a href="'.$this->url('entity', array('action'=>'grid', 'type'=>$row['name'])).'">'.$row['name_human'].' ('.$row['name'].')</a></li>';
+}
+
+?>
+</ul>

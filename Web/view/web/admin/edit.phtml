@@ -1,0 +1,72 @@
+<div class="widget ">
+    <div class="widget-header">
+        <i class="glyphicon glyphicon-user"></i>
+        <h3><?php print $title; ?> Details</h3>
+    </div> <!-- /widget-header -->
+    <div class="widget-content">
+        <form class="form-inline" action="#" method="POST">
+            <fieldset>
+<?php 
+
+foreach ($form->getElements() as $field) :
+
+    if ($field instanceof \Zend\Form\Element\Submit) :
+        continue;
+    elseif ($field instanceof \Zend\Form\Element\Hidden) :
+?>
+                <?php print $this->formElement($field);
+    else :
+        $field->setLabelAttributes(array('class' => 'control-label'));
+?>
+                <div class="form-group <?php print $field->getMessages() ? 'error' : ''?>">
+                    <?php print $this->formLabel($field); ?>
+                    <div class="controls">
+                        <?php print $this->formElement($field); ?>
+                    </div> <!-- /controls -->   
+                    <?php print $this->formElementErrors($field, array('class' => 'help-inline')) ?>               
+                </div> <!-- /form-group -->
+<?php
+    endif;
+endforeach;
+
+$form->get('submit')->setAttributes(array('class' => 'btn btn-primary'));
+?>
+                <br>
+                <div class="form-actions">
+                    <?php print $this->formElement($form->get('submit')); ?>
+                    <a href="<?php
+print $this->url($routeControl->getRouteName('list')); ?>" class="btn">Back to list</a>
+<?php
+
+if ($form->getObject()->getId() && $isDeleteEnabled) :
+?>
+                    <a href="#adminRecordDelete" role="button" class="btn btn-danger pull-right" data-toggle="modal">
+                        Delete
+                    </a>
+                    <!-- Modal -->
+                    <div id="adminRecordDelete" class="modal fade" tabindex="-1" role="dialog"
+                        aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                    <h3>This action can not be undone, please confirm to delete?</h3>
+                                </div>
+                                <div class="modal-footer">
+                                    <a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>
+                                    <a href="<?php
+    print $this->url($routeControl->getRouteName('delete'), array('id' => $form->getObject()->getId()));
+    ?>" class="btn btn-danger">Confirm</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+<?php
+
+endif;
+?>
+                </div> <!-- /form-actions -->
+            </fieldset>
+        </form>
+    </div> <!-- /widget-content -->
+</div>

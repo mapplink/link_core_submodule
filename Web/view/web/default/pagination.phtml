@@ -1,0 +1,39 @@
+<?php if ($paginator->getPageTotal() <= 1) return; ?>
+
+<?php $currentPage = $paginator->getPage() ?>
+<?php $totalPage = $paginator->getPageTotal() ?>
+<?php $startPage = max(1, $currentPage - 5) ?>
+<?php $endPage = min($totalPage, $currentPage + (10 - abs($currentPage - $startPage))) ?>
+
+<ul class="pagination">
+    <?php if ($startPage > 1) : ?>
+        <?php $paginator->setRouteParam('page', $startPage - 1) ?>
+        <li>
+            <a href="<?php echo $this->url($paginator->getRouteName(), $paginator->getRouteParams(), array('query' => $paginator->getRouteQueries()))?>">
+                &laquo;
+            </a>
+        </li>
+    <?php endif ?>
+
+    <?php for ($i = $startPage; $i <= $endPage; $i++) : ?>
+        <?php $paginator->setRouteParam('page', $i) ?>
+        <li class="<?php echo ($currentPage == $i) ? 'active' : '' ?>">
+            <a href="<?php echo $this->url($paginator->getRouteName(), $paginator->getRouteParams(), array('query' => $paginator->getRouteQueries()))?>">
+                <?php echo $i ?>
+            </a>
+        </li>
+    <?php endfor ?>
+
+    <?php if ($endPage < $totalPage) : ?>
+        <?php $paginator->setRouteParam('page', $endPage + 1) ?>
+        <li>
+            <a href="<?php echo $this->url($paginator->getRouteName(), $paginator->getRouteParams(), array('query' => $paginator->getRouteQueries()))?>">
+                &raquo;
+            </a>
+        </li>
+    <?php endif ?>
+
+    <li class="paginationTotal">
+        <span>Total Results: <?php echo $paginator->count() ?></span>
+    </li>
+</ul>

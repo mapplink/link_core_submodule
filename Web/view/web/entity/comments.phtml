@@ -1,0 +1,68 @@
+<?php
+/** @var \Entity\Comment[] $comments */
+/** @var \Entity\Entity $entity */
+/** @var bool $allowAdd */
+/** @var string $route */
+?>
+
+<?php if($allowAdd): ?>
+    <div class="col-sm-8 col-md-8 col-lg-8">
+<?php else: ?>
+    <div class="col-sm-12 col-md-12 col-lg-12">
+<?php endif; ?>
+
+        <div class="widget">
+            <div class="widget-header"> <i class="glyphicon glyphicon-file"></i>
+                <h3>Comment History</h3>
+            </div>
+            <!-- /widget-header -->
+            <div class="widget-content">
+                <ul class="messages_layout ml-comments-list">
+                    <?php $position = 'left' ?>
+                    <?php foreach ($comments as $comment) : ?>
+                        <li class="from_user <?php echo $position ?>">
+                            <div href="#" class="avatar">
+                                <img width="50" src="/img/<?php echo $comment->getCustomerVisible() ? 'email-icon.jpg' : 'default-avatar.png' ?>"/>
+                                <div><?php echo $comment->getSource() ?></div>
+                            </div>
+
+                            <div class="message_wrap">
+                                <span class="ml-comment-title"><?php echo $comment->getTitle(); ?></span>
+                                <span class="ml-comment-timestamp"><?php echo $comment->getTimestamp(); ?></span>
+
+                                <div class="text"> <?php echo nl2br($comment->getBody()) ?></div>
+                            </div>
+                        </li>
+
+                        <?php $position = (($position == 'left') ? 'right' : 'left')   ?>
+                    <?php endforeach ?>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+
+<?php if($allowAdd): ?>
+    <div class="col-sm-4 col-md-4 col-lg-4">
+        <div class="widget">
+            <div class="widget-header"> <i class="glyphicon glyphicon-file"></i>
+                <h3>Add Comment</h3>
+            </div>
+            <!-- /widget-header -->
+            <div class="widget-content">
+                <form action="<?php echo $this->url($route, array('action'=>'addcomment', 'entity_id'=>$entity->getId())) ?>" method="POST" class="form-inline">
+                    <fieldset>
+                        <div class="form-group">
+                            <textarea class="form-control ml-comment-add" style="width:100%; min-height: 200px" name="commentBody"></textarea>
+                            <input class="form-control" type="checkbox" value="1" name="commentVisible"/> Make customer visible
+                        </div> <!-- /form-group -->
+                        <br>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Create</button>
+                        </div> <!-- /form-actions -->
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>

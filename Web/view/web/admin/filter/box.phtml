@@ -1,0 +1,42 @@
+<div class="widget-content widget-form jsSeachFilterBox" <?php echo $isFilterOn ? '' : 'style="display:none"' ?>>
+        <form class="form-inline" action="#">
+            <fieldset>
+
+               <input type="hidden" name="searchForm" value="1">
+                
+               <?php foreach ($form->getGroup() as $groupName) : ?>
+
+                    <div class="form-group">
+                        <?php $field = $form->get($groupName . "[operator]") ?>       
+                        <?php $field->setLabelAttributes(array('class' => 'control-label'))?> 
+                        <?php echo $this->formLabel($field); ?>     
+
+                        <div class="controls">
+                            <?php echo $this->formElement($field); ?>
+                            <?php $field = $form->get($groupName . "[value]") ?>  
+                            <?php if ($field instanceof \Zend\Form\Element\DateTime) : ?>
+                                <?php $field->setAttributes(array('class' => 'jsDatetimePicker'))?>      
+                            <?php endif ?>
+                            <?php echo $this->formElement($field); ?>
+                            <?php $field = $form->get($groupName . "[field]") ?>  
+                            <?php echo $this->formElement($field); ?>
+                        </div> <!-- /controls -->   
+
+                    </div> <!-- /form-group -->
+
+                <?php endforeach ?>
+                
+                <br>
+                    
+                <div class="form-actions">
+
+                    <input type="submit" name="submit" class="btn btn-primary" value="Submit">
+
+                    <input type="submit" name="submit" class="btn" value="Reset">
+
+                </div> <!-- /form-actions -->
+
+
+            </fieldset>
+        </form>
+</div>

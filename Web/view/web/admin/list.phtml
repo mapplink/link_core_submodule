@@ -1,0 +1,158 @@
+<div class="widget widget-table action-table">
+    <div class="widget-header"> <i class="glyphicon glyphicon-th-list"></i>
+        <h3><?php print $title; ?> Admin</h3>
+<?php
+
+if ($hasFilter) :
+?>
+            <a href="#none" role="button" class="btn jsBtnSearchFilterBox">Search / Filters</a>
+<?php
+
+endif;
+
+if ($isCreateEnabled) :
+?>
+            <a href="<?php print $this->url($routeControl->getRouteName('create'))?>" role="button" class="btn">
+                + New <?php print $title; ?>
+            </a>
+<?php
+
+endif;
+?>
+    </div>
+<?php
+
+if ($hasFilter) :
+?>
+        <?php print $this->searchFilterBox; ?>
+<?php
+
+endif;
+?>
+    <!-- /widget-header -->
+    <div class="widget-content">
+        <table class="table table-striped table-bordered">
+            <thead>
+            <tr>
+<?php
+
+foreach ($listConfig as $name=>$config) :
+?>
+                    <th>
+                        <?php print ucfirst($name);
+    if (isset($config['sortable']) && $config['sortable']) :
+        $sortingDirection = 'desc';
+        $sortingIcon = 'glyphicon glyphicon-sort';
+
+        if ($sortedField == $name) :
+            if ($sortedDirection == 'asc') :
+                $sortingIcon = 'glyphicon glyphicon-sort-up';
+            else :
+                $sortingDirection = 'asc';
+                $sortingIcon = 'glyphicon glyphicon-sort-down';
+            endif;
+        endif;
+
+        $url = $this->url(
+            $paginator->getRouteName(),
+            array('page'=>$paginator->getPage()),
+            array('query'=>array('sorting[field]'=>$name,'sorting[direction]'=>$sortingDirection))
+        );
+?>
+                            <a class="column-sort" href="<?php print $url; ?>">
+                                <i class="<?php print $sortingIcon ?>"></i>
+                            </a>
+<?php
+    endif;
+?>
+                    </th>
+<?php
+
+endforeach;
+?>
+            </tr>
+            </thead>
+            <tbody>
+<?php
+
+foreach ($paginator as $objectKey=>$object) :
+    $display = NULL;
+?>
+                <tr>
+<?php
+    foreach ($listConfig as $name=>$config) :
+
+        if (isset($config['getValue'])) :
+            $value = $config['getValue'];
+            $fieldValue = $object->$value;
+        elseif (isset($config['getMethod'])) :
+            $method = $config['getMethod'];
+            $fieldValue = $object->$method();
+        else :
+            $fieldValue = call_user_func(array($object, 'get'.$name));
+        endif;
+
+        // Checks if id == 0 to remove magelink node from list
+        if ($display === NULL) :
+            if (trim($fieldValue) == '0') :
+                $display = FALSE;
+            else :
+                $display = TRUE;
+            endif;
+        endif;
+
+        if ($display) :
+            if (isset($config['type']) && ($config['type'] == 'boolean')) :
+                $fieldValue = ($fieldValue ? 'Yes' : 'No');
+            endif;
+?>
+                            <td>
+<?php
+            if (isset($config['linked'])) :
+                $url = $this->url($routeControl->getRouteName('edit'), array('id' => $object->getId()));?>
+                                    <a href="<?php print $url; ?>">
+                                        <?php print $this->escapeHtml($fieldValue); ?>
+                                    </a>
+<?php
+            elseif (isset($config['collection'])) :
+                $stringObject = "";
+                foreach ($fieldValue as $subObject) :
+                    $stringObject .= "$subObject, ";
+                endforeach;
+?>
+                                    <?php print substr($stringObject , 0, strlen($stringObject)-2);
+            else :
+                if ($fieldValue instanceof \DateTime) :
+?>
+                                    <?php print $fieldValue->format('d/M/Y H:i:s');
+                elseif (isset($config['raw'])) :
+?>
+                    <?php print $fieldValue;
+                else :
+?>
+                    <?php print $this->escapeHtml($fieldValue);
+                endif;
+            endif;
+?>
+                            </td>
+<?php
+        endif;
+    endforeach;
+?>
+                </tr>
+<?php
+
+endforeach;
+?>
+            </tbody>
+        </table>
+    </div>
+    <!-- /widget-content -->
+</div>
+<?php
+
+if ($paginator instanceof \Web\Helper\Paginator) :
+    print $this->render('web/default/pagination', array('paginator'=>$paginator));
+endif;
+
+?>

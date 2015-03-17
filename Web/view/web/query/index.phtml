@@ -1,0 +1,58 @@
+<form action="" method="POST">
+    Query:<br/>
+    <textarea name="query" style="height: 25em; width: 100em;"><?php echo $query; ?></textarea><br/>
+    <input type="submit"/>
+</form>
+<?php if($error){ echo 'ERROR: ' . $error . '<br/>'.PHP_EOL; } ?>
+<?php if($parsedQuery): ?>
+Generated Query:<br/>
+<pre>
+    <?php echo $parsedQuery; ?>
+</pre><br/>
+<?php endif; ?>
+<?php if($result):
+    $result_count = count($result);
+    if($result_count > 200){
+        $result = array_chunk($result, 200);
+    }
+    ?>
+<?php echo $result_count; ?> results total.<br/>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <?php foreach($headers as $v): ?>
+        <th><?php echo (is_scalar($v) ? $v : gettype($v)); ?></th>
+        <?php endforeach; ?>
+    </tr>
+    </thead>
+    <tbody>
+    <?php foreach($result as $row): ?>
+        <tr>
+        <?php foreach($row as $k=>$v): ?>
+            <td><?php echo (is_scalar($v) ? $v : gettype($v)); ?></td>
+        <?php endforeach; ?>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+<?php endif; ?>
+<?php if($explain): ?>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <?php foreach($explainHeaders as $v): ?>
+                <th><?php echo (is_scalar($v) ? $v : gettype($v)); ?></th>
+            <?php endforeach; ?>
+        </tr>
+        </thead>
+        <tbody>
+        <?php foreach($explain as $row): ?>
+            <tr>
+                <?php foreach($row as $k=>$v): ?>
+                    <td><?php echo (is_scalar($v) ? $v : gettype($v)); ?></td>
+                <?php endforeach; ?>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+<?php endif; ?>

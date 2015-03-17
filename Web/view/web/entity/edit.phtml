@@ -1,0 +1,59 @@
+<?php
+/** @var string $title */
+/** @var string $entity_type */
+/** @var \Web\Form\Entity\EditForm $form */
+/** @var \Entity\Entity $entity */
+/** @var string $route */
+/** @var array $simpleActions */
+?>
+<div class="widget ">
+    <div class="widget-header">
+        <i class="glyphicon glyphicon-user"></i>
+        <h3><?php print $title ?></h3>
+    </div> <!-- /widget-header -->
+    <div class="widget-content">
+        <form class="form-inline" action="#" method="POST">
+            <fieldset>
+<?php
+
+foreach ($form->getElements() as $field) :
+
+    if ($field instanceof \Zend\Form\Element\Submit) :
+        continue;
+    elseif ($field instanceof \Zend\Form\Element\Hidden) :
+?>
+                <?php print $this->formElement($field);
+    else :
+        $field->setLabelAttributes(array('class' => 'control-label'));
+        $field->setAttribute('class', 'form-control');
+?>
+                <div class="form-group generic col-sm-3 col-md-3 col-lg-3 <?php
+        print $field->getMessages() ? 'error' : ''; ?>">
+                    <?php print $this->formLabel($field); ?>
+                    <div class="controls">
+                        <?php print $this->formElement($field); ?>
+                    </div> <!-- /controls -->
+                    <?php print $this->formElementErrors($field, array('class' => 'help-inline')) ?>
+                </div> <!-- /form-group -->
+<?php
+    endif;
+endforeach;
+?>
+                <br>
+                <div class="form-actions">
+<?php
+// TODO Add simple actions here!
+
+$form->get('submit')->setAttributes(array('class' => 'btn btn-primary'));
+print $this->formElement($form->get('submit'));
+?>
+                    <a href="<?php
+print $this->url($route, array(
+        'entity_type'=>$entity_type,
+        'entity_id'=>$entity->getId())
+    ); ?>" class="btn">Back to list</a>
+                </div> <!-- /form-actions -->
+            </fieldset>
+        </form>
+    </div> <!-- /widget-content -->
+</div>

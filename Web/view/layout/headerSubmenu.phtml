@@ -1,0 +1,19 @@
+<?php if (empty($pages)) return ?>
+
+<ul class="dropdown-menu jsDropdownSubmenu" ?>
+    <?php foreach ($pages as $page) : ?>
+        <?php if ($page instanceof \Zend\Navigation\Page\Mvc) : ?>
+            <li>
+                <a href="<?php echo $this->url($page->getRoute()) ?>">
+                    <?php echo $page->getLabel() ?>
+                </a>
+            </li> 
+        <?php elseif ($page instanceof \Zend\Navigation\Page\Uri) : ?>
+            <li>
+                <a href="<?php echo $page->getUri() ?>">
+                    <?php echo $page->getLabel() ?>
+                </a>
+            </li> 
+        <?php endif ?>
+    <?php endforeach ?>
+</ul>
