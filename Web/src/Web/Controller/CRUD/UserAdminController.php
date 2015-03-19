@@ -11,12 +11,12 @@
 
 namespace Web\Controller\CRUD;
 
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\ViewModel;
+use Magelink\Entity\User;
+use Magelink\Entity\UserRole;
 use Web\Controller\CRUD\AbstractCRUDController;
 use Web\Form\UserForm;
-use Magelink\Entity\UserRole;
-use Magelink\Entity\User;
+use Zend\View\Model\ViewModel;
+
 
 class UserAdminController extends AbstractCRUDController
 {

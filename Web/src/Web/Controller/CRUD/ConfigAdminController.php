@@ -11,11 +11,11 @@
 
 namespace Web\Controller\CRUD;
 
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\ViewModel;
+use Magelink\Entity\Config;
 use Web\Controller\CRUD\AbstractCRUDController;
 use Web\Form\ConfigForm;
-use Magelink\Entity\Config;
+use Zend\View\Model\ViewModel;
+
 
 class ConfigAdminController extends AbstractCRUDController
 {

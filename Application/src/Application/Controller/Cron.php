@@ -21,11 +21,10 @@ use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Web\Controller\CRUD\LogEntryAdminController;
 use Zend\Console\Request as ConsoleRequest;
-use Zend\Mvc\Controller\AbstractActionController;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
 
-class Cron extends AbstractActionController implements ServiceLocatorAwareInterface
+class Cron extends AbstractMagelinkActionController implements ServiceLocatorAwareInterface
 {
 
     const LOCKS_DIRECTORY = 'data/locks';

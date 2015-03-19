@@ -17,7 +17,6 @@ use Magelink\Entity\Config;
 use Magelink\Exception\MagelinkException;
 use Web\Controller\CRUD\AbstractCRUDController;
 use Web\Form\ConfigForm;
-use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 
 

@@ -1,32 +1,43 @@
 <?php
-
-/*
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Manages assorted maintenance tasks
+ * @category Application
+ * @package Application\Controller
+ * @author Andreas Gerhards <andreas@lero9.com>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Application\Controller;
 
-use Zend\Mvc\Controller\AbstractActionController;
+use Magelink\Exception\MagelinkException;
 use Zend\Console\Request as ConsoleRequest;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
-use Magelink\Exception\MagelinkException;
 
-/**
- * Manages assorted maintenance tasks
- */
-abstract class AbstractConsole extends AbstractActionController implements ServiceLocatorAwareInterface
+
+abstract class AbstractConsole extends AbstractMagelinkActionController implements ServiceLocatorAwareInterface
 {
 
+    /** @var array $_tasks */
     protected $_tasks = array();
 
+    /** @var \Zend\Db\TableGateway\TableGateway[]  Cache of preloaded table gateways */
+    protected $_tgCache = array();
+
+
+    /**
+     * @throws MagelinkException
+     */
     public function indexAction()
     {
         throw new MagelinkException('Invalid Console action');
     }
 
-    public function runAction(){
+    /**
+     * @throws MagelinkException
+     */
+    public function runAction()
+    {
         if (extension_loaded('newrelic')) {
             newrelic_background_job(true);
         }
@@ -57,27 +68,29 @@ abstract class AbstractConsole extends AbstractActionController implements Servi
         $this->$func($id);
 
         die();
-
     }
 
     /**
      * @return \Log\Service\LogService
      */
-    protected function getLog(){
+    protected function getLog()
+    {
         return $this->getServiceLocator()->get('logService');
     }
 
     /**
      * @return \Entity\Service\EntityService
      */
-    protected function getEntityService(){
+    protected function getEntityService()
+    {
         return $this->getServiceLocator()->get('entityService');
     }
 
     /**
      * @return \Entity\Service\EntityConfigService
      */
-    protected function getEntityConfigService(){
+    protected function getEntityConfigService()
+    {
         return $this->getServiceLocator()->get('entityConfigService');
     }
 
@@ -85,22 +98,18 @@ abstract class AbstractConsole extends AbstractActionController implements Servi
      * Return the database adapter to be used to communicate with Entity storage.
      * @return \Zend\Db\Adapter\Adapter
      */
-    protected function getAdapter(){
+    protected function getAdapter()
+    {
         return $this->getServiceLocator()->get('zend_db');
     }
-
-    /**
-     * Cache of preloaded table gateways
-     * @var \Zend\Db\TableGateway\TableGateway[]
-     */
-    protected $_tgCache = array();
 
     /**
      * Returns a new TableGateway instance for the requested table
      * @param string $table
      * @return \Zend\Db\TableGateway\TableGateway
      */
-    protected function getTableGateway($table){
+    protected function getTableGateway($table)
+    {
         if(isset($this->_tgCache[$table])){
             return $this->_tgCache[$table];
         }

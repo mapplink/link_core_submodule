@@ -1,22 +1,20 @@
 <?php
 /**
- * Magelink\Controller
- *
- * @category    Magelink
- * @package     Magelink\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * BaseController
+ * @category Application
+ * @package Application\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.com>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Controller;
 
-use Zend\Mvc\Controller\AbstractActionController;
+use Application\Controller\AbstractMagelinkActionController;
 
-/**
- * BaseController 
- */
-abstract class BaseController extends AbstractActionController
+
+abstract class BaseController extends AbstractMagelinkActionController
 {   
     /**
      * Get Doctrine repository
