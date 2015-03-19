@@ -9,6 +9,7 @@
 
 namespace Application\Controller;
 
+use Application\CronRunnable;
 use Log\Service\LogService;
 use Zend\Mvc\Controller\AbstractActionController;
 
