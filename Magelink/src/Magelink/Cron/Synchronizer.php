@@ -18,44 +18,10 @@ use Magelink\Exception\SyncException;
 use Magelink\Exception\NodeException;
 use Node\AbstractNode;
 use Node\AbstractGateway;
-use Zend\ServiceManager\ServiceLocatorInterface;
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
 
-class Synchronizer implements CronRunnable, ServiceLocatorAwareInterface
+class Synchronizer extends CronRunnable
 {
-
-    /** @var ServiceLocatorInterface $_serviceLocator */
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
-    }
-
-    /**
-     * Checks whether we should run the cron task this run through.
-     * @param int $minutes
-     * @return boolean
-     */
-    public function cronCheck($minutes)
-    {
-        $run = $minutes % 30 == 0;
-        return $run;
-    }
 
     /**
      * Performs any scheduled actions.

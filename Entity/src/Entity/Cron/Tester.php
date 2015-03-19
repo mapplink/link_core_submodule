@@ -12,31 +12,11 @@
 
 namespace Entity\Cron;
 
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Application\CronRunnable;
 
 
-class Tester implements \Application\CronRunnable, \Zend\ServiceManager\ServiceLocatorAwareInterface
+class Tester extends CronRunnable
 {
-    /** @var ServiceLocatorInterface The service locator */
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
-    }
 
     /**
      * Checks whether we should run the cron task this run through.

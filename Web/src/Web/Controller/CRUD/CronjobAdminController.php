@@ -10,6 +10,7 @@
 
 namespace Web\Controller\CRUD;
 
+use Application\CronRunnable;
 use Application\Controller\Cron;
 use Application\Helper\ErrorHandler;
 use Magelink\Entity\Config;
@@ -22,9 +23,6 @@ use Zend\View\Model\ViewModel;
 
 class CronjobAdminController extends AbstractCRUDController
 {
-
-    const DEFAULT_BLOCKING_IN_MINUTES = 135;
-    const MOVETOPACKING_BLOCKING_IN_MINUTES = 9;
 
     /**
      * Child classes should override to return the Entity class name that this CRUD controller works on.
@@ -39,19 +37,6 @@ class CronjobAdminController extends AbstractCRUDController
     protected function setDefaultName()
     {
         $this->name = 'Cronjob monitor dashboard - Please use only in an important emergency situation -';
-    }
-
-    protected function getCronjobs()
-    {
-        $config = $this->getServiceLocator()->get('Config');
-
-        if (!isset($config['magelink_cron'])) {
-            $cronJobs = array();
-        }else{
-            $cronJobs = $config['magelink_cron'];
-        }
-
-        return $cronJobs;
     }
 
     /**
@@ -79,9 +64,16 @@ class CronjobAdminController extends AbstractCRUDController
     protected function getPaginator()
     {
         $paginator = array();
-        foreach ($this->getCronjobs() as $name=>$class) {
-
+        /** @var Cronrunnable $cronjob */
+        foreach ($this->getCronjobs() as $name=>$cronjob) {
             if (strpos($name, '_tester') === FALSE) {
+                $interval = $cronjob->getInterval();
+                if (is_int($interval)) {
+                   $interval = 'every '.$interval.' minutes';
+                }elseif (!is_string($interval)) {
+                    $interval = 'undefined';
+                }
+
                 $unlocked = Cron::checkIfUnlocked($name);
                 if ($unlocked) {
                     $since = $unlockAction = '-';
@@ -89,12 +81,7 @@ class CronjobAdminController extends AbstractCRUDController
                     $lockTimestamp = Cron::lockedSince($name);
                     $since = date('H:i:s d-m-Y', $lockTimestamp);
 
-                    $lockedSeconds = $lockTimestamp + self::DEFAULT_BLOCKING_IN_MINUTES * 60 - time();
-                    // ToDo: Remove this again after proper implementation through the config data
-                    if ($name == 'movetopacking') {
-                        $lockedSeconds = $lockTimestamp + self::MOVETOPACKING_BLOCKING_IN_MINUTES * 60 - time();
-                    }
-
+                    $lockedSeconds = $lockTimestamp + $cronjob->getLockTime() * 60 - time();
                     if ($lockedSeconds <= 0) {
                         $unlockAction = '<form method="POST" action="#" class="form-inline">'
                             .'<a href="/cronjob-admin/edit/'.$name.'" class="btn btn-danger">Unlock now</a>'
@@ -108,6 +95,7 @@ class CronjobAdminController extends AbstractCRUDController
 
                 $entry = new \stdClass();
                 $entry->name = $name;
+                $entry->interval = $interval;
                 $entry->status = $unlocked ? 'unlocked' : 'LOCKED';
                 $entry->since = $since;
                 $entry->unlockAction = $unlockAction;
@@ -126,6 +114,7 @@ class CronjobAdminController extends AbstractCRUDController
     {
         return array(
             'Synchronisation process'=>array('getValue'=>'name'),
+            'Interval'=>array('getValue'=>'interval'),
             'Status'=>array('getValue'=>'status'),
             'Since'=>array('getValue'=>'since'),
             'File'=>array('getValue'=>'unlockAction', 'raw'=>TRUE)
@@ -151,7 +140,7 @@ class CronjobAdminController extends AbstractCRUDController
             $this->flashMessenger()->setNamespace('error')->addMessage($message);
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_ERROR,
-                    'cron_unlock_failed_'.$code,
+                    'cron_unlock_fail_'.$code,
                     'Unlock failed on cron job '.$code.'. Directory not writable.',
                     array('cron job'=>$code, 'directory'=>realpath(Cron::LOCKS_DIRECTORY), 'user id'=>$user->getId())
                 );

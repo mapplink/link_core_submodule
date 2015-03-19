@@ -44,8 +44,13 @@ return array (
         )
     ),
 
-    'magelink_cron' => array(
-        'synchronizer'=>'\Magelink\Cron\Synchronizer'
+    'magelink_cron'=>array(
+        'synchronizer'=>array(
+            'class'=>'\Magelink\Cron\Synchronizer',
+            'interval'=>30,
+            'offset'=>0,
+            'lockTime'=>135
+        )
     ),
     // Map of country codes vs. country names
     'country_iso2_mapping' => array (
