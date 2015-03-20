@@ -160,7 +160,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
             $job = NULL;
         }
         
-        if (!$applicationConfigService->isCronjobs()) {
+        if (!$applicationConfigService->isCronjob()) {
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_ERROR,
                     'cron_err',
