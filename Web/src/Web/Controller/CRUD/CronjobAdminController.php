@@ -62,9 +62,12 @@ class CronjobAdminController extends AbstractCRUDController
      */
     protected function getPaginator()
     {
+        /** @var ApplicationConfigService $applicationConfigService */
+        $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
+
         $paginator = array();
         /** @var Cronrunnable $cronjob */
-        foreach ($this->getCronjobs() as $name=>$cronjob) {
+        foreach ($applicationConfigService->getCronjobs() as $name=>$cronjob) {
             if (strpos($name, '_tester') === FALSE) {
                 $interval = $cronjob->getInterval();
                 if (is_int($interval)) {

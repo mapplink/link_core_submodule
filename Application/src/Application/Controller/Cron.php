@@ -17,14 +17,16 @@ namespace Application\Controller;
 
 use Application\CronRunnable;
 use Application\Helper\ErrorHandler;
+use Application\Service\ApplicationConfigService;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Web\Controller\CRUD\LogEntryAdminController;
 use Zend\Console\Request as ConsoleRequest;
+use Zend\Mvc\Controller\AbstractActionController;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
 
-class Cron extends AbstractMagelinkActionController implements ServiceLocatorAwareInterface
+class Cron extends AbstractActionController implements ServiceLocatorAwareInterface
 {
 
     const LOCKS_DIRECTORY = 'data/locks';
@@ -145,6 +147,8 @@ class Cron extends AbstractMagelinkActionController implements ServiceLocatorAwa
         }
 
         $this->getServiceLocator()->get('zend_db');
+        /** @var ApplicationConfigService $applicationConfigService */
+        $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
 
         /** @var int $minutes Timestamp rounded to minutes */
         $time = time();
@@ -156,7 +160,7 @@ class Cron extends AbstractMagelinkActionController implements ServiceLocatorAwa
             $job = NULL;
         }
         
-        if (!$this->hasCronjobs()) {
+        if (!$applicationConfigService->hasCronjobs()) {
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_ERROR,
                     'cron_err',
@@ -168,7 +172,7 @@ class Cron extends AbstractMagelinkActionController implements ServiceLocatorAwa
 
         $ran = FALSE;
         /** @var Cronrunnable $magelinkCron */
-        foreach ($this->getCronjobs() as $name=>$magelinkCron) {
+        foreach ($applicationConfigService->getCronjobs() as $name=>$magelinkCron) {
 
             if ($job === NULL || $job == $name) {
                 $ran = TRUE;

@@ -11,10 +11,10 @@
 
 namespace Web\Controller;
 
-use Application\Controller\AbstractMagelinkActionController;
+use Zend\Mvc\Controller\AbstractActionController;
 
 
-abstract class BaseController extends AbstractMagelinkActionController
+abstract class BaseController extends AbstractActionController
 {   
     /**
      * Get Doctrine repository

@@ -12,10 +12,11 @@ namespace Application\Controller;
 
 use Magelink\Exception\MagelinkException;
 use Zend\Console\Request as ConsoleRequest;
+use Zend\Mvc\Controller\AbstractActionController;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
 
-abstract class AbstractConsole extends AbstractMagelinkActionController implements ServiceLocatorAwareInterface
+abstract class AbstractConsole extends AbstractActionController implements ServiceLocatorAwareInterface
 {
 
     /** @var array $_tasks */

@@ -1,35 +1,35 @@
 <?php
 
-return array (
-	'service_manager' => array(
-		'invokables' => array(
-			'entityService' => 'Entity\Service\EntityService',
-			'entityConfigService' => 'Entity\Service\EntityConfigService',
-		),
-	),
+return array (  
+    'service_manager'=>array(
+        'invokables'=>array(
+            'entityService'=>'Entity\Service\EntityService',
+            'entityConfigService'=>'Entity\Service\EntityConfigService',
+        ),
+    ),
 
-    'doctrine' => array(
-        'driver' => array(
-            'entity_entities' => array(
-                'class' => 'Doctrine\ORM\Mapping\Driver\AnnotationDriver',
-                'cache' => 'array',
-                'paths' => array(__DIR__ . '/../src/Entity/Entity')
+    'doctrine'=>array(
+        'driver'=>array(
+            'entity_entities'=>array(
+                'class'=>'Doctrine\ORM\Mapping\Driver\AnnotationDriver',
+                'cache'=>'array',
+                'paths'=>array(__DIR__ . '/../src/Entity/Entity')
             ),
-            'orm_default' => array(
-                'drivers' => array(
-                    'Entity\Entity' => 'entity_entities'
+            'orm_default'=>array(
+                'drivers'=>array(
+                    'Entity\Entity'=>'entity_entities'
                 )
             )
         )
     ),
 
-    'controllers' => array(
-        'invokables' => array(
-            'Entity\Controller\Console' => 'Entity\Controller\Console',
+    'controllers'=>array(
+        'invokables'=>array(
+            'Entity\Controller\Console'=>'Entity\Controller\Console',
         ),
     ),
 
-    'entity_class' => array(
+    'entity_class'=>array(
         'order'=>'\Entity\Wrapper\Order',
         'address'=>'\Entity\Wrapper\Address',
         'orderitem'=>'\Entity\Wrapper\Orderitem',
