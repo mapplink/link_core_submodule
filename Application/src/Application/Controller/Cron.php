@@ -212,9 +212,8 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
 
                     $end = time();
                     $runtime = $end - $start;
-                    $logMessage = 'Cron job '.$name.' finished at '.date('H:i:s d/m/y', $end).'.'
-                        .' Runtime was '.round($runtime / 60, 1).' minutes.';
-                    $logData['runtime[s]'] = $runtime;
+                    $logMessage = 'Cron job '.$name.' finished at '.date('H:i:s d/m/y', $end).'. Runtime was '
+                            .(floor($runtime / 60) ? floor($runtime / 60).' min and ' : '').($runtime % 60).' s.';
                     $this->getServiceLocator()->get('logService')
                         ->log(LogService::LEVEL_DEBUG, 'cron_run_'.$name, $logMessage, $logData, $logEntities);
 
