@@ -13,11 +13,13 @@
 namespace Magelink\Cron;
 
 use Application\CronRunnable;
+use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\SyncException;
 use Magelink\Exception\NodeException;
 use Node\AbstractNode;
 use Node\AbstractGateway;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
 
 class Synchronizer extends CronRunnable
@@ -28,13 +30,14 @@ class Synchronizer extends CronRunnable
      */
     public function cronRun()
     {
-        $appConfig = $this->getServiceLocator()->get('Config');
+        $serviceLocator = $this->getServiceLocator();
+        $appConfig = $serviceLocator->get('Config');
         $typeConfig = $appConfig['node_types'];
 
         try{
             $nodesToUpdate = array();
 
-            $nodes = $this->getServiceLocator()->get('nodeService')->getActiveNodes();
+            $nodes = $serviceLocator->get('nodeService')->getActiveNodes();
             foreach ($nodes as $nodeEntity) {
                 if ($nodeEntity->getId()) {
                     if (!($nodeEntity instanceof \Node\Entity\Node)) {
@@ -47,15 +50,14 @@ class Synchronizer extends CronRunnable
                     $thisTypeConfig = $typeConfig[$nodeEntity->getType()];
 
                     $className = '\\'.$thisTypeConfig['module'].'\\Node';
-                    if(!class_exists($className)){
+                    if (!class_exists($className)) {
                         throw new MagelinkException('Node class does not exist: ' . $className);
                     }
 
                     /** @var AbstractNode $node */
                     $node = new $className();
-                    if($node instanceof ServiceLocatorAwareInterface){
-                        // DI service locator
-                        $node->setServiceLocator($this->getServiceLocator());
+                    if ($node instanceof ServiceLocatorAwareInterface) {
+                        $node->setServiceLocator($serviceLocator);
                     }
 
                     try{
@@ -65,8 +67,7 @@ class Synchronizer extends CronRunnable
                     }catch (NodeException $nodeException) {
                         $message = 'Uncaught exception while processing node '.$nodeEntity->getNodeId().': '
                             .$nodeException->getMessage();
-                        $this->getServiceLocator()->get('logService')
-                            ->log(\Log\Service\LogService::LEVEL_ERROR,
+                        $serviceLocator->get('logService')->log(LogService::LEVEL_ERROR,
                                 'nodeex',
                                 $message,
                                 array($nodeException->getMessage(), $nodeException->getTraceAsString()),
@@ -81,7 +82,7 @@ class Synchronizer extends CronRunnable
                 try{
                     $node->update();
                 }catch (NodeException $nodeException) {
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
+                    $serviceLocator->get('logService')->log(LogService::LEVEL_ERROR,
                         'nodeex',
                         'Uncaught exception while updating node '.$node->getNodeId().': '.$nodeException->getMessage(),
                         array($nodeException->getMessage(), $nodeException->getTraceAsString()),
@@ -93,7 +94,7 @@ class Synchronizer extends CronRunnable
                 try{
                     $node->deinit();
                 }catch (NodeException $nodeException) {
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
+                    $serviceLocator->get('logService')->log(LogService::LEVEL_ERROR,
                         'nodeex',
                         'Uncaught node exception while updating node '.$node->getNodeId().': '.$nodeException->getMessage(),
                         array($nodeException->getMessage(), $nodeException->getTraceAsString()),
@@ -103,7 +104,7 @@ class Synchronizer extends CronRunnable
                 }
             }
         }catch (SyncException $syncException) {
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
+            $serviceLocator->get('logService')->log(LogService::LEVEL_ERROR,
                 'syncex',
                 'Uncaught exception during synchronization: '.$syncException->getMessage(),
                 array($syncException->getMessage(), $syncException->getTraceAsString()),
@@ -111,7 +112,7 @@ class Synchronizer extends CronRunnable
             );
             echo PHP_EOL.$syncException->getTraceAsString().PHP_EOL;
         }catch (MagelinkException $magelinkException) {
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR,
+            $serviceLocator->get('logService')->log(LogService::LEVEL_ERROR,
                 'mageex',
                 'Uncaught exception during synchronization: '.$magelinkException->getMessage(),
                 array($magelinkException->getMessage(), $magelinkException->getTraceAsString()),

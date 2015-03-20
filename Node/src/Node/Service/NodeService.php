@@ -1,7 +1,7 @@
 <?php
 /**
- * Node\Service
- *
+ * Responsible for providing node_status data (i.e. updated timestamps), attribute/node assignments
+ *   and locating/updating pending updates and actions.
  * @category Node
  * @package Node\Service
  * @author Matt Johnston
@@ -12,28 +12,25 @@
 
 namespace Node\Service;
 
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Magelink\Exception\MagelinkException;
 use Node\AbstractNode;
 use Node\Entity\Node;
 use Node\Entity\NodeStatus;
+use Zend\Db\Adapter\Adapter;
 use Zend\Db\TableGateway\TableGateway;
-use Magelink\Exception\MagelinkException;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
-/**
- * Responsible for providing node_status data (i.e. updated timestamps), attribute/node assignments, and locating/updating pending updates and actions.
- *
- * @package Node\Service
- */
+
 class NodeService implements ServiceLocatorAwareInterface
 {
 
     /**
      * Return an array of all currently active node entities
-     *
      * @return Node[]
      */
-    public function getActiveNodes(){
+    public function getActiveNodes()
+    {
         return $this->getServiceLocator()
             ->get('Doctrine\ORM\EntityManager')
             ->getRepository('Node\Entity\Node')
@@ -41,42 +38,45 @@ class NodeService implements ServiceLocatorAwareInterface
     }
     /**
      * Return an array of all currently active node entities of a specified type
-     *
-     * @param string $type_str
+     * @param string $type
      * @return Node[]
      */
-    public function getActiveNodesByType($type_str){
+    public function getActiveNodesByType($type)
+    {
         return $this->getServiceLocator()
             ->get('Doctrine\ORM\EntityManager')
             ->getRepository('Node\Entity\Node')
-            ->getActiveNodesByType($type_str);
+            ->getActiveNodesByType($type);
     }
 
     /**
      * Return all node IDs with the given type
      * @param string $type
-     * @return array
+     * @return array $nodeIds
      */
-    public function getNodesByType($type){
-        $res = $this->getTableGateway('node')->select(array('type'=>$type));
-        $ret = array();
-        foreach($res as $row){
-            $ret[] = $row['node_id'];
+    public function getNodesByType($type)
+    {
+        $response = $this->getTableGateway('node')->select(array('type'=>$type));
+        $nodeIds = array();
+        foreach($response as $row){
+            $nodeIds[] = $row['node_id'];
         }
-        return $ret;
+
+        return $nodeIds;
     }
 
     /**
      * Get all pending updates for the given node
-     * @param Node $nodeEnt
+     * @param Node $nodeEntity
      * @throws MagelinkException If there is invalid data
      * @return \Entity\Update[]
      */
-    public function getPendingUpdates(\Node\Entity\Node $nodeEnt){
+    public function getPendingUpdates(\Node\Entity\Node $nodeEntity)
+    {
         $updates = array();
 
-        $res = $this->getTableGateway('entity_update')->select(array('node_id'=>$nodeEnt->getId(), 'complete'=>0));
-        foreach($res as $row){
+        $response = $this->getTableGateway('entity_update')->select(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
+        foreach($response as $row){
             $logs = $this->getTableGateway('entity_update_log')->select(array('log_id'=>$row['log_id']));
             $log = false;
             foreach($logs as $logRow){
@@ -86,12 +86,12 @@ class NodeService implements ServiceLocatorAwareInterface
             if($log === false){
                 throw new MagelinkException('Could not find log entry for update ' . $row['update_id']);
             }
-            $ent = $this->getServiceLocator()->get('entityService')->loadEntityId($nodeEnt->getId(), $row['entity_id']);
+            $ent = $this->getServiceLocator()->get('entityService')->loadEntityId($nodeEntity->getId(), $row['entity_id']);
 
-            $upd = new \Entity\Update();
-            $upd->init($log['log_id'], $ent, $log['type'], $log['timestamp'], $log['source_node'], $log['affected_nodes'], $log['affected_attributes']);
+            $update = new \Entity\Update();
+            $update->init($log['log_id'], $ent, $log['type'], $log['timestamp'], $log['source_node'], $log['affected_nodes'], $log['affected_attributes']);
 
-            $updates[] = $upd;
+            $updates[] = $update;
         }
 
         return $updates;
@@ -99,17 +99,18 @@ class NodeService implements ServiceLocatorAwareInterface
 
     /**
      * Get all pending actions for the given node
-     * @param Node $nodeEnt
+     * @param Node $nodeEntity
      * @throws MagelinkException If there is invalid data
      * @return \Entity\Action[]
      */
-    public function getPendingActions(\Node\Entity\Node $nodeEnt){
+    public function getPendingActions(\Node\Entity\Node $nodeEntity)
+    {
         /** @var \Doctrine\ORM\EntityManager $entityManager */
         $entityManager = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager');
         $actions = array();
 
-        $res = $this->getTableGateway('entity_action_status')->select(array('node_id'=>$nodeEnt->getId(), 'status'=>0));
-        foreach($res as $row){
+        $response = $this->getTableGateway('entity_action_status')->select(array('node_id'=>$nodeEntity->getId(), 'status'=>0));
+        foreach($response as $row){
 
             /** @var \Entity\Entity\EntityAction $act */
             $act = $entityManager->find('Entity\Entity\EntityAction', $row['action_id']);
@@ -119,7 +120,7 @@ class NodeService implements ServiceLocatorAwareInterface
             }
             $act->loadSimpleData();
 
-            $ent = $this->getServiceLocator()->get('entityService')->loadEntityId($nodeEnt->getId(), $act->getEntityId());
+            $ent = $this->getServiceLocator()->get('entityService')->loadEntityId($nodeEntity->getId(), $act->getEntityId());
 
             $obj = new \Entity\Action();
             $obj->init($act->getId(), $ent, $act->getActionType(), $act->getSimpleData());
@@ -136,17 +137,20 @@ class NodeService implements ServiceLocatorAwareInterface
      * @param $status The status to update to (0=new, 1=done)
      */
     public function setActionStatus(\Node\Entity\Node $node, \Entity\Action $act, $status) {
-        $this->getAdapter()->query('UPDATE entity_action_status SET status = ' . intval($status) . ' WHERE action_id = ' . $act->getId() . ' AND node_id = ' . $node->getId() . ';', \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+        $sql = "UPDATE entity_action_status SET status = ".intval($status)
+            ." WHERE action_id = ".$act->getId().' AND node_id = ' . $node->getId().";";
+        $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
     }
 
     /**
      * Update an update status (i.e. when completed)
      * @param Node $node The node to update for
-     * @param \Entity\Update $upd The update instance being updated
+     * @param \Entity\Update $update The update instance being updated
      * @param $status The status to update to (0=new, 1=done)
      */
-    public function setUpdateStatus(\Node\Entity\Node $node, \Entity\Update $upd, $status) {
-        $this->getAdapter()->query('UPDATE entity_update SET complete = ' . intval($status) . ' WHERE log_id = ' . $upd->getLogId() . ' AND node_id = ' . $node->getId() . ';', \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+    public function setUpdateStatus(\Node\Entity\Node $node, \Entity\Update $update, $status)
+    {
+        $this->getAdapter()->query('UPDATE entity_update SET complete = ' . intval($status) . ' WHERE log_id = ' . $update->getLogId() . ' AND node_id = ' . $node->getId() . ';', Adapter::QUERY_MODE_EXECUTE);
 
     }
 
@@ -204,7 +208,7 @@ class NodeService implements ServiceLocatorAwareInterface
 
         if(!$ts){
             // We need to manually generate the ID as Doctrine doesn't like composite primary keys with auto increment (although MySQL does it fine)
-            $idRes = $this->getAdapter()->query('SELECT MAX(id) AS max_id FROM node_status;', \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+            $idRes = $this->getAdapter()->query('SELECT MAX(id) AS max_id FROM node_status;', Adapter::QUERY_MODE_EXECUTE);
             $id = false;
             foreach($idRes as $arr){
                 if($arr['max_id'] === null){
@@ -359,10 +363,10 @@ class NodeService implements ServiceLocatorAwareInterface
         $select->join(array('att'=>'entity_attribute'), new \Zend\Db\Sql\Expression('att.attribute_id = na.attribute_id'.($entityType != 0 ? ' AND att.entity_type_id = ' . $entityType : '')), array('attribute_code'=>'code'), $select::JOIN_INNER);
         $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'getsubattr', 'getSubscribedAttributeCodes - ' . $nodeId . '_' . $entityType.': '.$select->getSqlString($this->getAdapter()->getPlatform()), array('node_id'=>$nodeId, 'sql'=>$select->getSqlString($this->getAdapter()->getPlatform())), array('node'=>$nodeId));
 
-        $res = $this->getAdapter()->query($select->getSqlString($this->getAdapter()->getPlatform()), \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+        $response = $this->getAdapter()->query($select->getSqlString($this->getAdapter()->getPlatform()), Adapter::QUERY_MODE_EXECUTE);
 
         $retArr = array();
-        foreach($res as $row){
+        foreach($response as $row){
             if(in_array($row['attribute_code'], $retArr)){
                 continue;
             }
@@ -425,9 +429,10 @@ class NodeService implements ServiceLocatorAwareInterface
 
     /**
      * Return the database adapter to be used to communicate with Entity storage.
-     * @return \Zend\Db\Adapter\Adapter
+     * @return Adapter
      */
-    protected function getAdapter(){
+    protected function getAdapter()
+    {
         return $this->getServiceLocator()->get('zend_db');
     }
 
