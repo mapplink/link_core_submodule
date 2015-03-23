@@ -104,6 +104,8 @@ class ErrorHandler
             $errorContext = '';
         }
 
+        $debugInfo = PHP_EOL.debug_backtrace();
+
         switch ($errorNo) {
             case E_ERROR:
                 $errorType = 'ERROR';
@@ -155,27 +157,25 @@ class ErrorHandler
                 break;
         }
 
-        $content = <<<EOF
-[{$errorType}] {$errorText}
+        $content = '['.$errorType.'] '.$errorText
+            .PHP_EOL.'Line '.$errorLine.' in file '.$errorFile.'.'
+            .PHP_EOL.PHP_EOL.$debugInfo
+            .PHP_EOL.PHP_EOL.$errorContext;
 
-Line {$errorLine} in file {$errorFile}.
-{$errorContext}
-EOF;
-
-        if ($this->_lastErr == $content) {
-            return FALSE; // Already sent
-        }else{
+        if ($this->_lastErr != $content) {
             $this->_lastErr = $content;
+
+            mail(self::ERROR_TO, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);
+            $clientEmail = self::ERROR_TO_CLIENT && strpos($errorType, self::ERROR_TO_CLIENT_CODE) !== false;
+            $daytime = (date('H') > 7) && (date('H') < 20);
+            $devOrStaging = (strpos($_SERVER['HTTP_HOST'], 'dev.') + strpos($_SERVER['HTTP_HOST'], 'staging.') > 0);
+
+            if ($clientEmail && $daytime && !$devOrStaging) {
+                mail(self::ERROR_TO_CLIENT, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);
+            }
         }
 
-        mail(self::ERROR_TO, 'MageLink Error Handler: '.$errorType, $content, 'From: ' . self::ERROR_FROM);
-        $clientEmail = self::ERROR_TO_CLIENT && strpos($errorType, self::ERROR_TO_CLIENT_CODE) !== FALSE;
-        $daytime = (date('H') > 7) && (date('H') < 20);
-        if ($clientEmail && $daytime) {
-            mail(self::ERROR_TO_CLIENT, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);
-        }
-
-        return FALSE; // Continue PHP handler
+        return FALSE;
     }
 
 }
