@@ -19,33 +19,31 @@ class ErrorHandler
     const ERROR_TO = 'forms@lero9.co.nz';
     const ERROR_FROM = 'noreply@lero9.co.nz';
 
-    // ToDo: Move client data to the config
-    const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
-    const ERROR_TO_CLIENT_CODE = 'cno_';
+    /** @var bool|NULL $allowException */
+    protected static $allowException = NULL;
 
-    protected static $allowEx = NULL;
-
-    protected $_lastErr = FALSE;
+    /** @var string|FALSE $_lastError */
+    protected $_lastError = FALSE;
 
 
-    public function __construct($allowEx = NULL)
+    public function __construct($allowException = NULL)
     {
-        if (self::$allowEx === NULL) {
+        if (self::$allowException === NULL) {
             register_shutdown_function(array($this, 'shutdownhandler'));
         }
 
-        if ($allowEx === NULL && self::$allowEx !== NULL) {
-            $allowEx = self::$allowEx;
-        }elseif ($allowEx !== NULL) {
-            self::$allowEx = $allowEx;
+        if ($allowException === NULL && self::$allowException !== NULL) {
+            $allowException = self::$allowException;
+        }elseif ($allowException !== NULL) {
+            self::$allowException = $allowException;
         }else{
-            self::$allowEx = FALSE;
-            $allowEx = FALSE;
+            self::$allowException = FALSE;
+            $allowException = FALSE;
         }
 
         set_error_handler(array($this, 'errorhandler'));
 
-        if ($allowEx) {
+        if ($allowException) {
             set_exception_handler(array($this, 'exceptionhandler'));
         }
     }
@@ -162,17 +160,9 @@ class ErrorHandler
             .PHP_EOL.PHP_EOL.$debugInfo
             .PHP_EOL.PHP_EOL.$errorContext;
 
-        if ($this->_lastErr != $content) {
-            $this->_lastErr = $content;
-
+        if ($this->_lastError != $content) {
             mail(self::ERROR_TO, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);
-            $clientEmail = self::ERROR_TO_CLIENT && strpos($errorType, self::ERROR_TO_CLIENT_CODE) !== false;
-            $daytime = (date('H') > 7) && (date('H') < 20);
-            $devOrStaging = (strpos($_SERVER['HTTP_HOST'], 'dev.') + strpos($_SERVER['HTTP_HOST'], 'staging.') > 0);
-
-            if ($clientEmail && $daytime && !$devOrStaging) {
-                mail(self::ERROR_TO_CLIENT, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);
-            }
+            $this->_lastError = $content;
         }
 
         return FALSE;

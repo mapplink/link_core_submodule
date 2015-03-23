@@ -19,6 +19,11 @@ use Application\Helper\ErrorHandler;
 class EmailLogger extends AbstractLogger
 {
 
+    const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
+    const ERROR_TO_CLIENT_CODE = 'cno_';
+    const ERROR_TO_CLIENT_STARTHOUR = 7;
+    const ERROR_TO_CLIENT_ENDHOUR = 20;
+
     protected $lastCache = array();
     protected $cacheSize = 20;
 
@@ -103,15 +108,21 @@ class EmailLogger extends AbstractLogger
         }
     }
 
-    protected function sendAlert($level, $code, $message, $data, $extraData, $lastStackFrame)
+    protected function sendAlert($errorLevel, $errorCode, $errorMessage, $data, $extraData, $lastStackFrame)
     {
-        $subject = 'MageLink ERROR: ['.$code.'] '.$message;
-        $contents = 'MageLink error thrown! Details:'.PHP_EOL.PHP_EOL;
-        $contents .= implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
+        $subject = 'MageLink ERROR: ['.$errorCode.'] '.$errorMessage;
+        $content = 'MageLink error thrown! Details:'.PHP_EOL.PHP_EOL;
+        $content .= implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
 
-        mail(ErrorHandler::ERROR_TO, $subject, $contents, 'Content-Type: text/plain');
-        if (ErrorHandler::ERROR_TO_CLIENT && strpos($code, ErrorHandler::ERROR_TO_CLIENT_CODE) !== FALSE) {
-            mail(ErrorHandler::ERROR_TO_CLIENT, $subject, $contents, 'Content-Type: text/plain');
+        mail(ErrorHandler::ERROR_TO, $subject, $content, 'Content-Type: text/plain');
+
+        $clientCodeMatching = strpos($errorCode, self::ERROR_TO_CLIENT_CODE) !== FALSE;
+        $daytime = (date('H') > self::ERROR_TO_CLIENT_STARTHOUR) && (date('H') < self::ERROR_TO_CLIENT_ENDHOUR);
+        $devOrStaging = (strpos($_SERVER['HTTP_HOST'], 'dev.') + strpos($_SERVER['HTTP_HOST'], 'staging.') > 0);
+
+        if (self::ERROR_TO_CLIENT && $clientCodeMatching && $daytime && !$devOrStaging) {
+            $additionalHeader = 'Content-Type: text/plain'."\r\n".'From: '.ErrorHandler::ERROR_FROM;
+            mail(self::ERROR_TO_CLIENT, $subject, $content, $additionalHeader);
         }
     }
 
