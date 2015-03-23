@@ -118,7 +118,7 @@ class EmailLogger extends AbstractLogger
 
         $clientCodeMatching = strpos($errorCode, self::ERROR_TO_CLIENT_CODE) !== FALSE;
         $daytime = (date('H') > self::ERROR_TO_CLIENT_STARTHOUR) && (date('H') < self::ERROR_TO_CLIENT_ENDHOUR);
-        $devOrStaging = (strpos($_SERVER['HTTP_HOST'], 'dev.') + strpos($_SERVER['HTTP_HOST'], 'staging.') > 0);
+        $devOrStaging = (strpos(__DIR__, 'dev.') + strpos(__DIR__, 'staging.') > 0);
 
         if (self::ERROR_TO_CLIENT && $clientCodeMatching && $daytime && !$devOrStaging) {
             $additionalHeader = 'Content-Type: text/plain'."\r\n".'From: '.ErrorHandler::ERROR_FROM;
