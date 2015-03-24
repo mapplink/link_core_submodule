@@ -36,7 +36,7 @@ class EmailLogger extends AbstractLogger
     function init($config=array())
     {
         $this->lastCache = array();
-        // TODO make cacheSize configurable?
+        // TODO (maybe) : make cacheSize configurable
 
         return true;
     }

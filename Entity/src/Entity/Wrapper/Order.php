@@ -47,9 +47,9 @@ class Order extends AbstractWrapper
      * Retrieve all the order items attached to this order
      * @return \Entity\Wrapper\Orderitem[]
      */
-    public function getOrderitems()
+    public function getOrderitems($refresh = FALSE)
     {
-        if (!$this->_cachedOrderitems) {
+        if (!$this->_cachedOrderitems || $refresh) {
             $this->_cachedOrderitems = $this->getChildren('orderitem');
         }
 
