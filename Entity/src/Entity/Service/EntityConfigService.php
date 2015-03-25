@@ -269,63 +269,6 @@ class EntityConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Return all entity types with flat data
-     * @return array $entityTypes
-     */
-    public function getFlatEntityTypeCodes()
-    {
-        $entityTypes = array();
-        foreach ($this->getEntityTypesData() as $entityTypeId=>$typeData) {
-            if ($typeData['flat_table_fields']) {
-                $entityTypes[$entityTypeId] = $typeData['name'];
-            }
-        }
-
-        return $entityTypes;
-    }
-
-    /**
-     * Return all entity types with flat types to be updated
-     * @return array $entityTypes
-     */
-    public function getEntityTypeFlatUpdateCodes()
-    {
-        $entityTypes = array();
-        foreach ($this->getEntityTypesData() as $entityTypeId=>$typeData) {
-            if ($typeData['flat_types_to_update']) {
-                $entityTypes[$entityTypeId] = explode(',', $typeData['flat_types_to_update']);
-            }
-        }
-
-        return $entityTypes;
-    }
-
-    /**
-     * Return all entity flat data fields
-     * @return array $flatFields
-     */
-    public function getFlatEntityTypeFields($entityType = NULL)
-    {
-        $flatFields = array();
-        foreach ($this->getEntityTypesData() as $entityTypeId=>$typeData) {
-            if ($typeData['flat_table_fields']) {
-                $flatFields[$entityTypeId] = explode(',', $typeData['flat_table_fields']);
-            }
-        }
-
-        if ($entityType) {
-            $entityTypeId = $this->parseEntityType($entityType);
-            if (isset($flatFields[$entityTypeId])) {
-                $flatFields = $flatFields[$entityTypeId];
-            }else{
-                $flatFields = array();
-            }
-        }
-
-        return $flatFields;
-    }
-
-    /**
      * Turn a string or object based entity type into the ID
      * @param string $entityType
      * @throws \Magelink\Exception\MagelinkException
