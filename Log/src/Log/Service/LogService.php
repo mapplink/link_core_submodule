@@ -67,6 +67,8 @@ class LogService implements ServiceLocatorAwareInterface
      */
     protected function initLoggers()
     {
+        $this->_loggers = array();
+
         $config = $this->getServiceLocator()->get('Config');
         if (!isset($config['system_log'])) {
             $config = array();
@@ -93,8 +95,6 @@ class LogService implements ServiceLocatorAwareInterface
             'file'=>array('class'=>'\Log\Logger\FileLogger'),
             'email'=>array('class'=>'\Log\Logger\EmailLogger'),
         );
-
-        $this->_loggers = array();
 
         foreach ($logConfig as $name=>$logger) {
             $loggerObject = new $logger['class']();

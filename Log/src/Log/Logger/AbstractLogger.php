@@ -12,6 +12,7 @@
 
 namespace Log\Logger;
 
+use Log\Service\LogService;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
