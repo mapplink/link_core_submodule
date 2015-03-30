@@ -1,78 +1,127 @@
 <?php
+/*
+ * Provides log services for Magelink modules
+ * @category Log
+ * @package Log\Service
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ *
+ * This software is subject to our terms of trade and any applicable licensing agreements.
+ */
 
 namespace Log\Service;
 
+use Magelink\Exception\MagelinkException;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
-class LogService implements ServiceLocatorAwareInterface {
 
-    /** Used for extreme debugging messages that should not be needed for anything other than internal framework development */
+class LogService implements ServiceLocatorAwareInterface
+{
+    // Used for extreme debugging messages (needed for internal framework development)
+    const LEVEL_DEBUGINTERNAL = 'debugint';
+    // Used for extreme debugging messages (more details for of finding issues)
     const LEVEL_DEBUGEXTRA = 'debugex';
-    /** Used for troubleshooting issues with data flow etc - not useful for users but can be important for finding issues */
+    // Used for troubleshooting issues with data flow, etc. (useful for finding issues)
     const LEVEL_DEBUG = 'debug';
-    /** The minimum level useful to users, should always be logged */
+    // The minimum level useful to users, should always be logged
     const LEVEL_INFO = 'info';
-    /** Potential issues or unusual circumstances */
+    // Potential issues or unusual circumstances
     const LEVEL_WARN = 'warn';
-    /** Critical errors or data inconsistencies */
+    // Critical errors or data inconsistencies
     const LEVEL_ERROR = 'error';
 
-    protected $_enableDebugExtra = true;
-    protected $_enableDebug = true;
+    // Presets of the non user-oriented log messages
+    protected $_enableDebugInternal = FALSE;
+    protected $_enableDebugExtra = FALSE;
+    protected $_enableDebug = TRUE;
+
+    /** @var \Log\Logger\AbstractLogger[] */
+    protected $_loggers = FALSE;
+
+    /** @var ServiceLocatorInterface $serviceLocator */
+    protected $_serviceLocator;
+
 
     /**
-     * @var \Log\Logger\AbstractLogger[]
+     * Set service locator
+     * @param ServiceLocatorInterface $serviceLocator
      */
-    protected $_loggers = false;
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+    }
 
-    protected function initLoggers(){
+    /**
+     * Get service locator
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
+    }
+
+    /**
+     * @throws \Magelink\Exception\MagelinkException
+     */
+    protected function initLoggers()
+    {
         $config = $this->getServiceLocator()->get('Config');
-        if(!isset($config['system_log'])){
+        if (!isset($config['system_log'])) {
             $config = array();
         }else{
             $config = $config['system_log'];
         }
-        if (!isset($config['enable_debug_extra']) || !$config['enable_debug_extra']) {
-            $this->_enableDebugExtra = false;
-        }
-        if (!isset($config['enable_debug']) || !$config['enable_debug']) {
-            $this->_enableDebugExtra = false;
+
+        if (isset($config['enable_debug_internal'])) {
+            $this->_enableDebugInternal = $config['enable_debug_internal'];
         }
 
+        if (isset($config['enable_debug_extra'])) {
+            $this->_enableDebugExtra = $config['enable_debug_extra'];
+        }
 
-        // TODO read from config
+        if (isset($config['enable_debug'])) {
+            $this->_enableDebugExtra = $config['enable_debug'];
+        }
+
+        // TODO : read from config
         $logConfig = array(
-            'stdout'=>array(
-                'class'=>'\Log\Logger\StdoutLogger',
-            ),
-            'database'=>array(
-                'class'=>'\Log\Logger\DatabaseLogger',
-            ),
-            'file'=>array(
-                'class'=>'\Log\Logger\FileLogger',
-            ),
-            'email'=>array(
-                'class'=>'\Log\Logger\EmailLogger',
-            ),
+            'stdout'=>array('class'=>'\Log\Logger\StdoutLogger'),
+            'database'=>array('class'=>'\Log\Logger\DatabaseLogger'),
+            'file'=>array('class'=>'\Log\Logger\FileLogger'),
+            'email'=>array('class'=>'\Log\Logger\EmailLogger'),
         );
 
         $this->_loggers = array();
 
-        foreach($logConfig as $name=>$logger){
-            $obj = new $logger['class']();
-            if($obj instanceof ServiceLocatorAwareInterface){
-                $obj->setServiceLocator($this->getServiceLocator());
+        foreach ($logConfig as $name=>$logger) {
+            $loggerObject = new $logger['class']();
+            if ($loggerObject instanceof ServiceLocatorAwareInterface) {
+                $loggerObject->setServiceLocator($this->getServiceLocator());
             }
-            if($obj instanceof \Log\Logger\AbstractLogger){
-                if($obj->init($logger)){
-                    $this->_loggers[$name] = $obj;
+            if ($loggerObject instanceof \Log\Logger\AbstractLogger) {
+                if ($loggerObject->init($logger)) {
+                    $this->_loggers[$name] = $loggerObject;
                 }
             }else{
-                throw new \Magelink\Exception\MagelinkException('Invalid logger class specified - ' . $logger['class'] . '!');
+                throw new MagelinkException('Invalid logger class specified - '.$logger['class'].'!');
             }
         }
     }
+
+    /**
+     * @param string $level
+     * @return bool $logIt
+     */
+    protected function isLevelToBeLogged($level)
+    {
+        $logIt = ($level != self::LEVEL_DEBUG || $this->_enableDebug)
+            && ($level != self::LEVEL_DEBUGEXTRA || $this->_enableDebugExtra)
+            && ($level != self::LEVEL_DEBUGINTERNAL || $this->_enableDebugInternal);
+        return $logIt;
+     }
 
     /**
      * Enters a new log message, routing it to appropriate destinations (i.e. DB, files, email, etc).
@@ -94,111 +143,96 @@ class LogService implements ServiceLocatorAwareInterface {
      */
     public function log($level, $code, $message, array $data, array $options = array())
     {
-        if($this->_loggers == false){
+        if ($this->_loggers == FALSE) {
             $this->initLoggers();
         }
 
-        if($level == self::LEVEL_DEBUGEXTRA && !$this->_enableDebugExtra){
-            return;
-        }
-        if($level == self::LEVEL_DEBUG && !$this->_enableDebug){
-            return;
-        }
+        if ($this->isLevelToBeLogged($level)) {
+            if (!isset($options['user']) && php_sapi_name() != 'cli') {
+                /** @var \Zend\Authentication\AuthenticationService $authService */
+                $authService = $this->getServiceLocator()->get('zfcuser_auth_service');
 
-
-        if(!isset($options['user']) && php_sapi_name() != 'cli'){
-            /** @var \Zend\Authentication\AuthenticationService $authService */
-            $authService = $this->getServiceLocator()->get('zfcuser_auth_service');
-
-            if($authService && $authService->getIdentity()) {
-                $options['user'] = $authService->getIdentity()->getId();
+                if ($authService && $authService->getIdentity()) {
+                    $options['user'] = $authService->getIdentity()->getId();
+                }
             }
-        }
 
-        $topTrace = null;
-        if(isset($options['exception']) && $options['exception'] instanceof \Exception){
-            /** @var \Exception $ex */
-            $ex = $options['exception'];
-            $backtrace = $ex->getTrace();
-            $topTrace = array(
-                'file'=>$ex->getFile(),
-                'line'=>$ex->getLine(),
-            );
-        }else{
-            $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
-            array_shift($backtrace);
-            $topTrace = $backtrace[0];
-        }
-
-        // Parse backtrace for node/entity if not specified
-        foreach($backtrace as $bt){
-            if(isset($bt['object'])){
-                $arr = $this->parseObj($bt['object']);
-                $options = array_merge($arr, $options);
+            $topTrace = NULL;
+            if (isset($options['exception']) && $options['exception'] instanceof \Exception) {
+                /** @var \Exception $$exception */
+                $exception = $options['exception'];
+                $backtraces = $exception->getTrace();
+                $topTrace = array(
+                    'file'=>$exception->getFile(),
+                    'line'=>$exception->getLine(),
+                );
+            }else {
+                $backtraces = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
+                array_shift($backtraces);
+                $topTrace = $backtraces[0];
             }
-            if(isset($bt['args'])){
-                foreach($bt['args'] as $k=>$v){
-                    if(is_object($v)){
-                        $arr = $this->parseObj($v);
-                        $options = array_merge($arr, $options);
+
+            // Parse backtrace for node/entity if not specified
+            foreach ($backtraces as $backtrace) {
+                if (isset($backtrace['object'])) {
+                    $parsedBacktraceObject = $this->parseObject($backtrace['object']);
+                    $options = array_merge($parsedBacktraceObject, $options);
+                }
+                if (isset($backtrace['args'])) {
+                    foreach ($backtrace['args'] as $key=>$value) {
+                        if (is_object($value)) {
+                            $parsedValue = $this->parseObject($value);
+                            $options = array_merge($parsedValue, $options);
+                        }
                     }
                 }
             }
-        }
 
-        // Find node/entity in data array
-        foreach($data as $k=>$v){
-            $k = strtolower($k);
-            if($k == 'node' || $k == 'node_id' || $k == 'nodeid'){
-                if(is_object($v)){
-                    $options = array_merge($this->parseObj($v), $options);
-                }else if(is_numeric($v) && !isset($options['node'])){
-                    $options['node'] = intval($v);
+            $optionTypeMap = array(
+                'node'=>array('node', 'nodeid', 'node_id'),
+                'entity'=>array('entity', 'entityid', 'entity_id')
+            );
+            foreach ($data as $code=>$value) {
+                $code = strtolower($code);
+                foreach ($optionTypeMap as $type=>$codesArray) {
+                    if (in_array($code, $codesArray)) {
+                        if (is_object($value)) {
+                            $options = array_merge($this->parseObject($value), $options);
+                            break;
+                        }else {
+                            if (is_numeric($value) && !isset($options[$type])) {
+                                $options[$type] = intval($value);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
-            if($k == 'entity' || $k == 'entity' || $k == 'entity'){
-                if(is_object($v)){
-                    $options = array_merge($this->parseObj($v), $options);
-                }else if(is_numeric($v) && !isset($options['entity'])){
-                    $options['entity'] = intval($v);
+
+            // ToDo: Check if this is actually necessary : Enforce node ID
+            foreach ($optionTypeMap as $type=>$codesArray) {
+                if (isset($options[$type]) && is_object($options[$type])) {
+                    $parsedObject = $this->parseObject($options[$type]);
+                    if (isset($parsedObject[$type])) {
+                        $options[$type] = $parsedObject[$type];
+                    }else {
+                        $options[$type] = 'Invalid '.$type.' option '.get_class($options[$type]);
+                        unset($options[$type]);
+                    }
                 }
             }
-        }
 
-        // Enforce node ID
-        if(isset($options['node']) && is_object($options['node'])){
-            $arr = $this->parseObj($options['node']);
-            if(isset($arr['node'])){
-                $options['node'] = $arr['node'];
-            }else{
-                $options['note'] = 'Invalid node option ' . get_class($options['node']);
-                unset($options['node']);
+            // ToDo: Check if this is actually necessary : Enforce exception type
+            if (isset($options['exception']) && !($options['exception'] instanceof \Exception)) {
+                $options['note'] = 'Invalid exception option '.get_class($options['exception']);
+                unset($options['exception']);
             }
-        }
-        if(isset($options['node']) && $options['node'] === 0){
-            unset($options['node']);
-        }
 
-        // Enforce entity ID
-        if(isset($options['entity']) && is_object($options['entity'])){
-            $arr = $this->parseObj($options['entity']);
-            if(isset($arr['entity'])){
-                $options['entity'] = $arr['entity'];
-            }else{
-                $options['note'] = 'Invalid entity option ' . get_class($options['entity']);
-                unset($options['entity']);
+            foreach ($this->_loggers as $name=>$logger) {
+                if ($logger->isLogLevel($level)) {
+                    $logger->printLog($level, $code, $message, $data, $options, $topTrace);
+                }
             }
-        }
-
-        // Enforce exception type
-        if(isset($options['exception']) && !($options['exception'] instanceof \Exception)){
-            $options['note'] = 'Invalid exception option ' . get_class($options['exception']);
-            unset($options['exception']);
-        }
-
-        // Output log message
-        foreach($this->_loggers as $name=>$logger){
-            $logger->printLog($level, $code, $message, $data, $options, $topTrace);
         }
     }
 
@@ -208,75 +242,52 @@ class LogService implements ServiceLocatorAwareInterface {
      * @param $obj
      * @return array
      */
-    protected function parseObj($obj){
-        if($obj instanceof \Node\AbstractNode){
-            return array('node'=>$obj->getNodeId());
+    protected function parseObject($object)
+    {
+        if ($object instanceof \Node\AbstractNode) {
+            $parsedObject = array('node'=>$object->getNodeId());
+
+        }elseif ($object instanceof \Node\Entity\Node) {
+            $parsedObject = array('node'=>$object->getId());
+
+        }elseif (method_exists($object, 'getNodeId') && is_callable(array($object, 'getNodeId'))) {
+            $parsedObject = array('node'=>$object->getNodeId());
+
+        }elseif ($object instanceof \Entity\Entity) {
+            $parsedObject = array('entity'=>$object->getId());
+
+        }elseif ($object instanceof \Entity\Update) {
+            $parsedObject = array('entity'=>$object->getEntity()->getId());
+
+        }elseif ($object instanceof \Entity\Action) {
+            $parsedObject = array('entity'=>$object->getEntity()->getId());
+
+        }elseif ($object instanceof \Entity\Entity\EntityAction) {
+            $parsedObject = array('entity'=>$object->getEntityId());
+
+        }elseif(method_exists($object, 'getEntityId') && is_callable(array($object, 'getEntityId'))) {
+            $parsedObject = array('entity'=>$object->getEntityId());
+
+        }elseif ($object instanceof \Exception) {
+            $parsedObject = array('exception'=>$object);
+
+        }else{
+            $parsedObject = array();
         }
-        if($obj instanceof \Node\Entity\Node){
-            return array('node'=>$obj->getId());
-        }
-        if($obj instanceof \Entity\Entity){
-            return array('entity'=>$obj->getId());
-        }
-        if($obj instanceof \Entity\Update){
-            return array('entity'=>$obj->getEntity()->getId());
-        }
-        if($obj instanceof \Entity\Action){
-            return array('entity'=>$obj->getEntity()->getId());
-        }
-        if($obj instanceof \Entity\Entity\EntityAction){
-            return array('entity'=>$obj->getEntityId());
-        }
-        if($obj instanceof \Exception){
-            return array('exception'=>$obj);
-        }
-        if(method_exists($obj, 'getNodeId') && is_callable(array($obj, 'getNodeId'))){
-            return array('node'=>$obj->getNodeId());
-        }
-        if(method_exists($obj, 'getEntityId') && is_callable(array($obj, 'getEntityId'))){
-            return array('entity'=>$obj->getEntityId());
-        }
-        return array();
+
+        return $parsedObject;
     }
 
     /**
-     * Generates a human-readable version of the log message identified by the given ID.
-     * @param int $log_id
+     * ToDo : Generates a human-readable version of the log message identified by the given ID.
+     * @param int $logId
      */
-    public function generateHuman($log_id){
-
-    }
+    public function generateHuman($logId) {}
 
     /**
-     * Returns whether or not the provided error code has a human readable version
+     * ToDo : Returns whether or not the provided error code has a human readable version
      * @param string $code
      */
-    public function hasHuman($code){
-
-    }
-
-
-
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     *
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     *
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
-    }
+    public function hasHuman($code){}
 
 }
