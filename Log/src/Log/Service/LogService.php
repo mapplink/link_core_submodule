@@ -91,6 +91,9 @@ class LogService implements ServiceLocatorAwareInterface
 
         if (isset($config['logger']) && is_array($config['logger']) && count($config['logger'])) {
             $logger = $config['logger'];
+        }else{
+            $logger = array();
+            throw new MagelinkException('No logger class specified!');
         }
 
         foreach ($logger as $name=>$loggerInfo) {
