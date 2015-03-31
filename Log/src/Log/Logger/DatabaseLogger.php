@@ -52,7 +52,7 @@ class DatabaseLogger extends AbstractLogger {
      */
     public function isLogLevel($level, $extendedDatabaseEnabled)
     {
-        $isLogLevel = ($extendedDatabaseEnabled || parent::isLogLevel($level));
+        $isLogLevel = ($extendedDatabaseEnabled || parent::isLogLevel($level, $extendedDatabaseEnabled));
         return $isLogLevel;
     }
 
