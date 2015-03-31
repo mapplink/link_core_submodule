@@ -94,15 +94,29 @@ class ErrorHandler
 
         if ($errorContext) {
             try{
-                $errorContext = PHP_EOL.'Error Context: '.serialize($errorContext);
+                if (is_scalar($errorContext)) {
+                    $errorContext = PHP_EOL.'Error Context: '.$errorContext;
+                }else{
+                    $errorContext = PHP_EOL.'Error Context: '.serialize($errorContext);
+                }
             }catch (\Exception $exception) {
-                $errorContext = PHP_EOL.'Error occurred during the Error Context conversion.';
+                $errorContext = PHP_EOL.'Error occurred during the error context conversion.';
             }
         }else{
             $errorContext = '';
         }
 
-        $debugInfo = PHP_EOL.serialize(debug_backtrace());
+        $debugInfo = PHP_EOL.'debug_backtrace{';
+        foreach (debug_backtrace() as $key=>$value) {
+            if (is_scalar($value)) {
+                $debugInfo .= PHP_EOL.$key.':'.$value;
+            }elseif (is_array($value)) {
+                $debugInfo .= PHP_EOL.$key.':'.serialize($value);
+            }elseif (is_object($value)) {
+                $debugInfo .= PHP_EOL.$key.':'.get_class($value);
+            }
+        }
+        $debugInfo .= PHP_EOL.'}';
 
         switch ($errorNo) {
             case E_ERROR:
