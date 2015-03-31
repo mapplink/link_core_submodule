@@ -119,9 +119,7 @@ class ErrorHandler
                     }elseif (is_object($value)) {
                         $debugInfo .= PHP_EOL.$key.':<'.get_class($value).'>';
                     }
-                }catch (\Exception $exception){
-                    $debugInfo .= PHP_EOL.'(skipped '.$key.')';
-                }
+                }catch (\Exception $exception) {}
             }
         }
         $debugInfo .= PHP_EOL.'}';
