@@ -90,16 +90,23 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
      * @param bool $hideArray
      * @return string
      */
-    protected function convertDataHuman($input, $hideArray = FALSE)
+    protected function convertDataHuman($input, $maxValues = NULL, $hideArray = FALSE)
     {
         if (is_scalar($input)) {
             $convertedData = (string) $input;
+        }elseif (is_null($input)) {
+            $convertedData = 'NULL';
         }elseif (is_object($input)) {
             $convertedData = 'Object<'.get_class($input).'>';
+            if (method_exists($input, 'getFullArrayCopy')) {
+                $objectData = $input->getFullArrayCopy();
+                $convertedData .= serialize($objectData);
+            }elseif (method_exists($input, 'getId')) {
+                $convertedData .= '{id:'.$input->getId().'}';
+            }
         }elseif (is_array($input)) {
-            $maxValues = 7;
             $count = count($input);
-            if ($count > $maxValues) {
+            if (is_int($maxValues) && $maxValues > 0 && $count > $maxValues) {
                 $input = array_slice($input, 0, $maxValues);
                 $input[] = '...';
             }
@@ -110,16 +117,14 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
                 $contentsSimple = array();
                 foreach ($input as $key=>$value) {
                     if (is_int($key)) {
-                        $contentsSimple[] = $this->convertDataHuman($value, TRUE);
+                        $contentsSimple[] = $this->convertDataHuman($value, NULL, TRUE);
                     }else{
-                        $contentsSimple[] = $key.': '.$this->convertDataHuman($value, TRUE);
+                        $contentsSimple[] = $key.': '.$this->convertDataHuman($value, NULL, TRUE);
                     }
                 }
                 $convertedData .= implode(', ', $contentsSimple);
                 $convertedData .= ')';
             }
-        }elseif(is_null($input)) {
-            $convertedData = 'NULL';
         }else{
             $convertedData = 'INV<' . gettype($input) . '>';
         }

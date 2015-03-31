@@ -71,7 +71,7 @@ class EmailLogger extends AbstractLogger
             $additionalInformation .= " \t".'data{';
             $entries = array();
             foreach ($data as $key=>$dataRow) {
-                $entries[] = $key.': '.$this->convertDataHuman($dataRow);
+                $entries[] = $key.': '.$this->convertDataHuman($dataRow, 7);
             }
             $additionalInformation .= implode(', ', $entries);
             $additionalInformation .= '}';
@@ -81,7 +81,7 @@ class EmailLogger extends AbstractLogger
             $additionalInformation .= " \t".'extraData{';
             $entries = array();
             foreach ($extraData as $key=>$extraDataRow) {
-                $entries[] = $key.': '.$this->convertDataHuman($extraDataRow);
+                $entries[] = $key.': '.$this->convertDataHuman($extraDataRow, 7);
             }
             $additionalInformation .= implode(', ', $entries);
             $additionalInformation .= '}';

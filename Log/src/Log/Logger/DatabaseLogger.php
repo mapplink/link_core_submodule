@@ -61,7 +61,7 @@ class DatabaseLogger extends AbstractLogger {
             $module = '{unknown}';
         }else{
             $className = $lastStackFrame['class'];
-            if(strpos($className, '\\') !== false){
+            if (strpos($className, '\\') !== FALSE) {
                 $module = substr($className, 0, strpos($className, '\\'));
                 $className = str_replace($module.'\\', '', $className);
             }else{
