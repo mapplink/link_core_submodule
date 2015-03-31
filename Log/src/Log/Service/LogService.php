@@ -192,10 +192,10 @@ class LogService implements ServiceLocatorAwareInterface
                 'node'=>array('node', 'nodeid', 'node_id'),
                 'entity'=>array('entity', 'entityid', 'entity_id')
             );
-            foreach ($data as $code=>$value) {
-                $code = strtolower($code);
+            foreach ($data as $typeCode=>$value) {
+                $typeCode = strtolower($typeCode);
                 foreach ($optionTypeMap as $type=>$codesArray) {
-                    if (in_array($code, $codesArray)) {
+                    if (in_array($typeCode, $codesArray)) {
                         if (is_object($value)) {
                             $options = array_merge($this->parseObject($value), $options);
                             break;
