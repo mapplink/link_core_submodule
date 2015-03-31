@@ -46,6 +46,17 @@ class DatabaseLogger extends AbstractLogger {
     }
 
     /**
+     * @param string $level
+     * @param bool $extendedDatabaseEnabled
+     * @return bool $isLogLevel
+     */
+    public function isLogLevel($level, $extendedDatabaseEnabled)
+    {
+        $isLogLevel = ($extendedDatabaseEnabled || parent::isLogLevel($level));
+        return $isLogLevel;
+    }
+
+    /**
      * Provides a log message to the logger. The logger instance SHOULD output it immediately, but may queue it if necessary.
      * @param string $level
      * @param string $code
