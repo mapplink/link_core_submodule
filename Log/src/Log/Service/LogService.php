@@ -127,10 +127,10 @@ class LogService implements ServiceLocatorAwareInterface
      * Enters a new log message, routing it to appropriate destinations (i.e. DB, files, email, etc).
      * It will examine the stack to automatically populate the calling module and calling class.
      *
-     * @param string $level
-     * @param string $code
-     * @param string $message
-     * @param array $data
+     * @param string $logLevel
+     * @param string $logCode
+     * @param string $logMessage
+     * @param array $logData
      * @param array $options An array of auxiliary data - supports the following keys:user: User ID to attach to the entry
      * * node: Node ID to attach to the entry
      * * entity: Entity ID to attach to the entry
@@ -141,13 +141,13 @@ class LogService implements ServiceLocatorAwareInterface
      * * Where these are not specified we will try and infer useful values from the stack
      * @return int ID of the new log entry
      */
-    public function log($level, $code, $message, array $data, array $options = array())
+    public function log($logLevel, $logCode, $logMessage, array $logData, array $options = array())
     {
         if ($this->_loggers == FALSE) {
             $this->initLoggers();
         }
 
-        if ($this->isLevelToBeLogged($level)) {
+        if ($this->isLevelToBeLogged($logLevel)) {
             if (!isset($options['user']) && php_sapi_name() != 'cli') {
                 /** @var \Zend\Authentication\AuthenticationService $authService */
                 $authService = $this->getServiceLocator()->get('zfcuser_auth_service');
@@ -192,10 +192,10 @@ class LogService implements ServiceLocatorAwareInterface
                 'node'=>array('node', 'nodeid', 'node_id'),
                 'entity'=>array('entity', 'entityid', 'entity_id')
             );
-            foreach ($data as $typeCode=>$value) {
-                $typeCode = strtolower($typeCode);
+            foreach ($logData as $code=>$value) {
+                $code = strtolower($code);
                 foreach ($optionTypeMap as $type=>$codesArray) {
-                    if (in_array($typeCode, $codesArray)) {
+                    if (in_array($code, $codesArray)) {
                         if (is_object($value)) {
                             $options = array_merge($this->parseObject($value), $options);
                             break;
@@ -229,8 +229,8 @@ class LogService implements ServiceLocatorAwareInterface
             }
 
             foreach ($this->_loggers as $name=>$logger) {
-                if ($logger->isLogLevel($level)) {
-                    $logger->printLog($level, $code, $message, $data, $options, $topTrace);
+                if ($logger->isLogLevel($logLevel)) {
+                    $logger->printLog($logLevel, $logCode, $logMessage, $logData, $options, $topTrace);
                 }
             }
         }
@@ -238,7 +238,7 @@ class LogService implements ServiceLocatorAwareInterface
 
     /**
      * Parse a provided object to see if we can extract a node, entity, or exception from it
-     * @todo Parse users
+     * ToDo : Parse users
      * @param $obj
      * @return array
      */
