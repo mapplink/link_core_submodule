@@ -102,7 +102,7 @@ class ErrorHandler
             $errorContext = '';
         }
 
-        $debugInfo = PHP_EOL.debug_backtrace();
+        $debugInfo = PHP_EOL.serialize(debug_backtrace());
 
         switch ($errorNo) {
             case E_ERROR:
