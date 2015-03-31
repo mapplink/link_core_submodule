@@ -62,7 +62,7 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
      * @param string $level
      * @return bool $isLogLevel
      */
-    public function isLogLevel($level)
+    public function isLogLevel($level, $extendedDatabaseEnabled)
     {
         if (in_array($level, $this->_allowedLevels)) {
             $isLogLevel = TRUE;
