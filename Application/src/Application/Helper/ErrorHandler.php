@@ -94,10 +94,12 @@ class ErrorHandler
 
         if ($errorContext) {
             try{
-                if (is_scalar($errorContext)) {
-                    $errorContext = PHP_EOL.'Error Context: '.$errorContext;
-                }else{
+                if (is_array($errorContext)) {
                     $errorContext = PHP_EOL.'Error Context: '.serialize($errorContext);
+                }elseif (is_object($errorContext)) {
+                    $errorContext .= PHP_EOL.'Error Context: <'.get_class($errorContext).'>';
+                }else{
+                    $errorContext = PHP_EOL.'Error Context: '.$errorContext;
                 }
             }catch (\Exception $exception) {
                 $errorContext = PHP_EOL.'Error occurred during the error context conversion.';
@@ -110,10 +112,16 @@ class ErrorHandler
         foreach (debug_backtrace() as $key=>$value) {
             if (is_scalar($value)) {
                 $debugInfo .= PHP_EOL.$key.':'.$value;
-            }elseif (is_array($value)) {
-                $debugInfo .= PHP_EOL.$key.':'.serialize($value);
-            }elseif (is_object($value)) {
-                $debugInfo .= PHP_EOL.$key.':'.get_class($value);
+            }else{
+                try{
+                    if (is_array($value)) {
+                        $debugInfo .= PHP_EOL.$key.':'.serialize($value);
+                    }elseif (is_object($value)) {
+                        $debugInfo .= PHP_EOL.$key.':<'.get_class($value).'>';
+                    }
+                }catch (\Exception $exception){
+                    $debugInfo .= PHP_EOL.'(skipped '.$key.')';
+                }
             }
         }
         $debugInfo .= PHP_EOL.'}';
