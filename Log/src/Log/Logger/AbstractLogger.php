@@ -1,81 +1,40 @@
 <?php
+/*
+ * Class AbstractLogger represents a log output method.
+ * @category Log
+ * @package Log\Logger
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ *
+ * This software is subject to our terms of trade and any applicable licensing agreements.
+ */
 
 namespace Log\Logger;
 
+use Log\Service\LogService;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
-/**
- * Class AbstractLogger represents a log output method. Child classes should implement the provided abstract methods to provide log output/persistence.
- *
- * @package Log\Logger
- */
-abstract class AbstractLogger implements ServiceLocatorAwareInterface {
 
-    /**
-     * Initialize the logger instance and verify if it is able to log messages.
-     * @param array $config
-     * @return boolean Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
-     */
-    abstract function init($config=array());
+abstract class AbstractLogger implements ServiceLocatorAwareInterface
+{
 
-    /**
-     * Provides a log message to the logger. The logger instance SHOULD output it immediately, but may queue it if necessary.
-     *
-     * @param $level
-     * @param $code
-     * @param $message
-     * @param $data
-     * @param $extraData
-     * @param $lastStackFrame
-     */
-    abstract function printLog($level, $code, $message, $data, $extraData, $lastStackFrame);
-
-    protected function convertDataHuman($ed, $hideArray=false){
-        $ret = '';
-        if(is_scalar($ed)){
-            $ret = ''.$ed;
-        }else if(is_object($ed)){
-            $ret = 'Object<'.get_class($ed).'>';
-        }else if(is_array($ed)){
-            $count = count($ed);
-            if($count > 5){
-                $ed = array_slice($ed, 0, 5);
-                $ed[] = '...';
-            }
-            $ret = 'Array['.$count.']';
-
-            if(!$hideArray){
-                $ret .= '(';
-                $contentsSimple = array();
-                foreach($ed as $k=>$v){
-                    if(is_int($k)){
-                        $contentsSimple[] = $this->convertDataHuman($v, true);
-                    }else{
-                        $contentsSimple[] = $k . ': ' . $this->convertDataHuman($v, true);
-                    }
-                }
-                $ret .= implode(', ', $contentsSimple);
-                $ret .= ')';
-            }
-        }else if(is_null($ed)){
-            $ret = 'NULL';
-        }else{
-            $ret = 'INV<' . gettype($ed) . '>';
-        }
-        return $ret;
-    }
-
-    /**
-     * Output any queued messages (if relevant).
-     */
-    abstract function flushLog();
-
+    /** @var ServiceLocatorInterface $serviceLocator */
     protected $_serviceLocator;
+
+    /** @var array $_allowedLevels  Contains all allowed levels of the logger */
+    protected $_allowedLevels = array(
+        LogService::LEVEL_DEBUGINTERNAL,
+        LogService::LEVEL_DEBUGEXTRA,
+        LogService::LEVEL_DEBUG,
+        LogService::LEVEL_INFO,
+        LogService::LEVEL_WARN,
+        LogService::LEVEL_ERROR
+    );
 
     /**
      * Set service locator
-     *
      * @param ServiceLocatorInterface $serviceLocator
      */
     public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
@@ -85,12 +44,97 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface {
 
     /**
      * Get service locator
-     *
      * @return ServiceLocatorInterface
      */
     public function getServiceLocator()
     {
         return $this->_serviceLocator;
     }
+
+    /**
+     * Initialize the logger instance and verify if it is able to log messages.
+     * @param array $config
+     * @return boolean Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
+     */
+    abstract function init($config = array());
+
+    /**
+     * @param string $level
+     * @return bool $isLogLevel
+     */
+    public function isLogLevel($level, $extendedDatabaseEnabled)
+    {
+        if (in_array($level, $this->_allowedLevels)) {
+            $isLogLevel = TRUE;
+        }else{
+            $isLogLevel = FALSE;
+        }
+
+        return $isLogLevel;
+    }
+
+    /**
+     * Provides a log message to the logger.
+     * The logger instance SHOULD output it immediately but may queue it if necessary.
+     * @param string $level
+     * @param string $code
+     * @param string $message
+     * @param array $data
+     * @param array $extraData
+     * @param array $lastStackFrame
+     */
+    abstract function printLog($level, $code, $message, array $data, array $extraData, array $lastStackFrame);
+
+    /**
+     * @param mixed $input
+     * @param bool $hideArray
+     * @return string
+     */
+    protected function convertDataHuman($input, $maxValues = NULL, $hideArray = FALSE)
+    {
+        if (is_scalar($input)) {
+            $convertedData = (string) $input;
+        }elseif (is_null($input)) {
+            $convertedData = 'NULL';
+        }elseif (is_object($input)) {
+            $convertedData = 'Object<'.get_class($input).'>';
+            if (method_exists($input, 'getFullArrayCopy')) {
+                $objectData = $input->getFullArrayCopy();
+                $convertedData .= serialize($objectData);
+            }elseif (method_exists($input, 'getId')) {
+                $convertedData .= '{id:'.$input->getId().'}';
+            }
+        }elseif (is_array($input)) {
+            $count = count($input);
+            if (is_int($maxValues) && $maxValues > 0 && $count > $maxValues) {
+                $input = array_slice($input, 0, $maxValues);
+                $input[] = '...';
+            }
+            $convertedData = 'Array['.$count.']';
+
+            if (!$hideArray) {
+                $convertedData .= '(';
+                $contentsSimple = array();
+                foreach ($input as $key=>$value) {
+                    if (is_int($key)) {
+                        $contentsSimple[] = $this->convertDataHuman($value, NULL, TRUE);
+                    }else{
+                        $contentsSimple[] = $key.': '.$this->convertDataHuman($value, NULL, TRUE);
+                    }
+                }
+                $convertedData .= implode(', ', $contentsSimple);
+                $convertedData .= ')';
+            }
+        }else{
+            $convertedData = 'INV<' . gettype($input) . '>';
+        }
+
+        return $convertedData;
+    }
+
+    /**
+     * Output any queued messages (if relevant).
+     */
+    abstract function flushLog();
 
 }

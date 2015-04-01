@@ -1,7 +1,5 @@
 <?php
 /**
- * Log\Logger\EmailLogger
- *
  * @category Log
  * @package Log\Logger
  * @author Matt Johnston
@@ -18,7 +16,6 @@ use Application\Helper\ErrorHandler;
 
 class EmailLogger extends AbstractLogger
 {
-
     const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
     const ERROR_TO_CLIENT_CODE = 'cno_';
     const ERROR_TO_CLIENT_STARTHOUR = 7;
@@ -27,92 +24,101 @@ class EmailLogger extends AbstractLogger
     protected $lastCache = array();
     protected $cacheSize = 20;
 
+    protected $_allowedLevels = array(
+        LogService::LEVEL_ERROR
+    );
+
+
+
     /**
      * Initialize the logger instance and verify if it is able to log messages.
-     *
      * @param array $config
      * @return boolean Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
-    function init($config=array())
+    function init($config = array())
     {
         $this->lastCache = array();
         // TODO (maybe) : make cacheSize configurable
 
-        return true;
+        return TRUE;
     }
 
     /**
      * Provides a log message to the logger. The logger instance SHOULD output it immediately, but may queue it if necessary.
      *
-     * @param $level
-     * @param $code
-     * @param $message
-     * @param $data
-     * @param $extraData
-     * @param $lastStackFrame
+     * @param string $level
+     * @param string $code
+     * @param string $message
+     * @param array $data
+     * @param array $extraData
+     * @param array $lastStackFrame
      */
-    function printLog($level, $code, $message, $data, $extraData, $lastStackFrame)
+    function printLog($level, $code, $message, array $data, array $extraData, array $lastStackFrame)
     {
-        $s1 = '['.strtoupper($level).':' . $code . ']';
-        if(isset($lastStackFrame['class'])){
-            $s2 = $lastStackFrame['class'] . $lastStackFrame['type'] . $lastStackFrame['function'] . ':'.$lastStackFrame['line'];
+        $specifier = '['.strtoupper($level).':'.$code.']';
+
+        if (isset($lastStackFrame['class'])) {
+            $basicInformation = $lastStackFrame['class'].$lastStackFrame['type'].$lastStackFrame['function'].':'
+                .$lastStackFrame['line'];
         }else{
             // Exception-recovered format
-            $s2 = $lastStackFrame['file'] . ':' . $lastStackFrame['line'];
+            $basicInformation = $lastStackFrame['file'].':'.$lastStackFrame['line'];
         }
-        $s3 = $message;
 
-        $s4 = '';
+        $additionalInformation = '';
 
-        if(count($data)){
-            $s4 .= " \tdata{";
+        if (count($data)) {
+            $additionalInformation .= " \t".'data{';
             $entries = array();
-            foreach($data as $key=>$ed){
-                $entries[] = $key . ': ' . $this->convertDataHuman($ed);
+            foreach ($data as $key=>$dataRow) {
+                $entries[] = $key.': '.$this->convertDataHuman($dataRow, 7);
             }
-            $s4 .= implode(', ', $entries);
-            $s4 .= '}';
+            $additionalInformation .= implode(', ', $entries);
+            $additionalInformation .= '}';
         }
 
-        if(count($extraData)){
-            $s4 .= " \textraData{";
+        if (count($extraData)) {
+            $additionalInformation .= " \t".'extraData{';
             $entries = array();
-            foreach($extraData as $key=>$ed){
-                $entries[] = $key . ': ' . $this->convertDataHuman($ed);
+            foreach ($extraData as $key=>$extraDataRow) {
+                $entries[] = $key.': '.$this->convertDataHuman($extraDataRow, 7);
             }
-            $s4 .= implode(', ', $entries);
-            $s4 .= '}';
+            $additionalInformation .= implode(', ', $entries);
+            $additionalInformation .= '}';
         }
 
-        $p1 = 25 - strlen($s1);
-        $p2 = 50 - strlen($s2);
-        if($p2 < 0){
-            $p2 = 4;
-        }
-        if($p1 <= 0){
-            $p1 = 1;
-        }
-        if($p2 <= 0){
-            $p2 = 1;
+        $specifierGap = 25 - strlen($specifier);
+        if ($specifierGap <= 0) {
+            $specifierGap = 1;
         }
 
-        $output = $s1 . str_repeat(' ', $p1) . $s2 . str_repeat(' ', $p2) . $s3 . $s4 . PHP_EOL;
+        $basicGap = 50 - strlen($basicInformation);
+        if ($basicGap < 0) {
+            $basicGap = 4;
+        }elseif ($basicGap == 0) {
+            $basicGap = 1;
+        }
 
-        if(count($this->lastCache) >= $this->cacheSize){
+        $output = $specifier.str_repeat(' ', $specifierGap).$basicInformation.str_repeat(' ', $basicGap)
+            .$message.$additionalInformation.PHP_EOL;
+
+        if (count($this->lastCache) >= $this->cacheSize) {
             array_pop($this->lastCache);
         }
         array_unshift($this->lastCache, $output);
 
-        if($level == LogService::LEVEL_ERROR){
-            $this->sendAlert($level, $code, $message, $data, $extraData, $lastStackFrame);
-        }
+        $this->sendAlert($code, $message);
     }
 
-    protected function sendAlert($errorLevel, $errorCode, $errorMessage, $data, $extraData, $lastStackFrame)
+    /**
+     * @param string $errorCode
+     * @param string $errorMessage
+     */
+    protected function sendAlert($errorCode, $errorMessage)
     {
         $subject = 'MageLink ERROR: ['.$errorCode.'] '.$errorMessage;
-        $content = 'MageLink error thrown! Details:'.PHP_EOL.PHP_EOL;
-        $content .= implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
+        $content = 'MageLink error thrown! Details:'.PHP_EOL.PHP_EOL
+            .implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
 
         mail(ErrorHandler::ERROR_TO, $subject, $content, 'Content-Type: text/plain');
 

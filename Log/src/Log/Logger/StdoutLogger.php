@@ -1,88 +1,94 @@
 <?php
+/**
+ * @category Log
+ * @package Log\Logger
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Log\Logger;
 
 use Log\Service\LogService;
 
-class StdoutLogger extends AbstractLogger {
 
-    protected $_cliMode = false;
+class StdoutLogger extends AbstractLogger
+{
+
+    /** @var bool $_cliMode */
+    protected $_cliMode = FALSE;
+
 
     /**
      * Initialize the logger instance and verify if it is able to log messages.
-     *
      * @param array $config
      * @return boolean Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
-    function init($config=array()) {
-        if(php_sapi_name() == 'cli'){
-            $this->_cliMode = true;
+    function init($config = array())
+    {
+        if (php_sapi_name() == 'cli') {
+            $success = $this->_cliMode = TRUE;
         }else{
-            return false;
+            $success = FALSE;
         }
 
-        return true;
+        return $success;
     }
 
     /**
      * Provides a log message to the logger. The logger instance SHOULD output it immediately, but may queue it if necessary.
-     *
-     * @param $level
-     * @param $code
-     * @param $message
-     * @param $data
-     * @param $extraData
-     * @param $lastStackFrame
+     * @param string $level
+     * @param string $code
+     * @param string$message
+     * @param array $data
+     * @param array $extraData
+     * @param array $lastStackFrame
      */
-    function printLog($level, $code, $message, $data, $extraData, $lastStackFrame) {
-
-        $s1 = '['.strtoupper($level).':' . $code . ']';
+    function printLog($level, $code, $message, array $data, array $extraData, array $lastStackFrame)
+    {
+        $specifier = '['.strtoupper($level).':'.$code.']';
         if(isset($lastStackFrame['class'])){
-            $s2 = $lastStackFrame['class'] . $lastStackFrame['type'] . $lastStackFrame['function'] . ':'.$lastStackFrame['line'];
+            $basicInformation = $lastStackFrame['class'].$lastStackFrame['type'].$lastStackFrame['function'].':'.$lastStackFrame['line'];
         }else{
-            // Exception-recovered format
-            $s2 = $lastStackFrame['file'] . ':' . $lastStackFrame['line'];
-        }
-        $s3 = $message;
-
-        $p1 = 25 - strlen($s1);
-        $p2 = 50 - strlen($s2);
-        if($p2 < 0){
-            $p2 = 4;
-        }
-        if($p1 <= 0){
-            $p1 = 1;
-        }
-        if($p2 <= 0){
-            $p2 = 1;
+            $basicInformation = $lastStackFrame['file'].':'.$lastStackFrame['line'];
         }
 
-        if($level == LogService::LEVEL_ERROR && $this->_cliMode){
-            echo "\033[0;31m\033[40m";
-        }
-        if($level == LogService::LEVEL_WARN && $this->_cliMode){
-            echo "\033[1;31m\033[40m";
+        $specifierGap = 25 - strlen($specifier);
+        if($specifierGap <= 0){
+            $specifierGap = 1;
         }
 
-        if(!$this->_cliMode){
-            echo '<pre>';
-        }
-        echo $s1 . str_repeat(' ', $p1) . $s2 . str_repeat(' ', $p2) . $s3 . PHP_EOL;
-        if(!$this->_cliMode){
-            echo '</pre><br/>';
-        }
-
-        if(($level == LogService::LEVEL_ERROR || $level == LogService::LEVEL_WARN) && $this->_cliMode){
-            echo "\033[0m";
+        $basicGap = 50 - strlen($basicInformation);
+        if ($basicGap < 0) {
+            $basicGap = 4;
+        }elseif ($basicGap == 0) {
+            $basicGap = 1;
         }
 
+        if ($this->_cliMode) {
+            switch ($level) {
+                case LogService::LEVEL_ERROR:
+                    $prefix = "\033[0;31m\033[40m";
+                    $suffix = "\033[0m";
+                    break;
+                case LogService::LEVEL_WARN:
+                    $prefix = "\033[1;31m\033[40m";
+                    $suffix = "\033[0m";
+                    break;
+                default:
+                    $prefix = $suffix = '';
+            }
+        }else{
+            $prefix = '<pre>';
+            $suffix = '</pre><br/>';
+        }
+
+        print $prefix.$specifier.str_repeat(' ', $specifierGap).$basicInformation.str_repeat(' ', $basicGap)
+            .$message.PHP_EOL.$suffix;
     }
 
-    /**
-     * Output any queued messages (if relevant).
-     */
-    function flushLog() {
-        // Unused
-    }
+    /** Output any queued messages (if relevant). */
+    function flushLog() {}
 
 }

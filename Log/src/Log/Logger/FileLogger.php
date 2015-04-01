@@ -1,92 +1,101 @@
 <?php
+/*
+ * Class AbstractLogger represents a log output method.
+ * @category Log
+ * @package Log\Logger
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ *
+ * This software is subject to our terms of trade and any applicable licensing agreements.
+ */
 
 namespace Log\Logger;
 
 use Log\Service\LogService;
 
-class FileLogger extends AbstractLogger {
 
-    protected $_fh = null;
+class FileLogger extends AbstractLogger
+{
+    const LOGFILE = 'data/link.log';
+
+    /** @var resource|NULL $_fileHandler */
+    protected $_fileHandler = NULL;
+
 
     /**
      * Initialize the logger instance and verify if it is able to log messages.
-     *
      * @param array $config
-     * @return boolean Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
+     * @return bool Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
-    function init($config=array()) {
-        $this->_fh = fopen('data/link.log', 'a');
-        if(!$this->_fh){
-            return false;
-        }
-
-        return true;
+    function init($config = array())
+    {
+        $this->_fileHandler = fopen(self::LOGFILE, 'a');
+        return (bool) $this->_fileHandler;
     }
 
     /**
      * Provides a log message to the logger. The logger instance SHOULD output it immediately, but may queue it if necessary.
-     *
-     * @param $level
-     * @param $code
-     * @param $message
-     * @param $data
-     * @param $extraData
-     * @param $lastStackFrame
+     * @param string $level
+     * @param string $code
+     * @param string $message
+     * @param array $data
+     * @param array $extraData
+     * @param array $lastStackFrame
      */
-    function printLog($level, $code, $message, $data, $extraData, $lastStackFrame) {
+    function printLog($level, $code, $message, array $data, array $extraData, array $lastStackFrame)
+    {
+        $specifier = '['.strtoupper($level).':'.$code.']';
 
-        $s1 = '['.strtoupper($level).':' . $code . ']';
-        if(isset($lastStackFrame['class'])){
-            $s2 = $lastStackFrame['class'] . $lastStackFrame['type'] . $lastStackFrame['function'] . ':'.$lastStackFrame['line'];
+        if (isset($lastStackFrame['class'])) {
+            $basicInformation = $lastStackFrame['class'].$lastStackFrame['type'].$lastStackFrame['function'].':'
+                .$lastStackFrame['line'];
         }else{
             // Exception-recovered format
-            $s2 = $lastStackFrame['file'] . ':' . $lastStackFrame['line'];
+            $basicInformation = $lastStackFrame['file'].':'.$lastStackFrame['line'];
         }
-        $s3 = $message;
 
-        $s4 = '';
+        $additionalInformation = '';
 
-        if(count($data)){
-            $s4 .= " \tdata{";
+        if (count($data)) {
+            $additionalInformation .= " \t".'data{';
             $entries = array();
-            foreach($data as $key=>$ed){
-                $entries[] = $key . ': ' . $this->convertDataHuman($ed);
+            foreach ($data as $key=>$dataRow) {
+                $entries[] = $key.': '.$this->convertDataHuman($dataRow);
             }
-            $s4 .= implode(', ', $entries);
-            $s4 .= '}';
+            $additionalInformation .= implode(', ', $entries);
+            $additionalInformation .= '}';
         }
 
-        if(count($extraData)){
-            $s4 .= " \textraData{";
+        if (count($extraData)) {
+            $additionalInformation .= " \t".'extraData{';
             $entries = array();
-            foreach($extraData as $key=>$ed){
-                $entries[] = $key . ': ' . $this->convertDataHuman($ed);
+            foreach ($extraData as $key=>$extraDataRow) {
+                $entries[] = $key.': '.$this->convertDataHuman($extraDataRow);
             }
-            $s4 .= implode(', ', $entries);
-            $s4 .= '}';
+            $additionalInformation .= implode(', ', $entries);
+            $additionalInformation .= '}';
         }
 
-        $p1 = 25 - strlen($s1);
-        $p2 = 50 - strlen($s2);
-        if($p2 < 0){
-            $p2 = 4;
-        }
-        if($p1 <= 0){
-            $p1 = 1;
-        }
-        if($p2 <= 0){
-            $p2 = 1;
+        $specifierGap = 25 - strlen($specifier);
+        if($specifierGap <= 0){
+            $specifierGap = 1;
         }
 
-        $output = $s1 . str_repeat(' ', $p1) . $s2 . str_repeat(' ', $p2) . $s3 . $s4 . PHP_EOL;
-        fwrite($this->_fh, $output);
+        $basicGap = 50 - strlen($basicInformation);
+        if ($basicGap < 0) {
+            $basicGap = 4;
+        }elseif ($basicGap == 0) {
+            $basicGap = 1;
+        }
+
+        $output = $specifier.str_repeat(' ', $specifierGap).$basicInformation.str_repeat(' ', $basicGap)
+            .$message.$additionalInformation.PHP_EOL;
+
+        fwrite($this->_fileHandler, $output);
     }
 
-    /**
-     * Output any queued messages (if relevant).
-     */
-    function flushLog() {
-        // Unused
-    }
+    /** Output any queued messages */
+    function flushLog() {}
 
 }
