@@ -87,10 +87,11 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
 
     /**
      * @param mixed $input
-     * @param bool $hideArray
+     * @param int|NULL $maxValues
+     * @param int $displayArrayLevel
      * @return string
      */
-    protected function convertDataHuman($input, $maxValues = NULL, $hideArray = FALSE)
+    protected function convertDataHuman($input, $maxValues = NULL, $displayArrayLevel = 2)
     {
         if (is_scalar($input)) {
             $convertedData = (string) $input;
@@ -100,7 +101,7 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
             $convertedData = 'Object<'.get_class($input).'>';
             if (method_exists($input, 'getFullArrayCopy')) {
                 $objectData = $input->getFullArrayCopy();
-                $convertedData .= serialize($objectData);
+                $convertedData .= json_encode($objectData);
             }elseif (method_exists($input, 'getId')) {
                 $convertedData .= '{id:'.$input->getId().'}';
             }
@@ -112,21 +113,17 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
             }
             $convertedData = 'Array['.$count.']';
 
-            if (!$hideArray) {
-                $convertedData .= '(';
+            if ($displayArrayLevel-- > 0) {
+                $convertedData .= '{';
                 $contentsSimple = array();
                 foreach ($input as $key=>$value) {
-                    if (is_int($key)) {
-                        $contentsSimple[] = $this->convertDataHuman($value, NULL, TRUE);
-                    }else{
-                        $contentsSimple[] = $key.': '.$this->convertDataHuman($value, NULL, TRUE);
-                    }
+                    $contentsSimple[] = $key.':'.$this->convertDataHuman($value, NULL, $displayArrayLevel);
                 }
-                $convertedData .= implode(', ', $contentsSimple);
-                $convertedData .= ')';
+                $convertedData .= implode(';', $contentsSimple);
+                $convertedData .= '}';
             }
         }else{
-            $convertedData = 'INV<' . gettype($input) . '>';
+            $convertedData = 'INV<'.gettype($input).'>';
         }
 
         return $convertedData;
