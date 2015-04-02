@@ -345,7 +345,7 @@ class Entity implements ServiceLocatorAwareInterface
      */
     public function getChildren($entityType)
     {
-        if(array_key_exists($entityType, $this->_childrenCache)){
+        if (array_key_exists($entityType, $this->_childrenCache)) {
             return $this->_childrenCache[$entityType];
         }
         return ($this->_childrenCache[$entityType] = $this->getServiceLocator()->get('entityService')
