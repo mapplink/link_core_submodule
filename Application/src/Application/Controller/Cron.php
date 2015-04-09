@@ -188,7 +188,6 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     'time'=>$startDate,
                     'name'=>$name,
                     'class'=>get_class($magelinkCron),
-                    'file'=>__FILE__
                 );
                 $logEntities = array('magelinkCron'=>$magelinkCron);
 
@@ -214,7 +213,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     $logMessage = 'Cron job '.$name.' finished at '.date('H:i:s d/m/y', $end).'. Runtime was '
                             .(floor($runtime / 60) ? floor($runtime / 60).' min and ' : '').($runtime % 60).' s.';
                     $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_DEBUG, 'cron_run_'.$name, $logMessage, $logData, $logEntities);
+                        ->log(LogService::LEVEL_INFO, 'cron_run_'.$name, $logMessage, $logData, $logEntities);
 
                     if (!$this->releaseLock($name)) {
                         $file = self::getLockFileName($name);
@@ -236,7 +235,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                 );
         }
 
-        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUG,
             'cron_done', 'Cron completed', array('start time'=>$time, 'end time'=>date('H:i:s d/m/y')));
         die();
     }
