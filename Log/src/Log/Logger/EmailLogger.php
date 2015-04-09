@@ -69,7 +69,7 @@ class EmailLogger extends AbstractLogger
 
         if (count($data)) {
             $additionalInformation .= " \t".'data{';
-            $entries = array();
+            $entries = array('dir'=>__DIR__);
             foreach ($data as $key=>$dataRow) {
                 $entries[] = $key.': '.$this->convertDataHuman($dataRow, 7);
             }
