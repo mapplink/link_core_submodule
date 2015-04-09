@@ -16,7 +16,7 @@ use Application\Helper\ErrorHandler;
 
 class EmailLogger extends AbstractLogger
 {
-    const ERROR_TO_CLIENT = 'alerts@healthpost.co.nz';
+    const ERROR_TO_CLIENT = '';
     const ERROR_TO_CLIENT_CODE = 'cno_';
     const ERROR_TO_CLIENT_STARTHOUR = 7;
     const ERROR_TO_CLIENT_ENDHOUR = 20;
