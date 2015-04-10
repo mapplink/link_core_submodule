@@ -19,7 +19,7 @@ use Zend\Db\Adapter\Adapter;
 class DatabaseLogger extends AbstractLogger {
 
     /** @var TableGateway */
-    protected $_tableGateway = false;
+    protected $_tableGateway = FALSE;
 
     /** @var array $_allowedLevels */
     protected $_allowedLevels = array(

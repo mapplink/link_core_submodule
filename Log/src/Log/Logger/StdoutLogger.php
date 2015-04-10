@@ -19,6 +19,13 @@ class StdoutLogger extends AbstractLogger
     /** @var bool $_cliMode */
     protected $_cliMode = FALSE;
 
+    /** @var array $_allowedLevels */
+    protected $_allowedLevels = array(
+        LogService::LEVEL_INFO,
+        LogService::LEVEL_WARN,
+        LogService::LEVEL_ERROR
+    );
+
 
     /**
      * Initialize the logger instance and verify if it is able to log messages.
@@ -48,32 +55,23 @@ class StdoutLogger extends AbstractLogger
     function printLog($level, $code, $message, array $data, array $extraData, array $lastStackFrame)
     {
         $specifier = '['.strtoupper($level).':'.$code.']';
-        if(isset($lastStackFrame['class'])){
+        if (isset($lastStackFrame['class'])) {
             $basicInformation = $lastStackFrame['class'].$lastStackFrame['type'].$lastStackFrame['function'].':'.$lastStackFrame['line'];
         }else{
             $basicInformation = $lastStackFrame['file'].':'.$lastStackFrame['line'];
         }
 
-        $specifierGap = 25 - strlen($specifier);
-        if($specifierGap <= 0){
-            $specifierGap = 1;
-        }
-
-        $basicGap = 50 - strlen($basicInformation);
-        if ($basicGap < 0) {
-            $basicGap = 4;
-        }elseif ($basicGap == 0) {
-            $basicGap = 1;
-        }
+        $specifierGap = max(3, 25 - strlen($specifier));
+        $basicGap = max(3, 50 - strlen($basicInformation));
 
         if ($this->_cliMode) {
             switch ($level) {
                 case LogService::LEVEL_ERROR:
-                    $prefix = "\033[0;31m\033[40m";
+                    $prefix = "\033[1;31m\033[40m";
                     $suffix = "\033[0m";
                     break;
                 case LogService::LEVEL_WARN:
-                    $prefix = "\033[1;31m\033[40m";
+                    $prefix = "\033[0;33m\033[40m";
                     $suffix = "\033[0m";
                     break;
                 default:
