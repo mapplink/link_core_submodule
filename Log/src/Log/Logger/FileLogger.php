@@ -73,21 +73,11 @@ class FileLogger extends AbstractLogger
             foreach ($extraData as $key=>$extraDataRow) {
                 $entries[] = $key.': '.$this->convertDataHuman($extraDataRow);
             }
-            $additionalInformation .= implode(', ', $entries);
-            $additionalInformation .= '}';
+            $additionalInformation .= implode(', ', $entries).'}';
         }
 
-        $specifierGap = 25 - strlen($specifier);
-        if($specifierGap <= 0){
-            $specifierGap = 1;
-        }
-
-        $basicGap = 50 - strlen($basicInformation);
-        if ($basicGap < 0) {
-            $basicGap = 4;
-        }elseif ($basicGap == 0) {
-            $basicGap = 1;
-        }
+        $specifierGap = max(3, 25 - strlen($specifier));
+        $basicGap = max(3, 50 - strlen($basicInformation));
 
         $output = $specifier.str_repeat(' ', $specifierGap).$basicInformation.str_repeat(' ', $basicGap)
             .$message.$additionalInformation.PHP_EOL;

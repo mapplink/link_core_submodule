@@ -69,12 +69,11 @@ class EmailLogger extends AbstractLogger
 
         if (count($data)) {
             $additionalInformation .= " \t".'data{';
-            $entries = array('dir: '.__DIR__);
+            $entries = array();
             foreach ($data as $key=>$dataRow) {
                 $entries[] = $key.': '.$this->convertDataHuman($dataRow, 7);
             }
-            $additionalInformation .= implode(', ', $entries);
-            $additionalInformation .= '}';
+            $additionalInformation .= implode(', ', $entries).', __DIR__: '.__DIR__.'}';
         }
 
         if (count($extraData)) {
@@ -83,21 +82,11 @@ class EmailLogger extends AbstractLogger
             foreach ($extraData as $key=>$extraDataRow) {
                 $entries[] = $key.': '.$this->convertDataHuman($extraDataRow, 7);
             }
-            $additionalInformation .= implode(', ', $entries);
-            $additionalInformation .= '}';
+            $additionalInformation .= implode(', ', $entries).'}';
         }
 
-        $specifierGap = 25 - strlen($specifier);
-        if ($specifierGap <= 0) {
-            $specifierGap = 1;
-        }
-
-        $basicGap = 50 - strlen($basicInformation);
-        if ($basicGap < 0) {
-            $basicGap = 4;
-        }elseif ($basicGap == 0) {
-            $basicGap = 1;
-        }
+        $specifierGap = max(3, 25 - strlen($specifier));
+        $basicGap = max(3, 50 - strlen($basicInformation));
 
         $output = $specifier.str_repeat(' ', $specifierGap).$basicInformation.str_repeat(' ', $basicGap)
             .$message.$additionalInformation.PHP_EOL;
