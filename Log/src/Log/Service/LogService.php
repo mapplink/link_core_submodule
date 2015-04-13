@@ -12,6 +12,7 @@
 
 namespace Log\Service;
 
+use Log\Logger\AbstractLogger;
 use Magelink\Exception\MagelinkException;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
@@ -38,7 +39,7 @@ class LogService implements ServiceLocatorAwareInterface
 
     protected $_enableExtendedDatabase = FALSE;
 
-    /** @var \Log\Logger\AbstractLogger[] */
+    /** @var AbstractLogger[] */
     protected $_logger = array();
 
     /** @var ServiceLocatorInterface $serviceLocator */
@@ -101,7 +102,7 @@ class LogService implements ServiceLocatorAwareInterface
             if ($loggerObject instanceof ServiceLocatorAwareInterface) {
                 $loggerObject->setServiceLocator($this->getServiceLocator());
             }
-            if ($loggerObject instanceof \Log\Logger\AbstractLogger) {
+            if ($loggerObject instanceof AbstractLogger) {
                 if ($loggerObject->init($loggerInfo)) {
                     $this->_logger[$name] = $loggerObject;
                 }
