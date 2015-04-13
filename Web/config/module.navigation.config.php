@@ -8,10 +8,8 @@ return array(
                 'route'=>'home',
                 'iconClass'=>'glyphicon glyphicon-dashboard',
                 'pages'=>array(
-                    
                 ),
             ),
-
             array(
                 'label'=>'Entities',
                 'uri'=>'/entities',
@@ -19,39 +17,38 @@ return array(
                 'pages'=>array(
                     array(
                         'label'=>'Customers',
-                        'uri'  =>'/entities/grid/customer',
+                        'uri'=>'/entities/grid/customer',
                     ),
                     array(
                         'label'=>'Address',
-                        'uri'  =>'/entities/grid/address',
+                        'uri'=>'/entities/grid/address',
                     ),
                     array(
                         'label'=>'Product',
-                        'uri'  =>'/entities/grid/product',
+                        'uri'=>'/entities/grid/product',
                     ),
                     array(
                         'label'=>'Stockitem',
-                        'uri'  =>'/entities/grid/stockitem',
+                        'uri'=>'/entities/grid/stockitem',
                     ),
                     array(
                         'label'=>'Order',
-                        'uri'  =>'/entities/grid/order',
+                        'uri'=>'/entities/grid/order',
                     ),
                     array(
                         'label'=>'Order Item',
-                        'uri'  =>'/entities/grid/orderitem',
+                        'uri'=>'/entities/grid/orderitem',
                     ),
                     array(
                         'label'=>'Credit Memo',
-                        'uri'  =>'/entities/grid/creditmemo',
+                        'uri'=>'/entities/grid/creditmemo',
                     ),
                     array(
                         'label'=>'Credit Memo Item',
-                        'uri'  =>'/entities/grid/creditmemoitem',
+                        'uri'=>'/entities/grid/creditmemoitem',
                     ),
                 )
             ),
-
             array(
                 'label'=>'Orders',
                 'uri'=>'/hops_order',
@@ -59,61 +56,59 @@ return array(
                 'pages'=>array(
                     array(
                         'label'=>'Pending',
-                        'uri'  =>'/hops_order/showpending',
+                        'uri'=>'/hops_order/showpending',
                     ),
                     array(
                         'label'=>'Pending On Account',
-                        'uri'  =>'/hops_order/showonaccountpending',
+                        'uri'=>'/hops_order/showonaccountpending',
                     ),
                     array(
                         'label'=>'New',
-                        'uri'  =>'/hops_order/shownew',
+                        'uri'=>'/hops_order/shownew',
                     ),
                     array(
                         'label'=>'Held',
-                        'uri'  =>'/hops_order/showheld',
+                        'uri'=>'/hops_order/showheld',
                     ),
 /* <<<HopsSpecific */ 
                     array(
                         'label'=>'Queued',
-                        'uri'  =>'/hops_order/showqueued',
+                        'uri'=>'/hops_order/showqueued',
                     ),
                     array(
                         'label'=>'To Pick',
-                        'uri'  =>'/hops_order/showpicking',
+                        'uri'=>'/hops_order/showpicking',
                     ),
                     array(
                         'label'=>'To Print',
-                        'uri'  =>'/hops_order/showpackingnew',
+                        'uri'=>'/hops_order/showpackingnew',
                     ),
                     array(
                         'label'=>'To Pack',
-                        'uri'  =>'/hops_order/showpackingprinted',
+                        'uri'=>'/hops_order/showpackingprinted',
                     ),
                     array(
                         'label'=>'Awaiting Stock',
-                        'uri'  =>'/hops_order/showawaitingstock',
+                        'uri'=>'/hops_order/showawaitingstock',
                     ),
 /* HopsSpecific; */
                     array(
                         'label'=>'Flagged',
-                        'uri'  =>'/hops_order/showflagged',
+                        'uri'=>'/hops_order/showflagged',
                     )
                 )
             ),
 /* <<<HopsSpecific */ 
             array(
-                'label'    =>'Picklist',
-                'route'      =>'hops_picklist',
+                'label'=>'Picklist',
+                'route'=>'hops_picklist',
                 'iconClass'=>'glyphicon glyphicon-list',
             ),
-
             array(
                 'label'=>'Pick',
                 'route'=>'picklist-scanning/start',
                 'iconClass'=>'glyphicon glyphicon-edit',
             ),
-
             array(
                 'label'=>'Pack',
                 'route'=>'packing/start',
@@ -143,7 +138,6 @@ return array(
                         'label'=>'Scanner Location',
                         'route'=>'hops_scannerlocation',
                     ),
-
                     array(
                         'label'=>'Pigeon Hole',
                         'route'=>'hops_pigeonhole',
@@ -151,7 +145,6 @@ return array(
 /* HopsSpecific; */
                 )
             ),
-
             array(
                 'label'=>'System',
                 'route'=>'config-admin/list',
@@ -169,12 +162,10 @@ return array(
                         'label'=>'General Log',
                         'route'=>'log-entry-admin/list',
                     ),
-                    
                     array(
                         'label'=>'Audit Log',
                         'route'=>'audit-log-admin/list',
                     ),
-
                     array(
                         'label'=>'MLQL Interface',
                         'route'=>'query',

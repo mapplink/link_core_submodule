@@ -122,6 +122,6 @@ $config = array (
 
 return array_merge(
     $config,
-    include __DIR__ . '/module.navigation.config.php',
-    include __DIR__ . '/module.router.config.php'
+    include __DIR__ .'/module.navigation.config.php',
+    include __DIR__ .'/module.router.config.php'
 );
