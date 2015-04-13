@@ -71,7 +71,7 @@ class StdoutLogger extends AbstractLogger
                     $suffix = "\033[0m";
                     break;
                 case LogService::LEVEL_WARN:
-                    $prefix = "\033[0;33m\033[40m";
+                    $prefix = "\033[1;33m\033[40m";
                     $suffix = "\033[0m";
                     break;
                 default:
