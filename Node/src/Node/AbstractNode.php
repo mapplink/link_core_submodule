@@ -39,6 +39,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     /** @var ServiceLocatorInterface $_serviceLocator */
     protected $_serviceLocator;
 
+
     /**
      * Set service locator
      * @param ServiceLocatorInterface $serviceLocator
@@ -62,18 +63,14 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
      * @param NodeEntity $nodeEntity
      * @see _init()
      */
-    public function init(NodeEntity $nodeEntity )
+    public function init(NodeEntity $nodeEntity)
     {
         $this->_entity = $nodeEntity;
         $nodeEntity->loadSimpleData();
         $this->_config = $nodeEntity->getSimpleData();
 
-        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
-            'init',
-            'AbstractNode completed init',
-            array('node'=>get_class($this), 'id'=>$nodeEntity->getNodeId()),
-            array('node'=>$this)
-        );
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO, 'node_init', 'AbstractNode init',
+            array('node'=>get_class($this), 'id'=>$nodeEntity->getNodeId()), array('node'=>$this));
 
         $appConfig = $this->getServiceLocator()->get('Config');
         $this->_typeConfig = $appConfig['node_types'][$this->_entity->getType()];
@@ -134,12 +131,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             $gateways = $this->_typeConfig['entity_type_support'];
         }
 
-        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
-            'retrieve',
-            'AbstractNode retrieve',
-            array('gateways'=>$gateways),
-            array('node'=>$this)
-        );
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO, 'node_retrieve',
+            'AbstractNode retrieve', array('gateways'=>$gateways), array('node'=>$this));
 
         foreach ($gateways as $gateway) {
             if(!isset($this->_gateway[$gateway])){
@@ -150,12 +143,10 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 try{
                     $this->_gateway[$gateway]->retrieve();
                 }catch (GatewayException $gatewayException) {
-                    $message = 'Uncaught exception while processing node '.$gatewayException->getNodeId().': '
+                    $logMessage = 'Uncaught exception while processing node '.$gatewayException->getNodeId().': '
                         .$gatewayException->getMessage();
                     $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_ERROR,
-                            'gatewayex',
-                            $message,
+                        ->log(LogService::LEVEL_ERROR, 'gatewayex', $logMessage,
                             array($gatewayException->getMessage(), $gatewayException->getTraceAsString()),
                             array('exception'=>$gatewayException, 'node'=>$gatewayException->getNodeId())
                         );
@@ -178,13 +169,9 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $updates = $this->getServiceLocator()->get('nodeService')->getPendingUpdates($this->_entity);
         $actions = $this->getServiceLocator()->get('nodeService')->getPendingActions($this->_entity);
 
-        $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_INFO,
-                'update',
-                'AbstractNode update: '.count($updates).' updates, '.count($actions).' actions.',
-                array(),
-                array('node'=>$this,'updates'=>$updates, 'actions'=>$actions)
-            );
+        $logMessage = 'AbstractNode update: '.count($updates).' updates, '.count($actions).' actions.';
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO, 'update', $logMessage,
+                array('node id'=>$this->getNodeId()), array('node'=>$this,'updates'=>$updates, 'actions'=>$actions));
 
         // Separate all updates into an array for each entity type
         $updatesByType = array();
@@ -224,8 +211,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                         'combined'=>array()
                     );
                     foreach ($updatesPerEntityId as $update) {
-                        $this->getServiceLocator()->get('logService')
-                            ->log(LogService::LEVEL_INFO,
+                        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
                                 'comb_update',
                                 'Combining updates '.$update->getLogId().' to '.$this->getNodeId(),
                                 array('attributes'=>$update->getAttributesSimple()),
@@ -242,8 +228,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             }
 
             foreach ($updates as $entityId=>$update) {
-                $message = $entityId.' to '.$this->getNodeId();
-                $data =  array(
+                $logMessage = $entityId.' to '.$this->getNodeId();
+                $logData =  array(
                     'entity id'=>$entityId,
                     'entity type'=>$update['type'],
                     'attributes'=>$update['attributes'],
@@ -251,12 +237,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 );
 
                 $this->getServiceLocator()->get('logService')
-                    ->log(LogService::LEVEL_INFO,
-                        'push_update',
-                        'Pushing update for '.$message,
-                        $data,
-                        array('entity'=>$entityId, 'node'=>$this)
-                    );
+                    ->log(LogService::LEVEL_INFO, 'push_update', 'Pushing update for '.$logMessage, $logData,
+                        array('entity'=>$entityId, 'node'=>$this));
 
                 try{
                     $this->_gateway[$entityType]->writeUpdates(
@@ -265,35 +247,27 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                         $update['type']
                     );
                 }catch (GatewayException $gatewayException) {
-                    $message = 'Exception during update processing for '.$message.': '.$gatewayException->getMessage();
-                    $data = array_merge($data, array(
+                    $logMessage = 'Exception during update processing for '.$logMessage.': '.$gatewayException->getMessage();
+                    $logData = array_merge($logData, array(
                         'exception message'=>$gatewayException->getMessage(),
                         'exception trace'=>$gatewayException->getTraceAsString()
                     ));
                     $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_ERROR,
-                            'update_ex_gw',
-                            $message,
-                            $data,
-                            array('update'=>$update, 'exception'=>$gatewayException)
-                        );
+                        ->log(LogService::LEVEL_ERROR, 'update_ex_gw', $logMessage, $logData,
+                            array('update'=>$update, 'exception'=>$gatewayException));
                     unset($this->_gateway[$entityType]);
                     break;
                 }catch (MagelinkException $exception) {
-                    $message = 'Exception during update processing for '.$message.': '.$exception->getMessage();
-                    $data = array_merge($data, array(
+                    $logMessage = 'Exception during update processing for '.$logMessage.': '.$exception->getMessage();
+                    $logData = array_merge($logData, array(
                         'exception message'=>$exception->getMessage(),
                         'exception trace'=>$exception->getTraceAsString()
                     ));
                     $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_ERROR,
-                            'update_ex_ml',
-                            $message,
-                            $data,
-                            array('update'=>$update, 'exception'=>$exception)
-                        );
+                        ->log(LogService::LEVEL_ERROR, 'update_ex_ml', $logMessage, $logData,
+                            array('update'=>$update, 'exception'=>$exception));
 
-                    throw new NodeException($message, 0, $exception);
+                    throw new NodeException($logMessage, 0, $exception);
                     break;
                 }
 
@@ -313,11 +287,11 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             try{
                 $result = TRUE;
                 if ($this->_gateway[$entityType]) {
-                    $message = $action->getId().' to '.$this->getNodeId().' ('.$action->getEntity()->getUniqueId().')';
+                    $logMessage = $action->getId().' to '.$this->getNodeId().' ('.$action->getEntity()->getUniqueId().')';
                     $this->getServiceLocator()->get('logService')
                         ->log(LogService::LEVEL_INFO,
                             'send_action',
-                            'Sending action '.$message,
+                            'Sending action '.$logMessage,
                             array('action id'=>$action->getId()),
                             array('entity'=>$action->getEntity(), 'node'=>$this)
                         );
@@ -327,31 +301,29 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                     $nodeService->setActionStatus($this->_entity, $action, 1);
                 }
             }catch (GatewayException $gatewayException) {
-                $message = 'Exception during action processing for '.$message.': '.$gatewayException->getMessage();
-                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR,
-                    'action_ex_gw',
-                    $message,
-                    array(
-                        'action id'=>$action->getId(),
-                        'exception message'=>$gatewayException->getMessage(),
-                        'exception trace', $gatewayException->getTraceAsString()
-                    ),
-                    array('action'=>$action, 'exception'=>$gatewayException)
-                );
+                $logMessage = 'Exception during action processing for '.$logMessage.': '.$gatewayException->getMessage();
+                $this->getServiceLocator()->get('logService')
+                    ->log(LogService::LEVEL_ERROR, 'action_ex_gw', $logMessage,
+                        array(
+                            'action id'=>$action->getId(),
+                            'exception message'=>$gatewayException->getMessage(),
+                            'exception trace', $gatewayException->getTraceAsString()
+                        ),
+                        array('action'=>$action, 'exception'=>$gatewayException)
+                    );
                 unset($this->_gateway[$entityType]);
             }catch (MagelinkException $magelinkException) {
-                $message = 'Exception during action processing for '.$message.': '.$magelinkException->getMessage();
-                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR,
-                    'action_ex_ml',
-                    $message,
-                    array(
-                        'action id'=>$action->getId(),
-                        'exception message'=>$magelinkException->getMessage(),
-                        'exception trace'=>$magelinkException->getTraceAsString()
-                    ),
-                    array('action'=>$action, 'exception'=>$magelinkException)
-                );
-                throw new NodeException($message, 0, $magelinkException);
+                $logMessage = 'Exception during action processing for '.$logMessage.': '.$magelinkException->getMessage();
+                $this->getServiceLocator()->get('logService')
+                    ->log(LogService::LEVEL_ERROR, 'action_ex_ml', $logMessage,
+                        array(
+                            'action id'=>$action->getId(),
+                            'exception message'=>$magelinkException->getMessage(),
+                            'exception trace'=>$magelinkException->getTraceAsString()
+                        ),
+                        array('action'=>$action, 'exception'=>$magelinkException)
+                    );
+                throw new NodeException($logMessage, 0, $magelinkException);
             }
         }
     }
