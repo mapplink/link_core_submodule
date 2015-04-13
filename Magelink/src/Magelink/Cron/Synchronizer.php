@@ -39,7 +39,8 @@ class Synchronizer extends CronRunnable
 
             $nodes = $serviceLocator->get('nodeService')->getActiveNodes();
             foreach ($nodes as $nodeEntity) {
-                if ($nodeEntity->getId()) {
+                $nodeId = $nodeEntity->getId();
+                if ($nodeId) {
                     if (!($nodeEntity instanceof \Node\Entity\Node)) {
                         throw new MagelinkException('Invalid node type passed (' . get_class($nodeEntity) . ')!');
                     }
@@ -60,7 +61,6 @@ class Synchronizer extends CronRunnable
                         $node->setServiceLocator($serviceLocator);
                     }
 
-                    $nodeId = $node->getNodeId();
                     $logMessage = 'Cron synchronizer on node '.$nodeId.' finished ';
                     $logData = array('node id'=>$nodeId);
 
