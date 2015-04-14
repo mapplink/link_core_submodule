@@ -105,14 +105,16 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                         ->log(LogService::LEVEL_INFO, 'cron_skip', $logMessage, $logData, $logEntities);
                 }elseif (!$magelinkCron->checkIfUnlocked()) {
 
+                    $logCode = 'cron_lock';
                     $logMessage = 'Cron job '.$name.' locked.';
                     if ($magelinkCron->notifyCustomer()) {
+                        $logCode = 'cno_'.$logCode;
                         $logMessage .= ' Please check the synchronisation process '.$name.' in the admin area.';
                     }else {
                         $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
                     }
                     $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_ERROR, 'cno_cron_lock', $logMessage, $logData, $logEntities);
+                        ->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logData, $logEntities);
                 }else{
                     $magelinkCron->cronRun();
                 }
