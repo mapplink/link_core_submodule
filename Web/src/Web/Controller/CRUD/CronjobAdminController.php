@@ -13,6 +13,7 @@ namespace Web\Controller\CRUD;
 use Application\CronRunnable;
 use Application\Controller\Cron;
 use Application\Helper\ErrorHandler;
+use Application\Service\ApplicationConfigService;
 use Magelink\Entity\Config;
 use Magelink\Exception\MagelinkException;
 use Web\Controller\CRUD\AbstractCRUDController;
@@ -66,30 +67,29 @@ class CronjobAdminController extends AbstractCRUDController
         $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
 
         $paginator = array();
-        /** @var Cronrunnable $cronjob */
-        foreach ($applicationConfigService->getCronjobs() as $name=>$cronjob) {
+        /** @var Cronrunnable $cron */
+        foreach ($applicationConfigService->getCronjobs() as $name=>$cron) {
             if (strpos($name, '_tester') === FALSE) {
-                $interval = $cronjob->getInterval();
+                $interval = $cron->getInterval();
                 if (is_int($interval)) {
                    $interval = 'every '.$interval.' minutes';
                 }elseif (!is_string($interval)) {
                     $interval = 'undefined';
                 }
 
-                $unlocked = Cron::checkIfUnlocked($name);
-                if ($unlocked) {
+                if ($cron->checkIfUnlocked()) {
                     $since = $unlockAction = '-';
+                    $status = 'unlocked';
                 }else{
-                    $lockTimestamp = Cron::lockedSince($name);
-                    $since = date('H:i:s d-m-Y', $lockTimestamp);
+                    $since = date('H:i:s d-m-Y', $cron->lockedSince());
+                    $status = 'LOCKED';
 
-                    $lockedSeconds = $lockTimestamp + $cronjob->getLockTime() * 60 - time();
-                    if ($lockedSeconds <= 0) {
+                    if ($cron->canAdminUnlock()) {
                         $unlockAction = '<form method="POST" action="#" class="form-inline">'
                             .'<a href="/cronjob-admin/edit/'.$name.'" class="btn btn-danger">Unlock now</a>'
                             .'</form>';
                     }else{
-                        $lockedMinutes = ceil($lockedSeconds / 60);
+                        $lockedMinutes = ceil($cron->getAdminLockedSeconds() / 60);
                         $unlockAction = 'Cannot be manually unlocked for the next '.$lockedMinutes.' minute'
                             .($lockedMinutes > 1 ? 's' : '');
                     }
@@ -98,7 +98,7 @@ class CronjobAdminController extends AbstractCRUDController
                 $entry = new \stdClass();
                 $entry->name = $name;
                 $entry->interval = $interval;
-                $entry->status = $unlocked ? 'unlocked' : 'LOCKED';
+                $entry->status = $status;
                 $entry->since = $since;
                 $entry->unlockAction = $unlockAction;
                 $paginator[$name] = $entry;
@@ -132,40 +132,29 @@ class CronjobAdminController extends AbstractCRUDController
         if (!$this->getEnableEdit()) {
             $this->getResponse()->setStatusCode(404);
             return;
+        }else {
+            /** @var ApplicationConfigService $applicationConfigService */
+            $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
+
+            $code = $this->params('id');
+            $cron = $applicationConfigService->getCronjob($code);
+
+            if ($cron instanceof CronRunnable) {
+                $success = $cron->adminReleaseLock();
+            }else{
+                $success = FALSE;
+            }
+
+            if ($success) {
+                $message = 'Successfully unlocked cronjob '.$code.'.';
+                $this->flashMessenger()->setNamespace('success')->addMessage($message);
+            }else {
+                $message = 'Failed to unlock cronjob '.$code.'. Please contact Lero9 for assistance.';
+                $this->flashMessenger()->setNamespace('error')->addMessage($message);
+            }
+
+            return $this->redirect()->toRoute($this->getRouteGenerator()->getRouteName('list'));
         }
-
-        $code = $this->params('id');
-        $user = $this->getServiceLocator()->get('zfcuser_auth_service')->getIdentity();
-
-        if (!is_writable(Cron::LOCKS_DIRECTORY)) {
-            $message = 'Failed to unlock cronjob '.$code.'. Please contact Lero9 for assistance.';
-            $this->flashMessenger()->setNamespace('error')->addMessage($message);
-            $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_ERROR,
-                    'cron_unlock_fail_'.$code,
-                    'Unlock failed on cron job '.$code.'. Directory not writable.',
-                    array('cron job'=>$code, 'directory'=>realpath(Cron::LOCKS_DIRECTORY), 'user id'=>$user->getId())
-                );
-        }else{
-            $fileName = Cron::getLockFileName($code);
-            unlink($fileName);
-            $fileName = realpath($fileName);
-
-            $message = 'Successfully unlocked cronjob '.$code.'.';
-            $this->flashMessenger()->setNamespace('success')->addMessage($message);
-
-            $subject = 'cron_unlock_'.$code;
-            $message .= '('.$fileName.'). User '.$user->getId().'.';
-            $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUG,
-                    $subject,
-                    $message,
-                    array('cron job'=>$code, 'file name'=>$fileName, 'user id'=>$user->getId())
-                );
-            mail(ErrorHandler::ERROR_TO, $subject, $message, 'From: ' . ErrorHandler::ERROR_FROM);
-        }
-
-        return $this->redirect()->toRoute($this->getRouteGenerator()->getRouteName('list'));
     }
 
 }

@@ -29,99 +29,6 @@ use Zend\ServiceManager\ServiceLocatorAwareInterface;
 class Cron extends AbstractActionController implements ServiceLocatorAwareInterface
 {
 
-    const LOCKS_DIRECTORY = 'data/locks';
-
-    /**
-     * Get file name of cronjob
-     * @param $code
-     * @return string
-     */
-    public static function getLockFileName($code)
-    {
-        $fileName = self::LOCKS_DIRECTORY.'/'.bin2hex(crc32('cron-'.$code)).'.lock';
-        return $fileName;
-    }
-
-    /**
-     * Check if cronjob is unlocked
-     * @param $code
-     * @return bool
-     */
-    public static function checkIfUnlocked($code)
-    {
-        $fileName = self::getLockFileName($code);
-        $unlocked = !file_exists($fileName);
-
-        return $unlocked;
-    }
-
-    public static function lockedSince($code)
-    {
-        if (self::checkIfUnlocked($code)) {
-            $sinceTimestamp = FALSE;
-        }else {
-            $fileName = Cron::getLockFileName($code);
-            $lockInformation = file_get_contents($fileName);
-
-            $cronName = strtok($lockInformation, ';');
-            $sinceTimestamp = strtok(';');
-        }
-
-        return $sinceTimestamp;
-    }
-
-    /**
-     * Acquire an exclusive lock for the provided lock codename
-     * @param $code
-     * @return bool
-     * @throws MagelinkException
-     */
-    protected function acquireLock($code)
-    {
-        if (!is_dir(self::LOCKS_DIRECTORY)) {
-            mkdir(self::LOCKS_DIRECTORY);
-        }
-        if (!is_writable(self::LOCKS_DIRECTORY)) {
-            throw new SyncException('Lock directory not writable!');
-        }
-
-        $unlocked = self::checkIfUnlocked($code);
-
-        if ($unlocked){
-            $fileName = self::getLockFileName($code);
-            $handle = fopen($fileName, 'x');
-
-            if (!$handle) {
-                $unlocked = FALSE;
-            }else{
-                $unlocked = flock($handle, LOCK_EX | LOCK_NB);
-                if ($unlocked) {
-                    fwrite($handle, $code.'; '.time().'; Date: '.date('Y-m-d H:i:s'));
-                    fflush($handle);
-                    flock($handle, LOCK_UN);
-                    fclose($handle);
-                }
-            }
-        }
-
-        return $unlocked;
-    }
-
-    /**
-     * Release an exclusive lock for the provided lock codename. NOTE: Does not check if we have the lock, simply unlocks, so can be dangerous.
-     * @param $code
-     */
-    protected function releaseLock($code)
-    {
-        $maxTries = 3;
-        do {
-            $fileName = self::getLockFileName($code);
-            unlink($fileName);
-        }while (!($unlocked = self::checkIfUnlocked($code)) && --$maxTries > 0);
-
-        return $unlocked;
-    }
-
     /**
      * No index action on cron
      * @throws MagelinkException
@@ -131,6 +38,9 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         throw new MagelinkException('Invalid Cron action');
     }
 
+    /*
+     * @throws SyncException
+     */
     public function runAction()
     {
         new ErrorHandler();
@@ -182,10 +92,8 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     $runCron = TRUE;
                 }
 
-                $start = time();
-                $startDate = date('H:i:s d/m/y', $start);
                 $logData = array(
-                    'time'=>$startDate,
+                    'time'=>date('H:i:s d/m/y', time()),
                     'name'=>$name,
                     'class'=>get_class($magelinkCron),
                 );
@@ -195,33 +103,18 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     $logMessage = 'Skipping cron job '.$name;
                     $this->getServiceLocator()->get('logService')
                         ->log(LogService::LEVEL_INFO, 'cron_skip', $logMessage, $logData, $logEntities);
-                }elseif (!self::checkIfUnlocked($name)) {
-                    $logMessage = 'Cron job '.$name.' locked. Don\'t take any action, before this error appears'
-                        .' at least for a 2nd time in a row.';
+                }elseif (!$magelinkCron->checkIfUnlocked()) {
+
+                    $logMessage = 'Cron job '.$name.' locked.';
+                    if ($magelinkCron->notifyCustomer()) {
+                        $logMessage .= 'Please check the synchronisation process '.$name.' in the admin area.';
+                    }else {
+                        $logMessage .= 'This is a pre-warning. The Client is not notified yet.';
+                    }
                     $this->getServiceLocator()->get('logService')
                         ->log(LogService::LEVEL_ERROR, 'cno_cron_lock', $logMessage, $logData, $logEntities);
                 }else{
-                    $lock = $this->acquireLock($name);
-                    $logMessage = 'Running cron job: '.$name.', begin '.$startDate;
-                    $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_DEBUGEXTRA, 'cron_run_'.$name, $logMessage, $logData, $logEntities);
-
                     $magelinkCron->cronRun();
-
-                    $end = time();
-                    $runtime = $end - $start;
-                    $logMessage = 'Cron job '.$name.' finished at '.date('H:i:s d/m/y', $end).'. Runtime was '
-                            .(floor($runtime / 60) ? floor($runtime / 60).' min and ' : '').($runtime % 60).' s.';
-                    $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_INFO, 'cron_run_'.$name, $logMessage, $logData, $logEntities);
-
-                    if (!$this->releaseLock($name)) {
-                        $file = self::getLockFileName($name);
-                        $logMessage = 'Unlocking of cron job '.$name.' ('.$file.') failed';
-                        $logData = array('name'=>$name, 'file'=>$file);
-                        $this->getServiceLocator()->get('logService')
-                            ->log(LogService::LEVEL_ERROR, 'cron_unl_fail', $logMessage, $logData);
-                    }
                 }
             }
         }

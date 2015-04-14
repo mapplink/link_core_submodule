@@ -28,7 +28,7 @@ class Synchronizer extends CronRunnable
     /**
      * Performs any scheduled actions.
      */
-    public function cronRun()
+    protected function _cronRun()
     {
         $serviceLocator = $this->getServiceLocator();
         $appConfig = $serviceLocator->get('Config');

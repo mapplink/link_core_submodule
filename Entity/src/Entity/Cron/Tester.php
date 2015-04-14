@@ -31,7 +31,7 @@ class Tester extends CronRunnable
     /**
      * Performs any scheduled actions.
      */
-    public function cronRun()
+    protected function _cronRun()
     {
         /** @var \Entity\Service\EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
