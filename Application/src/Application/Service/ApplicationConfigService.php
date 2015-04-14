@@ -80,7 +80,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
         if ($this->isCronjob()) {
             if (!$this->cronjobs) {
                 $magelinkCron = $this->_config['magelink_cron'];
-                foreach ($magelinkCron as $name => $cronjobData) {
+                foreach ($magelinkCron as $name=>$cronjobData) {
                     $class = __CLASS__;
                     extract($cronjobData, EXTR_IF_EXISTS);
 
@@ -91,8 +91,8 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
                             LogService::LEVEL_ERROR,
                             'cron_construct',
                             $syncException->getMessage(),
-                            array('name' => $name),
-                            array('name' => $name, 'data' => $cronjobData)
+                            array('name'=>$name),
+                            array('name'=>$name, 'data'=>$cronjobData)
                         );
                     }
 
