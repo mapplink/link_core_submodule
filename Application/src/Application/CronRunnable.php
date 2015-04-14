@@ -181,7 +181,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Release an exclusive lock for the provided lock codename. NOTE: Does not check if we have the lock, simply unlocks, so can be dangerous.
+     * Releases an exclusive lock. NB: Does not check if we have the lock, simply unlocks, so can be dangerous.
      * @param string $code
      * @return bool $unlocked
      */
@@ -195,6 +195,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         return $unlocked;
     }
 
+    /**
+     * Admin unlock to release an exclusive lock. Checks if admin can unlock.
+     * @return bool
+     */
     public function adminReleaseLock()
     {
         $name = $this->getName();
@@ -203,7 +207,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         if (!is_writable(self::LOCKS_DIRECTORY)) {
             $this->getServiceLocator()->get('logService')
                 ->log(\Log\Service\LogService::LEVEL_ERROR,
-                    'cron_unlock_fail_'.$name,
+                    'cron_unlock_dir_fail_'.$name,
                     'Unlock failed on cron job '.$name.'. Directory not writable.',
                     array('cron job'=>$name, 'directory'=>realpath(self::LOCKS_DIRECTORY), 'user id'=>$user->getId())
                 );
@@ -217,16 +221,20 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 );
             $success = FALSE;
         }else{
-            $this->releaseLock();
-
             $filename = realpath($this->filename);
-            $subject = 'cron_unlock_'.$name;
-            $message = 'Successfully unlocked cronjob '.$name.' ('.$filename.'). User '.$user->getId().'.';
+            $success = $this->releaseLock();
+
+            if ($success) {
+                $subject = 'cron_unlock_rls_fail_'.$name;
+                $message = 'Unsuccessfully unlocked cronjob '.$name.' ('.$filename.'). User '.$user->getId().'.';
+            }else{
+                $subject = 'cron_unlock_'.$name;
+                $message = 'Successfully unlocked cronjob '.$name.' ('.$filename.'). User '.$user->getId().'.';
+            }
 
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
                     $subject, $message, array('cron job'=>$name, 'file name'=>$filename, 'user id'=>$user->getId()));
             mail(ErrorHandler::ERROR_TO, $subject, $message, 'From: ' . ErrorHandler::ERROR_FROM);
-            $success = TRUE;
         }
 
         return $success;
