@@ -11,6 +11,7 @@
 
 namespace Application;
 
+use Application\Helper\ErrorHandler;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\SyncException;
