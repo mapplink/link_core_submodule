@@ -19,6 +19,7 @@ use Application\CronRunnable;
 use Application\Helper\ErrorHandler;
 use Application\Service\ApplicationConfigService;
 use Log\Service\LogService;
+use Log\Logger\EmailLogger;
 use Magelink\Exception\MagelinkException;
 use Web\Controller\CRUD\LogEntryAdminController;
 use Zend\Console\Request as ConsoleRequest;
@@ -108,7 +109,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                     $logCode = 'cron_lock';
                     $logMessage = 'Cron job '.$name.' locked.';
                     if ($magelinkCron->notifyCustomer()) {
-                        $logCode = 'cno_'.$logCode;
+                        $logCode = EmailLogger::ERROR_TO_CLIENT_CODE.$logCode;
                         $logMessage .= ' Please check the synchronisation process '.$name.' in the admin area.';
                     }else {
                         $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
