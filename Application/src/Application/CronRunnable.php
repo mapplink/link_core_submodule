@@ -100,6 +100,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     {
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m/y', $start);
+        $name = substr(0, 4, $this->getName());
         $logData = array('start'=>$startDate, 'name'=>$this->getName(), 'class'=>get_class($this));
 
         $lock = $this->acquireLock();
@@ -107,7 +108,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $logMessage = 'Running cron job: '.$this->getName().', begin '.$startDate;
         $logEntities = array('magelinkCron'=>$this);
         $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_DEBUGEXTRA, 'cron_run_'.$this->getName(), $logMessage, $logData);
+            ->log(LogService::LEVEL_DEBUGEXTRA, 'cron_run_'.$name, $logMessage, $logData);
 
         $this->_cronRun();
 
@@ -121,13 +122,13 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $logMessage = 'Cron job '.$this->getName().' finished at '.$end
         .'. Runtime was '.($runMinutes ? $runMinutes.' min and ' : '').$runSeconds.' s.';
         $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_INFO, 'cron_run_'.$this->getName(), $logMessage, $logData, $logEntities);
+            ->log(LogService::LEVEL_INFO, 'cron_run_'.$name, $logMessage, $logData, $logEntities);
 
         if (!$this->releaseLock()) {
             $logMessage = 'Unlocking of cron job '.$this->getName().' ('.$this->filename.') failed';
             $logData = array('name'=>$this->getName(), 'file'=>$this->filename);
             $this->getServiceLocator()->get('logService')
-                ->log(LogService::LEVEL_ERROR, 'cron_unl_fail', $logMessage, $logData);
+                ->log(LogService::LEVEL_ERROR, 'cron_unl_fail_'.$name, $logMessage, $logData);
         }
     }
 
@@ -280,7 +281,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     public function notifyCustomer()
     {
-        $notifyAfter = $this->lockedSince() + $this->getInterval() * (self::FIRST_CUSTOMER_LOCK_NOTIFICATION - 0.1);
+        $notifyAfter = $this->lockedSince() + $this->getInterval() * (self::FIRST_CUSTOMER_LOCK_NOTIFICATION - 0.3);
         return time() >= $notifyAfter;
     }
 
