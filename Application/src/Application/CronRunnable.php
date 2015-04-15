@@ -101,7 +101,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m/y', $start);
         $name = substr($this->getName(), 0, 4);
-        $logData = array('start'=>$startDate, 'name'=>$this->getName(), 'class'=>get_class($this));
+        $logData = array('name'=>$this->getName(), 'class'=>get_class($this), 'start'=>$startDate);
 
         $lock = $this->acquireLock();
 
@@ -119,8 +119,9 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $runMinutes = floor($runtime / 60);
         $runSeconds = $runtime % 60;
 
-        $logMessage = 'Cron job '.$this->getName().' finished at '.$end
-        .'. Runtime was '.($runMinutes ? $runMinutes.' min and ' : '').$runSeconds.' s.';
+        $logMessage = 'Cron job '.$this->getName().' finished at '.$endDate
+            .'. Runtime was '.($runMinutes ? $runMinutes.' min and ' : '').$runSeconds.' s.';
+        $logData = array_merge($logData, array('end'=>$endDate, 'runtime'=>$runtime));
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_INFO, 'cron_run_'.$name, $logMessage, $logData, $logEntities);
 
