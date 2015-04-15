@@ -225,11 +225,11 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $success = $this->releaseLock();
 
             if ($success) {
-                $subject = 'cron_unlock_rls_fail_'.$name;
-                $message = 'Unsuccessfully unlocked cronjob '.$name.' ('.$filename.'). User '.$user->getId().'.';
-            }else{
                 $subject = 'cron_unlock_'.$name;
-                $message = 'Successfully unlocked cronjob '.$name.' ('.$filename.'). User '.$user->getId().'.';
+                $message = 'Successfully unlocked cronjob '.$name.' ('.$filename.'); User '.$user->getId().'.';
+            }else{
+                $subject = 'cron_unlock_rls_fail_'.$name;
+                $message = 'User '.$user->getId().' tried to unlock cronjob '.$name.' ('.$filename.') unsuccessfully.';
             }
 
             $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
