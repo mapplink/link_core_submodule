@@ -76,12 +76,9 @@ class FileLogger extends AbstractLogger
             $additionalInformation .= implode(', ', $entries).'}';
         }
 
-        $specifierGap = max(3, 25 - strlen($specifier));
-        $basicGap = max(3, 50 - strlen($basicInformation));
-
-        $output = $specifier.str_repeat(' ', $specifierGap).$basicInformation.str_repeat(' ', $basicGap)
-            .$message.$additionalInformation.PHP_EOL;
-
+        $specifierGap = max(3, 45 - strlen($specifier));
+        $output = str_pad($specifier, $specifierGap).$basicInformation.PHP_EOL.
+            str_pad($message.$additionalInformation, 19, STR_PAD_LEFT).PHP_EOL;
         fwrite($this->_fileHandler, $output);
     }
 

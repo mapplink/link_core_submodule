@@ -61,8 +61,8 @@ class StdoutLogger extends AbstractLogger
             $basicInformation = $lastStackFrame['file'].':'.$lastStackFrame['line'];
         }
 
-        $specifierGap = max(3, 25 - strlen($specifier));
-        $basicGap = max(3, 50 - strlen($basicInformation));
+        $specifierGap = max(2, 27 - strlen($specifier)); // Leaves for the log code 16 characters
+        $basicGap = max(3, 50 - strlen($basicInformation)); //
 
         if ($this->_cliMode) {
             switch ($level) {
@@ -82,8 +82,8 @@ class StdoutLogger extends AbstractLogger
             $suffix = '</pre><br/>';
         }
 
-        print $prefix.$specifier.str_repeat(' ', $specifierGap).$basicInformation.str_repeat(' ', $basicGap)
-            .$message.PHP_EOL.$suffix;
+        print str_pad($prefix.$specifier, $specifierGap).str_pad($basicInformation, $basicGap).$message
+            .PHP_EOL.$suffix;
     }
 
     /** Output any queued messages (if relevant). */

@@ -99,13 +99,13 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     public function cronRun()
     {
         $start = microtime(TRUE);
-        $startDate = date('H:i:s d/m/y', $start);
+        $startDate = date('H:i:s d/m', $start);
         $name = substr($this->getName(), 0, 4);
         $logData = array('name'=>$this->getName(), 'class'=>get_class($this), 'start'=>$startDate);
 
         $lock = $this->acquireLock();
 
-        $logMessage = 'Running cron job: '.$this->getName().', begin '.$startDate;
+        $logMessage = 'Cron '.$this->getName().' started at '.$startDate;
         $logEntities = array('magelinkCron'=>$this);
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_DEBUGEXTRA, 'cron_run_'.$name, $logMessage, $logData);
@@ -113,13 +113,13 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $this->_cronRun();
 
         $end = microtime(TRUE);
-        $endDate = date('H:i:s d/m/y', $end);
+        $endDate = date('H:i:s d/m', $end);
 
         $runtime = $end - $start;
         $runMinutes = floor($runtime / 60);
         $runSeconds = $runtime % 60;
 
-        $logMessage = 'Cron job '.$this->getName().' finished at '.$endDate
+        $logMessage = 'Cron '.$this->getName().' finished at '.$endDate
             .'. Runtime was '.($runMinutes ? $runMinutes.' min and ' : '').$runSeconds.' s.';
         $logData = array_merge($logData, array('end'=>$endDate, 'runtime'=>$runtime));
         $this->getServiceLocator()->get('logService')

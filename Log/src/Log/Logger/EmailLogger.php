@@ -85,10 +85,9 @@ class EmailLogger extends AbstractLogger
             $additionalInformation .= implode(', ', $entries).'}';
         }
 
-        $specifierGap = max(3, 25 - strlen($specifier));
+        $specifierGap = max(2, 27 - strlen($specifier));
         $basicGap = max(3, 50 - strlen($basicInformation));
-
-        $output = $specifier.str_repeat(' ', $specifierGap).$basicInformation.str_repeat(' ', $basicGap)
+        $output = str_pad($specifier, $specifierGap).str_pad($basicInformation, $basicGap)
             .$message.$additionalInformation.PHP_EOL;
 
         if (count($this->lastCache) >= $this->cacheSize) {
@@ -101,11 +100,11 @@ class EmailLogger extends AbstractLogger
 
     /**
      * @param string $errorCode
-     * @param string $errorMessage
+     * @param string $subjectMessage
      */
-    protected function sendAlert($errorCode, $errorMessage)
+    protected function sendAlert($errorCode, $subjectMessage)
     {
-        $subject = 'MageLink ERROR: ['.$errorCode.'] '.$errorMessage;
+        $subject = 'MageLink ERROR: ['.$errorCode.'] '.$subjectMessage;
         $content = 'MageLink error thrown! Details:'.PHP_EOL.PHP_EOL
             .implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
 
