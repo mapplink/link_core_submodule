@@ -100,7 +100,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     {
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m/y', $start);
-        $name = substr(0, 4, $this->getName());
+        $name = substr($this->getName(), 0, 4);
         $logData = array('start'=>$startDate, 'name'=>$this->getName(), 'class'=>get_class($this));
 
         $lock = $this->acquireLock();
