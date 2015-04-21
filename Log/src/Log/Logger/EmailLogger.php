@@ -16,7 +16,8 @@ use Application\Helper\ErrorHandler;
 
 class EmailLogger extends AbstractLogger
 {
-    const ERROR_TO_CLIENT = '';
+
+    const ERROR_TO_CLIENT_EMAIL = '';
     const ERROR_TO_CLIENT_CODE = 'cno_';
     const ERROR_TO_CLIENT_STARTHOUR = 7;
     const ERROR_TO_CLIENT_ENDHOUR = 20;
@@ -27,7 +28,6 @@ class EmailLogger extends AbstractLogger
     protected $_allowedLevels = array(
         LogService::LEVEL_ERROR
     );
-
 
 
     /**
@@ -114,9 +114,9 @@ class EmailLogger extends AbstractLogger
         $daytime = (date('H') > self::ERROR_TO_CLIENT_STARTHOUR) && (date('H') < self::ERROR_TO_CLIENT_ENDHOUR);
         $devOrStaging = (strpos(__DIR__, 'dev.') + strpos(__DIR__, 'staging.') > 0);
 
-        if (self::ERROR_TO_CLIENT && $clientCodeMatching && $daytime && !$devOrStaging) {
+        if (self::ERROR_TO_CLIENT_EMAIL && $clientCodeMatching && $daytime && !$devOrStaging) {
             $additionalHeader = 'Content-Type: text/plain'."\r\n".'From: '.ErrorHandler::ERROR_FROM;
-            mail(self::ERROR_TO_CLIENT, $subject, $content, $additionalHeader);
+            mail(self::ERROR_TO_CLIENT_EMAIL, $subject, $content, $additionalHeader);
         }
     }
 
