@@ -13,41 +13,65 @@
 namespace Node;
 
 use Log\Service\LogService;
+use Node\Service\NodeService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
 
-abstract class AbstractNode implements ServiceLocatorAwareInterface {
+abstract class AbstractNode implements ServiceLocatorAwareInterface
+{
 
-    /**
-     * @var \Node\AbstractGateway[]
-     */
+    /** @var \Node\AbstractGateway[] $_gateway */
     protected $_gateway = array();
 
-    /**
-     * @var \Node\Entity\Node
-     */
-    protected $_entity = null;
+    /** @var \Node\Entity\Node $_entity */
+    protected $_entity = NULL;
+
+    /** @var array $_config */
+    protected $_config = NULL;
+
+    /** @var array $_typeConfig */
+    protected $_typeConfig = NULL;
+
+    /** @var array $updates */
+    protected $updates = array();
+
+    /** @var array $actions */
+    protected $actions = array();
+
+    /** @var NodeService $_nodeService */
+    protected $_nodeService = NULL;
+
+    /** @var ServiceLocatorInterface $_serviceLocator */
+    protected $_serviceLocator;
 
     /**
-     * @var array
+     * Set service locator
+     * @param ServiceLocatorInterface $serviceLocator
      */
-    protected $_config = null;
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+    }
 
     /**
-     * @var array
+     * Get service locator
+     * @return ServiceLocatorInterface
      */
-    protected $_typeConfig = null;
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
+    }
 
     /**
      * Sets up internal data structures, calls local _init method, and creates appropriate gateways.
-     *
      * @param Entity\Node $nodeEntity
      * @see _init()
      */
-    public function init( \Node\Entity\Node $nodeEntity ){
+    public function init(\Node\Entity\Node $nodeEntity)
+    {
         $this->_entity = $nodeEntity;
         $nodeEntity->loadSimpleData();
         $this->_config = $nodeEntity->getSimpleData();
@@ -65,18 +89,27 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
         $this->_init($nodeEntity);
     }
 
-    public function getNodeId(){
+    /**
+     * @return int
+     */
+    public function getNodeId()
+    {
         return $this->_entity->getId();
     }
 
-    public function getTitle(){
+    /**
+     * @return string
+     */
+    public function getTitle()
+    {
         return $this->_entity->getName();
     }
 
     /**
      * @see _deinit()
      */
-    public function deinit(){
+    public function deinit()
+    {
         $this->_deinit();
     }
 
@@ -85,14 +118,17 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
      * @param $entityType
      * @return AbstractGateway
      */
-    protected function _lazyLoad($entityType){
+    protected function _lazyLoad($entityType)
+    {
         $gateway = $this->_createGateway($entityType);
-        if($gateway instanceof ServiceLocatorAwareInterface){
+        if ($gateway instanceof ServiceLocatorAwareInterface) {
             $gateway->setServiceLocator($this->getServiceLocator());
         }
-        if($gateway){
+
+        if ($gateway) {
             $gateway->init($this, $this->_entity, $entityType);
         }
+
         return $gateway;
     }
 
@@ -126,27 +162,79 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
     }
 
     /**
-     * Updates all data into the node’s source - should load and collapse all pending updates and call writeUpdates,
-     *   as well as loading and sequencing all actions.
+     * @return array $this->actions
      */
-    public function update()
+    protected function getPendingActions()
     {
-        /** @var \Node\Service\NodeService $nodeService */
-        $nodeService = $this->getServiceLocator()->get('nodeService');
+        if (!$this->actions) {
+            $this->actions = $this->getServiceLocator()->get('nodeService')->getPendingActions($this->_entity);
+        }
 
-        $updates = $this->getServiceLocator()->get('nodeService')->getPendingUpdates($this->_entity);
-        $actions = $this->getServiceLocator()->get('nodeService')->getPendingActions($this->_entity);
+        return $this->actions;
+    }
 
-        $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_INFO,
-                'update',
-                'AbstractNode update: '.count($updates).' updates, '.count($actions).' actions.',
-                array(),
-                array('node'=>$this,'updates'=>$updates, 'actions'=>$actions)
-            );
+    /**
+     * @return array $this->updates
+     */
+    protected function getPendingUpdates()
+    {
+        if (!$this->updates) {
+            $this->updates = $this->getServiceLocator()->get('nodeService')->getPendingUpdates($this->_entity);
+        }
 
-        // Separate all updates into an array for each entity type
+        return $this->updates;
+    }
+
+    /**
+     * @throws NodeException
+     */
+    protected function processActions()
+    {
+        $actions = $this->getPendingActions();
+
+        foreach ($actions as $action) {
+            /* @var $action \Entity\Action */
+            $entityType = $action->getEntity()->getTypeStr();
+            if (!isset($this->_gateway[$entityType])) {
+                // Lazy-load gateway for entity type
+                $this->_gateway[$entityType] = $this->_lazyLoad($entityType);
+            }
+            try{
+                $result = true;
+                if($this->_gateway[$entityType]){
+                    $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
+                        'send_action',
+                        'Sending action '.$action->getId().' to '.$this->getNodeId().' ('.$action->getEntity()->getUniqueId().')',
+                        array($action->getId()),
+                        array('entity'=>$action->getEntity(), 'node'=>$this)
+                    );
+                    $result = $this->_gateway[$entityType]->writeAction($action);
+                }
+                if($result){
+                    $this->_nodeService->setActionStatus($this->_entity, $action, 1);
+                }
+            }catch(MagelinkException $exception){
+                $message = 'Uncaught exception during action processing for '.$action->getId()
+                    .' to '.$this->getNodeId().': '.$exception->getMessage();
+                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR,
+                    'action_ex',
+                    $message,
+                    array($exception->getMessage(), $exception->getTraceAsString()),
+                    array('exception'=>$exception)
+                );
+                throw new NodeException('Error applying actions: '.$exception->getMessage(), 0, $exception);
+            }
+        }
+    }
+
+    /**
+     * @throws NodeException
+     */
+    protected function processUpdates()
+    {
         $updatesByType = array();
+        $updates = $this->getPendingUpdates();
+
         foreach ($updates as $update) {
             /* @var $update \Entity\Update */
             $entityType = $update->getEntity()->getTypeStr();
@@ -163,7 +251,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                 $this->_gateway[$entityType] = $this->_lazyLoad($entityType);
             }
 
-            $attributes = $nodeService->getSubscribedAttributeCodes($this->getNodeId(), $entityType);
+            $attributes = $this->_nodeService->getSubscribedAttributeCodes($this->getNodeId(), $entityType);
 
             $updates = array();
             if ($this->_gateway[$entityType]) {
@@ -221,44 +309,34 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
                 }
             }
 
-            foreach($entityTypeUpdates as $update){
-                $nodeService->setUpdateStatus($this->_entity, $update, 1);
+            foreach ($entityTypeUpdates as $update) {
+                $this->_nodeService->setUpdateStatus($this->_entity, $update, 1);
             }
         }
+    }
 
-        foreach ($actions as $action) {
-            /* @var $action \Entity\Action */
-            $entityType = $action->getEntity()->getTypeStr();
-            if (!isset($this->_gateway[$entityType])) {
-                // Lazy-load gateway for entity type
-                $this->_gateway[$entityType] = $this->_lazyLoad($entityType);
-            }
-            try{
-                $result = true;
-                if($this->_gateway[$entityType]){
-                    $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
-                        'send_action',
-                        'Sending action '.$action->getId().' to '.$this->getNodeId().' ('.$action->getEntity()->getUniqueId().')',
-                        array($action->getId()),
-                        array('entity'=>$action->getEntity(), 'node'=>$this)
-                    );
-                    $result = $this->_gateway[$entityType]->writeAction($action);
-                }
-                if($result){
-                    $nodeService->setActionStatus($this->_entity, $action, 1);
-                }
-            }catch(MagelinkException $exception){
-                $message = 'Uncaught exception during action processing for '.$action->getId()
-                    .' to '.$this->getNodeId().': '.$exception->getMessage();
-                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR,
-                    'action_ex',
-                    $message,
-                    array($exception->getMessage(), $exception->getTraceAsString()),
-                    array('exception'=>$exception)
-                );
-                throw new NodeException('Error applying actions: '.$exception->getMessage(), 0, $exception);
-            }
-        }
+    /**
+     * Updates all data into the node’s source - should load and collapse all pending updates and call writeUpdates,
+     *   as well as loading and sequencing all actions.
+     * @throws NodeException
+     */
+    public function update()
+    {
+        $this->_nodeService = $this->getServiceLocator()->get('nodeService');
+
+        $this->actions = $this->getPendingActions();
+        $this->updates = $this->getPendingUpdates();
+
+        $this->getServiceLocator()->get('logService')
+            ->log(\Log\Service\LogService::LEVEL_INFO,
+                'node_upd',
+                'AbstractNode update: '.count($this->actions).' actions, '.count($this->updates).' updates.',
+                array(),
+                array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates)
+            );
+
+        $this->processActions();
+        $this->processUpdates();
     }
 
     /**
@@ -266,16 +344,17 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
      * @param string|null $key
      * @return null
      */
-    public function getConfig($key=null){
-        if($key == null){
-            return $this->_config;
+    public function getConfig($key = NULL)
+    {
+        if ($key == NULL) {
+            $config = $this->_config;
+        }elseif (isset($this->_config[$key])) {
+            $config = $this->_config[$key];
         }else{
-            if(isset($this->_config[$key])){
-                return $this->_config[$key];
-            }else{
-                return null;
-            }
+            $config = NULL;
         }
+
+        return $config;
     }
 
     /**
@@ -285,7 +364,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
      *
      * @param Entity\Node $nodeEntity
      */
-    protected abstract function _init(\Node\Entity\Node $nodeEntity );
+    protected abstract function _init(\Node\Entity\Node $nodeEntity);
 
     /**
      * Implemented in each NodeModule
@@ -304,27 +383,5 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface {
      * @return AbstractGateway
      */
     protected abstract function _createGateway($entity_type);
-
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     *
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     *
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
-    }
 
 }
