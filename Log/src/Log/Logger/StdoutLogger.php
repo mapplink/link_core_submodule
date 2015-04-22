@@ -61,9 +61,6 @@ class StdoutLogger extends AbstractLogger
             $basicInformation = $lastStackFrame['file'].':'.$lastStackFrame['line'];
         }
 
-        $specifierGap = max(2, 27 - strlen($specifier)); // Leaves for the log code 16 characters
-        $basicGap = max(3, 50 - strlen($basicInformation)); //
-
         if ($this->_cliMode) {
             switch ($level) {
                 case LogService::LEVEL_ERROR:
@@ -82,7 +79,10 @@ class StdoutLogger extends AbstractLogger
             $suffix = '</pre><br/>';
         }
 
-        print str_pad($prefix.$specifier, $specifierGap).str_pad($basicInformation, $basicGap).$message
+        $specifierLength = max(27, strlen($specifier) + 2); // Leaves for the log code 16 characters
+        $basicLength = max(50, strlen($basicInformation) + 3);
+
+        print str_pad($prefix.$specifier, $specifierLength).str_pad($basicInformation, $basicLength).$message
             .PHP_EOL.$suffix;
     }
 
