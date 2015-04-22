@@ -45,7 +45,7 @@ class FileLogger extends AbstractLogger
      */
     function printLog($level, $code, $message, array $data, array $extraData, array $lastStackFrame)
     {
-        $specifier = date('y-m-d H:i:s').' ['.strtoupper($level).':'.$code.']';
+        $specifier = date('d/m H:i:s').' ['.strtoupper($level).':'.$code.']';
 
         if (isset($lastStackFrame['class'])) {
             $basicInformation = $lastStackFrame['class'].$lastStackFrame['type'].$lastStackFrame['function'].':'
@@ -76,7 +76,7 @@ class FileLogger extends AbstractLogger
             $additionalInformation .= implode(', ', $entries).'}';
         }
 
-        $specifierLength = max(45, strlen($specifier) + 3);
+        $specifierLength = max(42, strlen($specifier) + 3);
         $output = str_pad($specifier, $specifierLength).$basicInformation.PHP_EOL
             .str_repeat(' ', 19).$message.$additionalInformation.PHP_EOL;
         fwrite($this->_fileHandler, $output);
