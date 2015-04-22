@@ -77,8 +77,8 @@ class FileLogger extends AbstractLogger
         }
 
         $specifierLength = max(45, strlen($specifier) + 3);
-        $output = str_pad($specifier, $specifierLength).$basicInformation.PHP_EOL.
-            str_repeat(' ', 19).$message.$additionalInformation.PHP_EOL;
+        $output = str_pad($specifier, $specifierLength).$basicInformation.PHP_EOL
+            .str_repeat(' ', 19).$message.$additionalInformation.PHP_EOL;
         fwrite($this->_fileHandler, $output);
     }
 
