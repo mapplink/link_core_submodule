@@ -82,7 +82,7 @@ class StdoutLogger extends AbstractLogger
         $specifierLength = max(27, strlen($specifier) + 2); // Leaves for the log code 16 characters
         $basicLength = max(50, strlen($basicInformation) + 3);
 
-        print str_pad($prefix.$specifier, $specifierLength).str_pad($basicInformation, $basicLength).$message
+        print $prefix.str_pad($specifier, $specifierLength).str_pad($basicInformation, $basicLength).$message
             .PHP_EOL.$suffix;
     }
 
