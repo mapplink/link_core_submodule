@@ -343,7 +343,6 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         }
     }
 
-
     /**
      * Updates all data into the node’s source - should load and collapse all pending updates and call writeUpdates,
      *   as well as loading and sequencing all actions.
@@ -359,13 +358,13 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $this->getServiceLocator()->get('logService')
             ->log(\Log\Service\LogService::LEVEL_INFO,
                 'node_upd',
-                'AbstractNode update: '.count($this->actions).' actions, '.count($this->updates).' updates.',
+                'AbstractNode update: '.count($this->updates).' updates, '.count($this->actions).' actions.',
                 array(),
                 array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates)
             );
 
-        $this->processActions();
         $this->processUpdates();
+        $this->processActions();
     }
 
     /**
