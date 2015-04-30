@@ -85,9 +85,9 @@ class EmailLogger extends AbstractLogger
             $additionalInformation .= implode(', ', $entries).'}';
         }
 
-        $specifierGap = max(2, 27 - strlen($specifier));
-        $basicGap = max(3, 50 - strlen($basicInformation));
-        $output = str_pad($specifier, $specifierGap).str_pad($basicInformation, $basicGap)
+        $specifierLength = max(27, strlen($specifier) + 2);
+        $basicLength = max(50, strlen($basicInformation) + 3);
+        $output = str_pad($specifier, $specifierLength).str_pad($basicInformation, $basicLength)
             .$message.$additionalInformation.PHP_EOL;
 
         if (count($this->lastCache) >= $this->cacheSize) {
