@@ -100,7 +100,7 @@ class Synchronizer extends CronRunnable
                         $nodeException->getMessage(),
                         $nodeException->getTraceAsString()
                     ));
-                    $serviceLocator->get('logService')->log(LogService::LEVEL_ERROR, 'cron_sync_nodeupd_ex',
+                    $serviceLocator->get('logService')->log(LogService::LEVEL_ERROR, 'cron_sync_nupdex',
                         $logMessage, $logData, array('exception'=>$nodeException, 'node'=>$node));
                     echo PHP_EOL.$nodeException->getTraceAsString().PHP_EOL;
                 }
