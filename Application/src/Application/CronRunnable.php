@@ -282,7 +282,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     public function notifyCustomer()
     {
-        $notifyAfter = $this->lockedSince() + $this->getInterval() * (self::FIRST_CUSTOMER_LOCK_NOTIFICATION - 0.3);
+        $notifyAfter = $this->lockedSince() + $this->getInterval() * 60 * (self::FIRST_CUSTOMER_LOCK_NOTIFICATION - 0.3);
         return time() >= $notifyAfter;
     }
 
