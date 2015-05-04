@@ -282,7 +282,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     public function notifyCustomer()
     {
-        $notifyAfter = $this->lockedSince() + $this->getInterval() * 60 * (self::FIRST_CUSTOMER_LOCK_NOTIFICATION - 0.3);
+        $tolerance = 0.3;
+        $numberOfIntervalsBeforeNotifyingTheClient = self::FIRST_CUSTOMER_LOCK_NOTIFICATION - $tolerance;
+        $notifyAfter = $this->lockedSince() + $this->getIntervalSeconds() * $numberOfIntervalsBeforeNotifyingTheClient;
+
         return time() >= $notifyAfter;
     }
 
@@ -295,11 +298,21 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
+     * Get the value for the interval [min]
      * @return int $this->attributes['interval']
      */
     public function getInterval()
     {
         return $this->attributes['interval'];
+    }
+
+    /**
+     * Multiplies $this->attributes['interval'] with 60 to return the interval seconds
+     * @return int $intervalSeconds
+     */
+    protected function getIntervalSeconds()
+    {
+        return $this->getInterval() * 60;
     }
 
     /**
