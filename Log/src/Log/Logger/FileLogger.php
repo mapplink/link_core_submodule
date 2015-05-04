@@ -45,7 +45,7 @@ class FileLogger extends AbstractLogger
      */
     function printLog($level, $code, $message, array $data, array $extraData, array $lastStackFrame)
     {
-        $specifier = '['.strtoupper($level).':'.$code.'@'.date('d/m H:i:s').']';
+        $specifier = '['.strtoupper($level).':'.$code.' '.date('d/m H:i:s').']';
 
         if (isset($lastStackFrame['class'])) {
             $basicInformation = $lastStackFrame['class'].$lastStackFrame['type'].$lastStackFrame['function'].':'
