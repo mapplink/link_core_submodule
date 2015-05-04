@@ -208,7 +208,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
         if (!is_writable(self::LOCKS_DIRECTORY)) {
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                ->log(LogService::LEVEL_ERROR,
                     'cron_unlock_dir_fail_'.$name,
                     'Unlock failed on cron job '.$name.'. Directory not writable.',
                     array('cron job'=>$name, 'directory'=>realpath(self::LOCKS_DIRECTORY), 'user id'=>$user->getId())
@@ -216,7 +216,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $success = FALSE;
         }elseif (!$this->canAdminUnlock()) {
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                ->log(LogService::LEVEL_ERROR,
                     'cron_unlock_lock_'.$name,
                     'Unlock failed on cron job '.$name.'. Admin cannot unlock yet.',
                     array('name'=>$name, 'locked seconds'=>$this->getAdminLockedSeconds(), 'user id'=>$user->getId())
@@ -234,7 +234,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $message = 'User '.$user->getId().' tried to unlock cronjob '.$name.' ('.$filename.') unsuccessfully.';
             }
 
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
                     $subject, $message, array('cron job'=>$name, 'file name'=>$filename, 'user id'=>$user->getId()));
             mail(ErrorHandler::ERROR_TO, $subject, $message, 'From: ' . ErrorHandler::ERROR_FROM);
         }
