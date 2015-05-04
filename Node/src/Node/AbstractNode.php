@@ -153,12 +153,12 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 try{
                     $this->_gateway[$gateway]->retrieve();
                 }catch (GatewayException $gatewayException) {
-                    $logMessage = 'Uncaught exception while processing node '.$gatewayException->getNodeId().': '
+                    $logMessage = 'Uncaught exception while processing node '.$this->getNodeId().': '
                         .$gatewayException->getMessage();
                     $this->getServiceLocator()->get('logService')
                         ->log(LogService::LEVEL_ERROR, 'gatewayex', $logMessage,
                             array($gatewayException->getMessage(), $gatewayException->getTraceAsString()),
-                            array('exception'=>$gatewayException, 'node'=>$gatewayException->getNodeId())
+                            array('exception'=>$gatewayException, 'node'=>$this->getNodeId())
                         );
                     print PHP_EOL.$gatewayException->getTraceAsString().PHP_EOL;
                 }
