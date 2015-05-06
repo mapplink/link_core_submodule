@@ -1,75 +1,111 @@
 <?php
+/**
+ * The RouterService is responsible for distributing entities and related associations, as well as providing notifications to nodes when new data is available
+ * @category Router
+ * @package Router\Service
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2015 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Router\Service;
 
-use Magelink\Exception\MagelinkException;
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
 use Entity\Entity;
+use Log\Service\LogService;
+use Magelink\Exception\MagelinkException;
+use Router\Transform\AbstractTransform;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Adapter\Adapter;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 
-/**
- * The RouterService is responsible for distributing entities and related associations, as well as providing notifications to nodes when new data is available
- *
- * @package Router\Service
- */
-class RouterService implements ServiceLocatorAwareInterface {
+class RouterService implements ServiceLocatorAwareInterface
+{
 
     /**
      * Process any Routing Transforms before processing an update.
      * @param Entity $entity The affected Entity
      * @param array $updated_data A key-value array of updated attributes
-     * @param int $source_node_id The node that performed the original update
+     * @param int $sourceNodeId The node that performed the original update
      * @param int $type The original update type (CUD)
      * @return array
      */
-    public function processTransforms(Entity $entity, $updated_data, $source_node_id, $type=\Entity\Update::TYPE_UPDATE){
-
+    public function processTransforms(Entity $entity, $updated_data, $sourceNodeId, $type=\Entity\Update::TYPE_UPDATE)
+    {
         /** @var \Entity\Service\EntityConfigService $entityConfigService */
         $entityConfigService = $this->getServiceLocator()->get('entityConfigService');
 
         $affectedAttributeIds = array();
-        foreach(array_keys($updated_data) as $att){
-            if($type == \Entity\Update::TYPE_UPDATE && $updated_data[$att] === $entity->getData($att)){
+        foreach (array_keys($updated_data) as $attributeCode) {
+            if($type == \Entity\Update::TYPE_UPDATE && $updated_data[$attributeCode] === $entity->getData($attributeCode)){
                 // Skip
                 continue;
             }
             $affectedAttributeIds[] = $entityConfigService->parseAttribute($att, $entity->getType());
         }
+
         if(!count($affectedAttributeIds)){
             return array();
         }
 
-        $retData = array();
+        $returnData = array();
 
         /** @var \Router\Transform\TransformFactory $transformFactory */
         $transformFactory = $this->getServiceLocator()->get('transformFactory');
         /** @var \Router\Entity\RouterTransform[] $transforms */
-        $transforms = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager')->getRepository('Router\Entity\RouterTransform')->getApplicableTransforms($entity->getType(), $affectedAttributeIds, $type);
+        $transforms = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager')
+            ->getRepository('Router\Entity\RouterTransform')
+            ->getApplicableTransforms($entity->getType(), $affectedAttributeIds, $type);
 
-        foreach($transforms as $transformEntity){
+        foreach ($transforms as $transformEntity) {
+            /** @var AbstractTransform $transform */
             $transform = $transformFactory->getTransform($transformEntity);
-            if(!$transform){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'bad_trans', 'processTransforms - invalid transform or error creating - from ' . $source_node_id . ' - ' . $entity->getId() . ' - ' . $transformEntity->getTransformId() . ' (' . $transformEntity->getTransformType() . ')', array('tfid'=>$transformEntity->getTransformid(), 'type'=>$transformEntity->getTransformType(), 'attributes'=>$affectedAttributeIds), array('entity'=>$entity, 'node'=>$source_node_id));
-                continue;
-            }
-            if(!$this->checkFiltersTransform($entity, $transformEntity, $type, $updated_data)){
-                // Some filter blocked, skip
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'rej_transform', 'processTransforms - rejected by filter - from ' . $source_node_id . ' - ' . $entity->getId() . ' - ' . $transformEntity->getTransformId() . ' (' . get_class($transform) . ')', array('tfid'=>$transformEntity->getTransformid(), 'type'=>$transformEntity->getTransformType(), 'attributes'=>$affectedAttributeIds), array('entity'=>$entity, 'node'=>$source_node_id));
-                continue;
-            }
-            if($transform->init($entity, $source_node_id, $transformEntity, $updated_data)){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO, 'app_transform', 'processTransforms - from ' . $source_node_id . ' - ' . $entity->getId() . ' - ' . $transformEntity->getTransformId() . ' (' . get_class($transform) . ')', array('tfid'=>$transformEntity->getTransformid(), 'type'=>$transformEntity->getTransformType(), 'attributes'=>$affectedAttributeIds), array('entity'=>$entity, 'node'=>$source_node_id));
-                $data = $transform->apply();
-                if($data && count($data)){
-                    $retData = array_merge($retData, $data);
+
+            $logLevel = LogService::LEVEL_INFO;
+            $logCode = 'trans_';
+            $logMessagePrefix = 'processTransforms: ';
+            $logMessage = '';
+            $logMessageSuffix = ' from node '.$sourceNodeId.' on entity '.$entity->getId();
+                .' with transform '.$transformEntity->getTransformId();
+            $logData = array(
+                'tfid'=>$transformEntity->getTransformid(),
+                'type'=>$transformEntity->getTransformType(),
+                'attributes'=>$affectedAttributeIds
+            );
+            $logEntities = array('entity'=>$entity, 'node'=>$sourceNodeId);
+
+            if (!$transform) {
+                $logLevel = LogService::LEVEL_ERROR;
+                $logCode .= 'ivld';
+                $logMessage = 'invalid transform or error creating';
+                $logMessageSuffix .= ' (type: '.$transformEntity->getTransformType().')';
+            }else{
+                $logCode .= substr(get_class($transform), 0, 4);
+                $logMessageSuffix .= ' (class: '.get_class($transform).')';
+                if (!$this->checkFiltersTransform($entity, $transformEntity, $type, $updated_data)) {
+                    $logCode .= '_skip';
+                    $logMessage = 'rejected by filter';
+                }elseif ($transform->init($entity, $sourceNodeId, $transformEntity, $updated_data)){
+                    $this->getServiceLocator()->get('logService')
+                        ->log($logLevel, $logCode, $logMessagePrefix.$logMessage.$logMessageSuffix, $logData, $logEntities);
+                    $data = $transform->apply();
+                    if ($data && count($data)) {
+                        $returnData = array_merge($returnData, $data);
+                    }
+                    $logLevel = LogService::LEVEL_DEBUGEXTRA;
+                    $logCode .= '_apply';
+                }else{
+                    $logLevel = LogService::LEVEL_WARN;
+                    $logCode .= 'ignore';
                 }
             }
+
+            $this->getServiceLocator()->get('logService')
+                ->log($logLevel, $logCode, $logMessagePrefix.$logMessage.$logMessageSuffix, $logData, $logEntities);
         }
 
-        return $retData;
+        return $returnData;
     }
 
     /**
@@ -105,7 +141,7 @@ class RouterService implements ServiceLocatorAwareInterface {
 
         $message = 'distributeUpdate - from '.$source_node_id.' - '.$entity->getId().' ('.$entity->getTypeStr().') - '
             .count($affectedNodes).' nodes';
-        $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
             'distup',
             $message,
             array('nodes'=>$affectedNodeIds, 'attributes'=>array_keys($attributes)),
@@ -136,10 +172,10 @@ class RouterService implements ServiceLocatorAwareInterface {
                     'complete'=>0,
                 ));
                 if(!$res){
-                    $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'distup_err', 'distributeUpdate had error while inserting update entries (unknown)', array('uid'=>$uid, 'type'=>'unknown'), array('entity'=>$entity, 'node'=>$source_node_id));
+                    $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR, 'distup_err', 'distributeUpdate had error while inserting update entries (unknown)', array('uid'=>$uid, 'type'=>'unknown'), array('entity'=>$entity, 'node'=>$source_node_id));
                 }
             }catch(\Exception $e){
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_ERROR, 'distup_err', 'distributeUpdate had error while inserting update entries (ex)', array('uid'=>$uid, 'type'=>'ex'), array('entity'=>$entity, 'node'=>$source_node_id, 'exception'=>$e));
+                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR, 'distup_err', 'distributeUpdate had error while inserting update entries (ex)', array('uid'=>$uid, 'type'=>'ex'), array('entity'=>$entity, 'node'=>$source_node_id, 'exception'=>$e));
             }
         }
     }
@@ -195,11 +231,11 @@ class RouterService implements ServiceLocatorAwareInterface {
                 ));
                 if(!$res){
                     $this->getServiceLocator()->get('logService')
-                        ->log(\Log\Service\LogService::LEVEL_ERROR, 'distact_err', 'distributeAction had error while inserting update entries (unknown)', array('aid'=>$aid, 'type'=>'unknown'), array('entity'=>$entity, 'node'=>$source_node_id));
+                        ->log(LogService::LEVEL_ERROR, 'distact_err', 'distributeAction had error while inserting update entries (unknown)', array('aid'=>$aid, 'type'=>'unknown'), array('entity'=>$entity, 'node'=>$source_node_id));
                 }
             }catch(\Exception $e){
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_ERROR, 'distact_err', 'distributeAction had error while inserting update entries (ex)', array('aid'=>$aid, 'type'=>'ex'), array('entity'=>$entity, 'node'=>$source_node_id, 'exception'=>$e));
+                    ->log(LogService::LEVEL_ERROR, 'distact_err', 'distributeAction had error while inserting update entries (ex)', array('aid'=>$aid, 'type'=>'ex'), array('entity'=>$entity, 'node'=>$source_node_id, 'exception'=>$e));
             }
         }
 
