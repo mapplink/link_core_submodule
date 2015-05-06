@@ -415,8 +415,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
 
         $sqls = array_merge($sqls, $extraSqls);
 
-        $try = 1;
-        $maxTries = 3;
+        $try = 0;
+        $maxTries = 9;
         $success = FALSE;
         $adapter = $this->getAdapter();
 
@@ -451,18 +451,18 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 $this->rollbackTransaction($transactionLabel);
 
                 if (self::isRestartTransaction($exception)) {
-                    sleep(2);
-                    $isLast = $try >= $maxTries;
+                    usleep(400);
+                    $isLast = ($try >= $maxTries);
                 }else{
                     $isLast = TRUE;
                 }
 
-                $logCode = 'sav_update_err';
+                $logCode = 'sav_upd_err';
                 if ($isLast) {
                     $logLevel = LogService::LEVEL_ERROR;
                 }else {
                     $logLevel = LogService::LEVEL_WARN;
-                    $logCode .= '_'.$try;
+                    $logCode .= $try;
                 }
                 $logMessage = 'updateData of entity '.$entity->getId().' - Exception in processing, rolling back'
                     .' ('.$try.'/'.$maxTries.')';
