@@ -14,29 +14,18 @@ use Zend\Mvc\ModuleRouteListener;
 use Zend\Mvc\MvcEvent;
 use Zend\ModuleManager\Feature\ConsoleBannerProviderInterface;
 
-class Module  implements ConsoleBannerProviderInterface
+
+class Module extends AbstractModule implements ConsoleBannerProviderInterface
 {
-    public function onBootstrap(MvcEvent $e)
+
+    /**
+     * @param MvcEvent $event
+     */
+    public function onBootstrap(MvcEvent $event)
     {
-        $eventManager        = $e->getApplication()->getEventManager();
+        $eventManager = $event->getApplication()->getEventManager();
         $moduleRouteListener = new ModuleRouteListener();
         $moduleRouteListener->attach($eventManager);
-    }
-
-    public function getConfig()
-    {
-        return include __DIR__ . '/config/module.config.php';
-    }
-
-    public function getAutoloaderConfig()
-    {
-        return array(
-            'Zend\Loader\StandardAutoloader' => array(
-                'namespaces' => array(
-                    __NAMESPACE__ => __DIR__ . '/src/' . __NAMESPACE__,
-                ),
-            ),
-        );
     }
 
     /**
@@ -48,15 +37,12 @@ class Module  implements ConsoleBannerProviderInterface
      * output.
      *
      * @param AdapterInterface $console
-     * @return string|null
+     * @return string|NULL $printOut
      */
     public function getConsoleBanner(AdapterInterface $console)
     {
-        return
-            "==------------------------------------------------------==\n" .
-            "           Welcome to the Magelink Command Line           \n" .
-            "==------------------------------------------------------==\n" .
-            "Version 3.0.0\n"
-            ;
+        return "===------------------------------------------------===\n"
+              ."    Welcome to the Magelink Command Line Tool v3.0    \n"
+              ."===------------------------------------------------===\n\n";
     }
 }
