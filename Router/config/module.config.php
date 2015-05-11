@@ -16,7 +16,7 @@ return array (
             'transform_set'=>false,
         ),
     ),
-	'doctrine' => array(
+    'doctrine' => array(
         'driver' => array(
             'router_entities' => array(
                 'class' => 'Doctrine\ORM\Mapping\Driver\AnnotationDriver',

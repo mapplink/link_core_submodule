@@ -79,21 +79,22 @@ class RouterService implements ServiceLocatorAwareInterface
     /**
      * Process any Routing Transforms before processing an update.
      * @param Entity $entity The affected Entity
-     * @param array $updated_data A key-value array of updated attributes
+     * @param array $updatedData A key-value array of updated attributes
      * @param int $sourceNodeId The node that performed the original update
      * @param int $type The original update type (CUD)
      * @return array $transformedData
      */
-    public function processTransforms(Entity $entity, $updated_data, $sourceNodeId, $type = Update::TYPE_UPDATE)
+    public function processTransforms(Entity $entity, $updatedData, $sourceNodeId, $type = Update::TYPE_UPDATE)
     {
         /** @var \Entity\Service\EntityConfigService $entityConfigService */
         $entityConfigService = $this->getServiceLocator()->get('entityConfigService');
 
+
         $transformedData = array();
         $affectedAttributeIds = array();
 
-        foreach (array_keys($updated_data) as $attributeCode) {
-            if ($type != Update::TYPE_UPDATE || $updated_data[$attributeCode] !== $entity->getData($attributeCode)) {
+        foreach (array_keys($updatedData) as $attributeCode) {
+            if ($type != Update::TYPE_UPDATE || $updatedData[$attributeCode] !== $entity->getData($attributeCode)) {
                 $affectedAttributeIds[] = $entityConfigService->parseAttribute($attributeCode, $entity->getType());
             }
         }
@@ -101,19 +102,24 @@ class RouterService implements ServiceLocatorAwareInterface
         if (count($affectedAttributeIds)) {
             /** @var \Router\Transform\TransformFactory $transformFactory */
             $transformFactory = $this->getServiceLocator()->get('transformFactory');
-            /** @var \Router\Entity\RouterTransform[] $transforms */
-            $transforms = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager')
+            /** @var \Router\Entity\RouterTransform[] $transformEntities */
+            $transformEntities = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager')
                 ->getRepository('Router\Entity\RouterTransform')
                 ->getApplicableTransforms($entity->getType(), $affectedAttributeIds, $type);
 
-            foreach ($transforms as $transformEntity) {
-                $transform = $transformFactory->getTransform($transformEntity);
+            $transforms = array();
+            foreach ($transformEntities as $transformEntity) {
+                $code = $transformEntity->getTransformType();
+                if (!isset($transforms[$code])) {
+                    $transforms[$code] = $transformFactory->getTransform($transformEntity);
+                }
+                $transform = $transforms[$code];
 
                 $logLevel = LogService::LEVEL_INFO;
                 $logCode = 'trans_';
                 $logMessagePrefix = 'processTransforms: ';
                 $logMessage = '';
-                $logMessageSuffix = ' from node '.$sourceNodeId.' on entity '.$entity->getId();
+                $logMessageSuffix = ' from node '.$sourceNodeId.' on entity '.$entity->getId()
                     .' with transform '.$transformEntity->getTransformId();
                 $logData = array(
                     'tfid'=>$transformEntity->getTransformid(),
@@ -130,14 +136,11 @@ class RouterService implements ServiceLocatorAwareInterface
                 }else{
                     $logCode .= substr(get_class($transform), 0, 4);
                     $logMessageSuffix .= ' (class: '.get_class($transform).')';
-                    $data = $transform->apply();
-                    if ($data && count($data)) {
-                        $transformedData = array_merge($transformedData, $data);
-                    }
-                    if (!$this->checkFiltersTransform($entity, $transformEntity, $type, $updated_data)) {
+
+                    if (!$this->checkFiltersTransform($entity, $transformEntity, $type, $updatedData)) {
                         $logCode .= '_skip';
                         $logMessage = 'rejected by filter';
-                    }elseif ($transform->init($entity, $sourceNodeId, $transformEntity, $updated_data)){
+                    }elseif ($transform->init($entity, $sourceNodeId, $transformEntity, $updatedData)){
                         $this->getServiceLocator()->get('logService')->log($logLevel, $logCode,
                             $logMessagePrefix.$logMessage.$logMessageSuffix, $logData, $logEntities);
                         $data = $transform->apply();
