@@ -69,12 +69,8 @@ class LogService implements ServiceLocatorAwareInterface
      */
     protected function initLoggers()
     {
-        $config = $this->getServiceLocator()->get('Config');
-        if (!isset($config['system_log'])) {
-            $config = array();
-        }else{
-            $config = $config['system_log'];
-        }
+        $config = $this->getServiceLocator()->get('applicationConfigService')
+            ->getConfigSystemLogData();
 
         if (isset($config['enable_debug'])) {
             $this->_enableDebug = $config['enable_debug'];

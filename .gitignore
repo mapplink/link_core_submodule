@@ -1,0 +1,17 @@
+local.*php
+*.local.php
+
+._*
+*.sh
+*.gz
+*.sql
+*.log*
+.~lock.*
+.DS_Store
+nbproject
+.buildpath
+.idea
+.project
+.settings
+
+docs/*

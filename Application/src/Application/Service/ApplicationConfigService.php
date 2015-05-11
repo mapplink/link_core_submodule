@@ -50,15 +50,96 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @return array|null $this->_config
+     * @param array $array
+     * @param string $key
+     * @return array $subArray
      */
-    protected function getConfigData()
+    protected function getArrayKeyData(array $array, $key, $default = array())
+    {
+        if ($key && array_key_exists($key, $array)) {
+            $subarray = $array[$key];
+        }else{
+            $subarray = $default;
+        }
+
+        return $subarray;
+    }
+
+    /**
+     * @return array $config
+     */
+    protected function getConfigData($code = NULL)
     {
         if (!$this->_config) {
             $this->_config = $this->getServiceLocator()->get('Config');
         }
 
-        return $this->_config;
+        if ($code && is_array($this->_config)) {
+            $config = $this->getArrayKeyData($this->_config, $code);
+        }elseif (!$code) {
+            $config = $this->_config;
+        }else{
+            $config = array();
+        }
+
+        return $config;
+    }
+
+    /**
+     * @return array $configCronData
+     */
+    protected function getConfigCronData()
+    {
+        return $this->getConfigData('magelink_cron');
+    }
+
+    /**
+     * @return array $configSystemLogData
+     */
+    protected function getConfigSystemLogData()
+    {
+        return $this->getConfigData('system_log');
+    }
+
+    /**
+     * @return array $configCronData
+     */
+    protected function getConfigClientData()
+    {
+        return $this->getArrayKeyData($this->getConfigSystemLogData(), 'client_notification');
+    }
+
+    /**
+     * @return string $clientEmail
+     */
+    public function getClientEmail()
+    {
+        return $this->getArrayKeyData($this->getConfigClientData(), 'email', '');
+    }
+
+
+    protected function getClientHour($code, $default)
+    {
+        $hour = $this->getArrayKeyData($this->getConfigClientData(), $code, $default);
+        $hour = ($hour < 0 || $hour > 24) ? $default : $hour;
+
+        return $hour;
+    }
+
+    /**
+     * @return int $clientNotificationStarthour
+     */
+    public function getClientStarthour()
+    {
+        return $this->getClientHour('starthour', 0);
+    }
+
+    /**
+     * @return int $clientNotificationEndhour
+     */
+    public function getClientEndhour()
+    {
+        return $this->getClientHour('endhour', 24);
     }
 
     /**
@@ -66,8 +147,8 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
      */
     public function isCronjob()
     {
-        $config = $this->getConfigData();
-        return isset($config['magelink_cron']) && is_array($config['magelink_cron']) && count($config['magelink_cron']);
+        $configCron = $this->getConfigCronData();
+        return is_array($configCron) && count($configCron);
     }
 
     /**
@@ -79,7 +160,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
 
         if ($this->isCronjob()) {
             if (!$this->cronjobs) {
-                $magelinkCron = $this->_config['magelink_cron'];
+                $magelinkCron = $this->getConfigCronData();
                 foreach ($magelinkCron as $name=>$cronjobData) {
                     $class = __CLASS__;
                     extract($cronjobData, EXTR_IF_EXISTS);

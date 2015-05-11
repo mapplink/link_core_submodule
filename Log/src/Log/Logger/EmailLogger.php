@@ -10,20 +10,23 @@
 
 namespace Log\Logger;
 
-use Log\Service\LogService;
 use Application\Helper\ErrorHandler;
+use Application\Service\ApplicationConfigService;
+use Log\Service\LogService;
 
 
 class EmailLogger extends AbstractLogger
 {
 
-    const ERROR_TO_CLIENT_EMAIL = '';
+    // ToDo : Implement as a logService ->log parameter
     const ERROR_TO_CLIENT_CODE = 'cno_';
-    const ERROR_TO_CLIENT_STARTHOUR = 7;
-    const ERROR_TO_CLIENT_ENDHOUR = 20;
 
     protected $lastCache = array();
     protected $cacheSize = 20;
+
+    protected $clientEmail;
+    protected $clientEmailStarthour;
+    protected $clientEmailEndhour;
 
     protected $_allowedLevels = array(
         LogService::LEVEL_ERROR
@@ -37,8 +40,16 @@ class EmailLogger extends AbstractLogger
      */
     function init($config = array())
     {
-        $this->lastCache = array();
+        /** @var ApplicationConfigService $applicationConfigService */
+        $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
+
         // TODO (maybe) : make cacheSize configurable
+        $this->lastCache = array();
+        $this->cacheSize = 20;
+
+        $this->clientEmail = $applicationConfigService->getClientEmail();
+        $this->clientEmailStarthour = $applicationConfigService->getClientStarthour();
+        $this->clientEmailEndhour = $applicationConfigService->getClientEndhour();
 
         return TRUE;
     }
@@ -111,7 +122,7 @@ class EmailLogger extends AbstractLogger
         mail(ErrorHandler::ERROR_TO, $subject, $content, 'Content-Type: text/plain');
 
         $clientCodeMatching = strpos($errorCode, self::ERROR_TO_CLIENT_CODE) !== FALSE;
-        $daytime = (date('H') > self::ERROR_TO_CLIENT_STARTHOUR) && (date('H') < self::ERROR_TO_CLIENT_ENDHOUR);
+        $daytime = (date('H') > $this->endhour) && (date('H') < self::ERROR_TO_CLIENT_ENDHOUR);
         $devOrStaging = (strpos(__DIR__, 'dev.') + strpos(__DIR__, 'staging.') > 0);
 
         if (self::ERROR_TO_CLIENT_EMAIL && $clientCodeMatching && $daytime && !$devOrStaging) {
