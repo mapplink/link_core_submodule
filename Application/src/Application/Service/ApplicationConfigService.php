@@ -96,7 +96,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     /**
      * @return array $configSystemLogData
      */
-    protected function getConfigSystemLogData()
+    public function getConfigSystemLogData()
     {
         return $this->getConfigData('system_log');
     }
