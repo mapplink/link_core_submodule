@@ -154,10 +154,10 @@ class RouterService implements ServiceLocatorAwareInterface
                         $logCode .= 'ignore';
                     }
                 }
-            }
 
-            $this->getServiceLocator()->get('logService')
-                ->log($logLevel, $logCode, $logMessagePrefix.$logMessage.$logMessageSuffix, $logData, $logEntities);
+                $this->getServiceLocator()->get('logService')
+                    ->log($logLevel, $logCode, $logMessagePrefix.$logMessage.$logMessageSuffix, $logData, $logEntities);
+            }
         }
 
         return $transformedData;
