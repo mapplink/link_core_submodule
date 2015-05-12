@@ -1,7 +1,7 @@
 <?php
 namespace Router;
 
-use Application\AbstractModule;
+use Application\MagelinkModule;
 
 
-class Module extends AbstractModule {}
+class Module extends MagelinkModule {}

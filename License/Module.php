@@ -1,7 +1,7 @@
 <?php
 namespace License;
 
-use Application\AbstractModule;
+use Application\MagelinkModule;
 
 
-class Module extends AbstractModule {}
+class Module extends MagelinkModule {}
