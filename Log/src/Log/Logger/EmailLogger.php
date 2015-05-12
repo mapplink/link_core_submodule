@@ -122,12 +122,11 @@ class EmailLogger extends AbstractLogger
         mail(ErrorHandler::ERROR_TO, $subject, $content, 'Content-Type: text/plain');
 
         $clientCodeMatching = strpos($errorCode, self::ERROR_TO_CLIENT_CODE) !== FALSE;
-        $daytime = (date('H') > $this->endhour) && (date('H') < self::ERROR_TO_CLIENT_ENDHOUR);
-        $devOrStaging = (strpos(__DIR__, 'dev.') + strpos(__DIR__, 'staging.') > 0);
+        $daytime = (date('H') > $this->clientEmailStarthour) && (date('H') < $this->clientEmailEndhour);
 
-        if (self::ERROR_TO_CLIENT_EMAIL && $clientCodeMatching && $daytime && !$devOrStaging) {
+        if ($this->clientEmail && $clientCodeMatching && $daytime) {
             $additionalHeader = 'Content-Type: text/plain'."\r\n".'From: '.ErrorHandler::ERROR_FROM;
-            mail(self::ERROR_TO_CLIENT_EMAIL, $subject, $content, $additionalHeader);
+            mail($this->clientEmail, $subject, $content, $additionalHeader);
         }
     }
 
