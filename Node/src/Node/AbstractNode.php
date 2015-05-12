@@ -361,8 +361,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         }else{
             $logCode = strtolower(substr($nodeClass, 0, 3)).'_';
         }
-
-        $logCode = 'node_upd';
+        $logCode .= 'node_upd';
         $logMessage = $nodeClass.' update: '.count($this->updates).' updates, '.count($this->actions).' actions.';
         $logData = array('class'=>$nodeClass, 'updates'=>count($this->updates), 'actions'=>count($this->actions));
         $logEntities = array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates);
