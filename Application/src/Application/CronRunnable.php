@@ -117,10 +117,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
         $runtime = $end - $start;
         $runMinutes = floor($runtime / 60);
-        $runSeconds = $runtime % 60;
+        $runSeconds = round(fmod($runtime, 60), 1);
 
         $logMessage = 'Cron '.$this->getName().' finished at '.$endDate
-            .'. Runtime was '.($runMinutes ? $runMinutes.' min and ' : '').$runSeconds.' s.';
+            .'. Runtime was '.($runMinutes ? $runMinutes.'min, ' : '').$runSeconds.'s.';
         $logData = array_merge($logData, array('end'=>$endDate, 'runtime'=>$runtime));
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_INFO, 'cron_run_'.$name, $logMessage, $logData, $logEntities);
