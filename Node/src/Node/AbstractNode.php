@@ -355,11 +355,13 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $this->actions = $this->getPendingActions();
         $this->updates = $this->getPendingUpdates();
 
+        $reflection = new \ReflectionClass($this);
+        $nodeClass = $reflection->getShortName();
         $this->getServiceLocator()->get('logService')
             ->log(\Log\Service\LogService::LEVEL_INFO,
                 'node_upd',
-                'AbstractNode update: '.count($this->updates).' updates, '.count($this->actions).' actions.',
-                array(),
+                $nodeClass.' update: '.count($this->updates).' updates, '.count($this->actions).' actions.',
+                array('class'=>$nodeClass, 'updates'=>count($this->updates), 'actions'=>count($this->actions)),
                 array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates)
             );
 
