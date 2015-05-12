@@ -355,18 +355,37 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $this->actions = $this->getPendingActions();
         $this->updates = $this->getPendingUpdates();
 
-        $reflection = new \ReflectionClass($this);
-        $nodeClass = $reflection->getShortName();
-        $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_INFO,
-                'node_upd',
-                $nodeClass.' update: '.count($this->updates).' updates, '.count($this->actions).' actions.',
-                array('class'=>$nodeClass, 'updates'=>count($this->updates), 'actions'=>count($this->actions)),
-                array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates)
-            );
+        $nodeClass = get_called_class();
+        if (strpos($nodeClass, 'Node') === 0) {
+            $logCode = '';
+        }else{
+            $logCode = strtolower(substr($nodeClass, 0, 3)).'_';
+        }
 
+        $logCode = 'node_upd';
+        $logMessage = $nodeClass.' update: '.count($this->updates).' updates, '.count($this->actions).' actions.';
+        $logData = array('class'=>$nodeClass, 'updates'=>count($this->updates), 'actions'=>count($this->actions));
+        $logEntities = array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates);
+
+        $this->getServiceLocator()->get('logService')
+            ->log(LogService::LEVEL_INFO,$logCode, $logMessage, $logData, $logEntities);
+
+        $startTimestamp = microtime(TRUE);
         $this->processUpdates();
+
+        $logCode .= 'time';
+        $logMessage = 'processUpdates took '.microtime(TRUE) - $startTimestamp.'s.';
+        $logData = array('message'=>$logMessage);
+        $this->getServiceLocator()->get('logService')
+            ->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData, $logEntities);
+
+        $startTimestamp = microtime(TRUE);
         $this->processActions();
+
+        $logMessage = 'processActions took '.microtime(TRUE) - $startTimestamp.'s.';
+        $logData = array('message'=>$logMessage);
+        $this->getServiceLocator()->get('logService')
+            ->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData, $logEntities);
     }
 
     /**
