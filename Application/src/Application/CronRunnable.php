@@ -113,7 +113,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $this->_cronRun();
 
         $end = microtime(TRUE);
-        $endDate = date('H:i:s d/m', $end);
+        $endDate = date('d/m, H:i:s', $end);
 
         $runtime = $end - $start;
         $runMinutes = floor($runtime / 60);
