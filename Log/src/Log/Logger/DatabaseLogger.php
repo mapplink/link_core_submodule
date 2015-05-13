@@ -10,6 +10,7 @@
 
 namespace Log\Logger;
 
+use Application\Service\ApplicationConfigService;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Zend\Db\TableGateway\TableGateway;
@@ -18,8 +19,11 @@ use Zend\Db\Adapter\Adapter;
 
 class DatabaseLogger extends AbstractLogger {
 
-    /** @var TableGateway */
+    /** @var TableGateway $_tableGateway */
     protected $_tableGateway = FALSE;
+
+    /** @var bool $_enableExtendedDatabase */
+    protected $_enableExtendedDatabase = FALSE;
 
     /** @var array $_allowedLevels */
     protected $_allowedLevels = array(
@@ -33,7 +37,7 @@ class DatabaseLogger extends AbstractLogger {
      * @param array $config
      * @return bool $success Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
-    function init($config = array())
+    public function init(array $config = array())
     {
         try{
             $this->_tableGateway = new TableGateway('log_entry', $this->getServiceLocator()->get('zend_db'));
@@ -42,17 +46,20 @@ class DatabaseLogger extends AbstractLogger {
             $success = FALSE;
         }
 
+        /** @var ApplicationConfigService $applicationConfigService */
+        $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
+        $this->_enableExtendedDatabase = $applicationConfigService->isExtendedDatabaseLoggingEnabled();
+
         return $success;
     }
 
     /**
      * @param string $level
-     * @param bool $extendedDatabaseEnabled
      * @return bool $isLogLevel
      */
-    public function isLogLevel($level, $extendedDatabaseEnabled)
+    public function isLogLevel($level)
     {
-        $isLogLevel = ($extendedDatabaseEnabled || parent::isLogLevel($level, $extendedDatabaseEnabled));
+        $isLogLevel = ($this->_extendedDatabaseEnabled || parent::isLogLevel($level));
         return $isLogLevel;
     }
 

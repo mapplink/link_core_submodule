@@ -96,7 +96,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     /**
      * @return array $configSystemLogData
      */
-    public function getConfigSystemLogData()
+    protected function getConfigSystemLogData()
     {
         return $this->getConfigData('system_log');
     }
@@ -140,6 +140,38 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     public function getClientEndhour()
     {
         return $this->getClientHour('endhour', 24);
+    }
+
+    /**
+     * @return bool $enableDebug
+     */
+    public function isDebugLevelEnabled()
+    {
+        return $this->getArrayKeyData($this->getConfigSystemLogData(), 'enable_debug', FALSE);
+    }
+
+    /**
+     * @return bool $enableDebugextra
+     */
+    public function isDebugextraLevelEnabled()
+    {
+        return $this->getArrayKeyData($this->getConfigSystemLogData(), 'enable_debug_extra', FALSE);
+    }
+
+    /**
+     * @return bool $enableDebuginternal
+     */
+    public function isDebuginternalLevelEnabled()
+    {
+        return $this->getArrayKeyData($this->getConfigSystemLogData(), 'enable_debug_internal', FALSE);
+    }
+
+    /**
+     * @return bool $enableExtendedDatabase
+     */
+    public function isExtendedDatabaseLoggingEnabled()
+    {
+        return $this->getArrayKeyData($this->getConfigSystemLogData(), 'enable_extended_database', FALSE);
     }
 
     /**

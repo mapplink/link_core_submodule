@@ -38,7 +38,7 @@ class EmailLogger extends AbstractLogger
      * @param array $config
      * @return boolean Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
-    function init($config = array())
+    public function init(array $config = array())
     {
         /** @var ApplicationConfigService $applicationConfigService */
         $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');

@@ -20,9 +20,6 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 abstract class AbstractLogger implements ServiceLocatorAwareInterface
 {
 
-    /** @var ServiceLocatorInterface $serviceLocator */
-    protected $_serviceLocator;
-
     /** @var array $_allowedLevels  Contains all allowed levels of the logger */
     protected $_allowedLevels = array(
         LogService::LEVEL_DEBUGINTERNAL,
@@ -32,6 +29,10 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
         LogService::LEVEL_WARN,
         LogService::LEVEL_ERROR
     );
+
+    /** @var ServiceLocatorInterface $serviceLocator */
+    protected $_serviceLocator;
+
 
     /**
      * Set service locator
@@ -54,15 +55,15 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
     /**
      * Initialize the logger instance and verify if it is able to log messages.
      * @param array $config
-     * @return boolean Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
+     * @return bool Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
-    abstract function init($config = array());
+    abstract public function init(array $config = array());
 
     /**
      * @param string $level
      * @return bool $isLogLevel
      */
-    public function isLogLevel($level, $extendedDatabaseEnabled)
+    public function isLogLevel($level)
     {
         if (in_array($level, $this->_allowedLevels)) {
             $isLogLevel = TRUE;

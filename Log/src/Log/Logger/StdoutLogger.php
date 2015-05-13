@@ -33,7 +33,7 @@ class StdoutLogger extends AbstractLogger
      * @param array $config
      * @return boolean Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
-    function init($config = array())
+    public function init(array $config = array())
     {
         if (php_sapi_name() == 'cli') {
             $success = $this->_cliMode = TRUE;

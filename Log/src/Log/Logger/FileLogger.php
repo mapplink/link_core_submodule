@@ -28,7 +28,7 @@ class FileLogger extends AbstractLogger
      * @param array $config
      * @return bool Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
-    function init($config = array())
+    public function init(array $config = array())
     {
         $this->_fileHandler = fopen(self::LOGFILE, 'a');
         return (bool) $this->_fileHandler;

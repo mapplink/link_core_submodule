@@ -12,6 +12,7 @@
 
 namespace Log\Service;
 
+use Application\Service\ApplicationConfigService;
 use Log\Logger\AbstractLogger;
 use Magelink\Exception\MagelinkException;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
@@ -33,14 +34,15 @@ class LogService implements ServiceLocatorAwareInterface
     // Used for extreme debugging messages (needed for internal framework development)
     const LEVEL_DEBUGINTERNAL = 'dbgint';
 
+    /** @var AbstractLogger[] */
+    protected $_logger = array();
+
     protected $_enableDebug = FALSE;
     protected $_enableDebugExtra = FALSE;
     protected $_enableDebugInternal = FALSE;
 
-    protected $_enableExtendedDatabase = FALSE;
-
     /** @var AbstractLogger[] */
-    protected $_logger = array();
+    protected $_levelsToBeLogged = array();
 
     /** @var ServiceLocatorInterface $serviceLocator */
     protected $_serviceLocator;
@@ -69,22 +71,12 @@ class LogService implements ServiceLocatorAwareInterface
      */
     protected function initLoggers()
     {
-        $config = $this->getServiceLocator()->get('applicationConfigService')
-            ->getConfigSystemLogData();
+        /** @var ApplicationConfigService $applicationConfigService */
+        $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
 
-        if (isset($config['enable_debug'])) {
-            $this->_enableDebug = $config['enable_debug'];
-        }
-        if (isset($config['enable_debug_extra'])) {
-            $this->_enableDebugExtra = $config['enable_debug_extra'];
-        }
-        if (isset($config['enable_debug_internal'])) {
-            $this->_enableDebugInternal = $config['enable_debug_internal'];
-        }
-
-        if (isset($config['enable_database_only'])) {
-            $this->_enableExtendedDatabase = $config['enable_extended_database'];
-        }
+        $this->_enableDebug = $applicationConfigService->isDebugLevelEnabled();
+        $this->_enableDebugExtra = $applicationConfigService->isDebugextraLevelEnabled();
+        $this->_enableDebugInternal = $applicationConfigService->isDebuginternalLevelEnabled();
 
         if (isset($config['logger']) && is_array($config['logger']) && count($config['logger'])) {
             $logger = $config['logger'];
@@ -94,53 +86,62 @@ class LogService implements ServiceLocatorAwareInterface
         }
 
         foreach ($logger as $name=>$loggerInfo) {
-            $loggerObject = new $loggerInfo['class']();
-            if ($loggerObject instanceof ServiceLocatorAwareInterface) {
-                $loggerObject->setServiceLocator($this->getServiceLocator());
-            }
-            if ($loggerObject instanceof AbstractLogger) {
-                if ($loggerObject->init($loggerInfo)) {
-                    $this->_logger[$name] = $loggerObject;
+            if (!is_null($loggerInfo)) {
+                try {
+                    $loggerObject = new $loggerInfo['class']();
+                    if ($loggerObject instanceof ServiceLocatorAwareInterface) {
+                        $loggerObject->setServiceLocator($this->getServiceLocator());
+                    }
+                }catch (\Exception $exception) {
+                    throw new MagelinkException('Invalid logger information specified: '.serialize($loggerInfo));
                 }
-            }else{
-                throw new MagelinkException('Invalid logger class specified - '.$loggerInfo['class'].'!');
+
+                if ($loggerObject instanceof AbstractLogger) {
+                    if ($loggerObject->init($loggerInfo)) {
+                        $this->_logger[$name] = $loggerObject;
+                    }
+                }else {
+                    throw new MagelinkException('Invalid logger class specified: '.$loggerInfo['class']);
+                }
             }
         }
     }
 
     /**
      * @param string $level
-     * @return bool $logIt
+     * @return bool $this->_levelsToBeLogged[$level]
      */
     protected function isLevelToBeLogged($level)
     {
-        $logIt = ($level != self::LEVEL_DEBUG || $this->_enableDebug)
-            && ($level != self::LEVEL_DEBUGEXTRA || $this->_enableDebugExtra)
-            && ($level != self::LEVEL_DEBUGINTERNAL || $this->_enableDebugInternal);
-        return $logIt;
+        if (!array_key_exists($level, $this->_levelsToBeLogged)) {
+            $this->_levelsToBeLogged[$level] = ($level != self::LEVEL_DEBUG || $this->_enableDebug)
+                && ($level != self::LEVEL_DEBUGEXTRA || $this->_enableDebugExtra)
+                && ($level != self::LEVEL_DEBUGINTERNAL || $this->_enableDebugInternal);
+        }
+
+        return $this->_levelsToBeLogged[$level];
      }
 
     /**
      * Enters a new log message, routing it to appropriate destinations (i.e. DB, files, email, etc).
-     * It will examine the stack to automatically populate the calling module and calling class.
-     *
+     *   It will examine the stack to automatically populate the calling module and calling class.
      * @param string $logLevel
      * @param string $logCode
      * @param string $logMessage
      * @param array $logData
-     * @param array $options An array of auxiliary data - supports the following keys:user: User ID to attach to the entry
-     * * node: Node ID to attach to the entry
-     * * entity: Entity ID to attach to the entry
-     * * filter: Router Filter ID to attach to the entry
-     * * user: User ID to attach to the entry
-     * * exception: An exception class, that will be used to find the module & calling class (instead of where this function is called from)
-     * * All other keys will be silently ignored (to allow for backwards-compatibility if logging is enhanced and we backport modules to older versions of Magelink)
-     * * Where these are not specified we will try and infer useful values from the stack
+     * @param array $options An array of auxiliary data - supports the following keys:
+     *     user: User ID to attach to the entry
+     *     node: Node ID to attach to the entry
+     *     entity: Entity ID to attach to the entry
+     *     filter: Router Filter ID to attach to the entry
+     *     user: User ID to attach to the entry
+     *     exception: An exception class, that will be used to find the module & calling class
+     *   All other keys will be silently ignored (to allow for backwards-compatibility)
      * @return int ID of the new log entry
      */
     public function log($logLevel, $logCode, $logMessage, array $logData, array $options = array())
     {
-        if ($this->_logger == FALSE) {
+        if (!$this->_logger) {
             $this->initLoggers();
         }
 
@@ -163,7 +164,7 @@ class LogService implements ServiceLocatorAwareInterface
                     'file'=>$exception->getFile(),
                     'line'=>$exception->getLine(),
                 );
-            }else {
+            }else{
                 $backtraces = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
                 array_shift($backtraces);
                 $topTrace = $backtraces[0];
@@ -226,7 +227,7 @@ class LogService implements ServiceLocatorAwareInterface
             }
 
             foreach ($this->_logger as $name=>$logger) {
-                if ($logger->isLogLevel($logLevel, $this->_enableExtendedDatabase)) {
+                if ($logger->isLogLevel($logLevel)) {
                     $logger->printLog($logLevel, $logCode, $logMessage, $logData, $options, $topTrace);
                 }
             }
