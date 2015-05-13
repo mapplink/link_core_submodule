@@ -29,9 +29,9 @@ class LogService implements ServiceLocatorAwareInterface
     // Used for troubleshooting issues with data flow, etc. (useful for finding issues)
     const LEVEL_DEBUG = 'debug';
     // Used for extreme debugging messages (more details for of finding issues)
-    const LEVEL_DEBUGEXTRA = 'debugex';
+    const LEVEL_DEBUGEXTRA = 'debugx';
     // Used for extreme debugging messages (needed for internal framework development)
-    const LEVEL_DEBUGINTERNAL = 'debugint';
+    const LEVEL_DEBUGINTERNAL = 'dbgint';
 
     protected $_enableDebug = FALSE;
     protected $_enableDebugExtra = FALSE;
