@@ -65,15 +65,15 @@ class StdoutLogger extends AbstractLogger
         if ($this->_cliMode) {
             switch ($level) {
                 case LogService::LEVEL_ERROR:
-                    $prefix = "\033[1;31m\033[40m";
+                    $prefix = "\033[1;31m\033[40m"; // red
                     $suffix = "\033[0m";
                     break;
                 case LogService::LEVEL_WARN:
-                    $prefix = "\033[1;33m\033[40m";
+                    $prefix = "\033[1;33m\033[40m"; // yellow
                     $suffix = "\033[0m";
                     break;
                 case LogService::LEVEL_DEBUGINTERNAL:
-                    $prefix = "\033[1;35m\033[40m";
+                    $prefix = "\033[1;34m\033[40m"; // light blue
                     $suffix = "\033[0m";
                     break;
                 default:
