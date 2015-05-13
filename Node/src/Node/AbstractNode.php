@@ -373,18 +373,18 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $this->processUpdates();
 
         $logCode .= '_t_';
-        $logMessage = 'processUpdates took '.(microtime(TRUE) - $startTimestamp).'s.';
+        $logMessage = $nodeClass.'->processUpdates() took '.(microtime(TRUE) - $startTimestamp).'s.';
         $logData = array('message'=>$logMessage);
         $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'u', $logMessage, $logData, $logEntities);
+            ->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'u', $logMessage, $logData);
 
         $startTimestamp = microtime(TRUE);
         $this->processActions();
 
-        $logMessage = 'processActions took '.(microtime(TRUE) - $startTimestamp).'s.';
+        $logMessage = $nodeClass.'->processActions() took '.(microtime(TRUE) - $startTimestamp).'s.';
         $logData = array('message'=>$logMessage);
         $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'a', $logMessage, $logData, $logEntities);
+            ->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'a', $logMessage, $logData);
     }
 
     /**
