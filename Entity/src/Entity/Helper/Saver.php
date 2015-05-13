@@ -451,19 +451,20 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 $this->rollbackTransaction($transactionLabel);
 
                 if (self::isRestartTransaction($exception)) {
-                    usleep(400);
-                    $isLast = ($try >= $maxTries);
+                    $logCode = $try;
+                    usleep(200 + $try * 40);
+                    $isLast = (++$try > $maxTries);
                 }else{
+                    $logCode = '';
                     $isLast = TRUE;
                 }
 
-                $logCode = 'sav_upd_err';
                 if ($isLast) {
                     $logLevel = LogService::LEVEL_ERROR;
                 }else {
                     $logLevel = LogService::LEVEL_WARN;
-                    $logCode .= $try;
                 }
+                $logCode = 'sav_upd_fail'.$logCode;
                 $logMessage = 'updateData of entity '.$entity->getId().' - Exception in processing, rolling back'
                     .' ('.$try.'/'.$maxTries.')';
 
