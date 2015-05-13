@@ -221,40 +221,36 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         $attributesToDelete = array();
         
         foreach ($updatedData as $code=>$newValue) {
-
+            $oldValue = $entity->getData($code);
             if (is_object($newValue) && $newValue instanceof Entity) {
                 if (!$newValue->getId()) {
                     throw new NodeException('Invalid ID for Entity-type value');
+                    $newValue = $oldValue;
                 }else{
                     $newValue = $newValue->getId();
                 }
             }
 
-            $oldValue = $entity->getData($code);
-            if (!is_null($oldValue) && !is_null($newValue)) {
-                settype($newValue, gettype($oldValue));
-            }
-
-            if ($newValue === NULL && $oldValue !== NULL) {
-                $attributesToDelete[] = $code;
-
-            }elseif (is_null($oldValue) && !is_null($newValue)) {
+            if (is_null($oldValue) && !is_null($newValue)) {
                 $attributesToCreate[] = $code;
+            }elseif (!is_null($oldValue) && is_null($newValue)) {
+                $attributesToDelete[] = $code;
+            }elseif (!is_null($oldValue) && !is_null($newValue)) {
+                settype($newValue, gettype($oldValue));
 
-            }elseif ($oldValue !== $newValue || $forcedUpdate) {
-                if (is_array($oldValue) && $merge === TRUE) {
-                    $attributesToMerge[] = $code;
-                }elseif (is_array($merge)) {
-                    if (isset($merge[$code]) && $merge[$code] === TRUE) {
+                if ($oldValue !== $newValue || $forcedUpdate) {
+                    if (is_array($oldValue) && $merge === true) {
                         $attributesToMerge[] = $code;
-                    }else{
+                    }elseif (is_array($merge)) {
+                        if (isset($merge[$code]) && $merge[$code] === true) {
+                            $attributesToMerge[] = $code;
+                        }else {
+                            $attributesToUpdate[] = $code;
+                        }
+                    }else {
                         $attributesToUpdate[] = $code;
                     }
-                }else{
-                    $attributesToUpdate[] = $code;
                 }
-            }else{
-                // Not changed - perhaps warn
             }
         }
 
@@ -301,7 +297,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
-                    'sav_upd_atcr',
+                    'sav_upd_att',
                     'updateData - '.$entity->getId().' - create '.$code,
                     array('type'=>'create', 'attribute code'=>$code, 'new'=>$updatedData[$code]),
                     array('entity'=>$entity)
