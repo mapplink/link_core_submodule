@@ -351,6 +351,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     public function update()
     {
         $this->_nodeService = $this->getServiceLocator()->get('nodeService');
+        /** @var LogService $logService */
+        $logService = $this->getServiceLocator()->get('logService');
 
         $this->actions = $this->getPendingActions();
         $this->updates = $this->getPendingUpdates();
@@ -366,25 +368,21 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $logData = array('class'=>$nodeClass, 'updates'=>count($this->updates), 'actions'=>count($this->actions));
         $logEntities = array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates);
 
-        $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_INFO,$logCode, $logMessage, $logData, $logEntities);
+        $logService->log(LogService::LEVEL_INFO,$logCode, $logMessage, $logData, $logEntities);
 
         $startTimestamp = microtime(TRUE);
         $this->processUpdates();
 
-        $logCode .= '_t_';
         $logMessage = $nodeClass.'->processUpdates() took '.round(microtime(TRUE) - $startTimestamp, 1).'s.';
         $logData = array('message'=>$logMessage);
-        $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'u', $logMessage, $logData);
+        $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_pup', $logMessage, $logData);
 
         $startTimestamp = microtime(TRUE);
         $this->processActions();
 
         $logMessage = $nodeClass.'->processActions() took '.round(microtime(TRUE) - $startTimestamp, 1).'s.';
         $logData = array('message'=>$logMessage);
-        $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'a', $logMessage, $logData);
+        $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_pac', $logMessage, $logData);
     }
 
     /**
