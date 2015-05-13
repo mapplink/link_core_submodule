@@ -23,7 +23,8 @@ class StdoutLogger extends AbstractLogger
     protected $_allowedLevels = array(
         LogService::LEVEL_INFO,
         LogService::LEVEL_WARN,
-        LogService::LEVEL_ERROR
+        LogService::LEVEL_ERROR,
+        LogService::LEVEL_DEBUGINTERNAL
     );
 
 
