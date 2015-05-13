@@ -78,9 +78,8 @@ class LogService implements ServiceLocatorAwareInterface
         $this->_enableDebugExtra = $applicationConfigService->isDebugextraLevelEnabled();
         $this->_enableDebugInternal = $applicationConfigService->isDebuginternalLevelEnabled();
 
-        if (isset($config['logger']) && is_array($config['logger']) && count($config['logger'])) {
-            $logger = $config['logger'];
-        }else{
+        $logger = $applicationConfigService->getConfigLoggerData();
+        if (!is_array($logger) || !count($logger)) {
             $logger = array();
             throw new MagelinkException('No logger class specified!');
         }
