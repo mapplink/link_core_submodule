@@ -48,7 +48,7 @@ class DatabaseLogger extends AbstractLogger {
 
         /** @var ApplicationConfigService $applicationConfigService */
         $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
-        $this->_enableExtendedDatabase = $applicationConfigService->isExtendedDatabaseLoggingEnabled();
+        $this->_extendedDatabaseEnabled = $applicationConfigService->isExtendedDatabaseLoggingEnabled();
 
         return $success;
     }
@@ -59,7 +59,7 @@ class DatabaseLogger extends AbstractLogger {
      */
     public function isLogLevel($level)
     {
-        $isLogLevel = ($this->_extendedDatabaseEnabled || parent::isLogLevel($level));
+        $isLogLevel = ($this->_enableExtendedDatabase || parent::isLogLevel($level));
         return $isLogLevel;
     }
 
