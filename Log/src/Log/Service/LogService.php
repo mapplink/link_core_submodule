@@ -59,7 +59,7 @@ class LogService implements ServiceLocatorAwareInterface
      * Set service locator
      * @param ServiceLocatorInterface $serviceLocator
      */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    public function qsetServiceLocator(ServiceLocatorInterface $serviceLocator)
     {
         $this->_serviceLocator = $serviceLocator;
     }
@@ -74,20 +74,24 @@ class LogService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @throws \Magelink\Exception\MagelinkException
+     * Init class properties applicationConfigService, enableDebug, enableDebugExtra and enableDebugInternal
      */
-    protected function initLoggers()
+    public function init()
     {
         if (!$this->applicationConfigService) {
             $this->applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
-        }
 
-        if (!$this->enableDebug) {
             $this->enableDebug = $this->applicationConfigService->isDebugLevelEnabled();
             $this->enableDebugExtra = $this->applicationConfigService->isDebugextraLevelEnabled();
             $this->enableDebugInternal = $this->applicationConfigService->isDebuginternalLevelEnabled();
         }
+    }
 
+    /**
+     * @throws \Magelink\Exception\MagelinkException
+     */
+    protected function initLoggers()
+    {
         if (!$this->logger) {
             $logger = $this->applicationConfigService->getConfigLoggerData();
             if (!is_array($logger) || !count($logger)) {
@@ -152,6 +156,8 @@ class LogService implements ServiceLocatorAwareInterface
      */
     public function log($logLevel, $logCode, $logMessage, array $logData, array $options = array())
     {
+        $this->init();
+
         if ($this->isLevelToBeLogged($logLevel)) {
             $this->initLoggers();
             if (!isset($options['user']) && php_sapi_name() != 'cli') {
