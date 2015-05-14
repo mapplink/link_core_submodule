@@ -91,7 +91,7 @@ class NodeService implements ServiceLocatorAwareInterface
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
         $updates = array();
-        $updateLogTime = $createUpdateTime = 0;
+        $selectTime = $createTime = 0;
 
         foreach ($response as $row) {
             $logs = $this->getTableGateway('entity_update_log')
@@ -108,7 +108,7 @@ class NodeService implements ServiceLocatorAwareInterface
                 break;
             }
 
-            $updateLogTime += -$start + ($start = microtime(TRUE));
+            $selectTime += -$start + ($start = microtime(TRUE));
 
             $entity = $this->getServiceLocator()->get('entityService')
                 ->loadEntityId($nodeEntity->getId(), $row['entity_id']);
@@ -118,13 +118,13 @@ class NodeService implements ServiceLocatorAwareInterface
                 $log['affected_nodes'], $log['affected_attributes']);
             $updates[] = $update;
 
-            $createUpdateTime += -$start + ($start = microtime(TRUE));
+            $createTime += -$start + ($start = microtime(TRUE));
         }
 
         $runtime = round(microtime(TRUE) - $startTimestamp, 1);
         $perEach = round($runtime / count($updates), 4);
-        $logMessage = 'Entity_update_log loop took '.$runtime.'s ('.$perEach.' per each). Accumulated updateLog time: '
-            .round($updateLogTime, 1).'s, createUpdate time: '.round($createUpdateTime, 1).'s.';
+        $logMessage = 'Entity_update_log loop took '.$runtime.'s ('.count($updates).' x '.$perEach.'s per each).'
+            .' Accumulated updateLog time: '.round($selectTime, 1).'s, createUpdate time: '.round($createTime, 1).'s.';
         $logData = array('runtime'=>$runtime, 'per each'=>$perEach);
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
