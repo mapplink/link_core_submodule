@@ -85,22 +85,17 @@ class NodeService implements ServiceLocatorAwareInterface
         $starttime = microtime(TRUE);
         $response = $this->getTableGateway('entity_update')
             ->select(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
-        $runtime = round(-$starttime + ($starttime = microtime(TRUE)), 1);
+        $runtime = round(-$starttime + ($starttime = $start = microtime(TRUE)), 1);
 
         $logMessage = 'Select entity_update took '.$runtime.'s.';
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
-$c = 0;$start = $starttime;
-
         $updates = array();
+        $updateLogTime = $createUpdateTime = 0;
+
         foreach ($response as $row) {
             $logs = $this->getTableGateway('entity_update_log')
                 ->select(array('log_id'=>$row['log_id']));
-if (++$c < 11) {
-    $runtime = round(-$start + ($start = microtime(TRUE)), 1);
-    $logMessage = 'Select entity_update_log took '.$runtime.'s.';
-    $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
-}
 
             $log = FALSE;
             foreach ($logs as $logRow) {
@@ -113,6 +108,8 @@ if (++$c < 11) {
                 break;
             }
 
+            $updateLogTime += -$start + ($start = microtime(TRUE));
+
             $entity = $this->getServiceLocator()->get('entityService')
                 ->loadEntityId($nodeEntity->getId(), $row['entity_id']);
 
@@ -120,14 +117,15 @@ if (++$c < 11) {
             $update->init($log['log_id'], $entity, $log['type'], $log['timestamp'], $log['source_node'],
                 $log['affected_nodes'], $log['affected_attributes']);
             $updates[] = $update;
-if ($c < 11) {
-    $runtime = round(-$start + ($start = microtime(TRUE)), 1);
-    $logMessage = 'Select entity_update_log took '.$runtime.'s.';
-    $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
-}
+
+            $createUpdateTime += -$start + ($start = microtime(TRUE));
         }
 
-        $logMessage = 'Select entity_update_log loop took '.round(microtime(TRUE) - $starttime, 1).'s.';
+        $runtime = round(microtime(TRUE) - $starttime, 1);
+        $perEach = round($runtime / count($updates), 4);
+        $logMessage = 'Select entity_update_log loop took '.round(microtime(TRUE) - $starttime, 1).'s ('.$perEach
+            .' per each). Accumulated updateLog time: '.$updateLogTime.', createUpdate time: '.$createUpdateTime.'.';
+        $logData = array('runtime'=>$runtime, 'per each'=>$perEach);
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
         return $updates;
