@@ -1,0 +1,10 @@
+<?php
+$name = '';
+
+if (extension_loaded('newrelic') && $name) {
+    newrelic_background_job(TRUE);
+    newrelic_set_appname($name);
+}
+
+// Add more local code
+?>
