@@ -360,38 +360,37 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         }else{
             $logCode = strtolower(substr($nodeClass, 0, 3)).'_';
         }
+
         $logCode .= 'node_upd';
         $logMessage = $nodeClass.' update starts.';
         $logData = array('class'=>$nodeClass);
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
-
         $startTimestamp = microtime(TRUE);
+
         $this->updates = $this->getPendingUpdates();
-        $logMessage = $nodeClass.'->getPendingUpdates() took '.round(microtime(TRUE) - $startTimestamp, 1).'s.';
-        $logData = array('message'=>$logMessage);
+        $runtime = round(-$startTimestamp + ($startTimestamp = microtime(TRUE)), 1);
+        $logMessage = $nodeClass.'->getPendingUpdates() took '.$runtime.'s.';
+        $logData = array('runtime'=>&$runtime);
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_gup', $logMessage, $logData);
 
-        $startTimestamp = microtime(TRUE);
         $this->actions = $this->getPendingActions();
-        $logMessage = $nodeClass.'->getPendingActions() took '.round(microtime(TRUE) - $startTimestamp, 1).'s.';
-        $logData = array('message'=>$logMessage);
+        $runtime = round(-$startTimestamp + ($startTimestamp = microtime(TRUE)), 1);
+        $logMessage = $nodeClass.'->getPendingActions() took '.$runtime.'s.';
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_gac', $logMessage, $logData);
 
         $logMessage = $nodeClass.' update: '.count($this->updates).' updates, '.count($this->actions).' actions.';
-        $logData = array_merge($logData, array('updates'=>count($this->updates), 'actions'=>count($this->actions)));
+        $logDataNumbers = array('updates'=>count($this->updates), 'actions'=>count($this->actions));
         $logEntities = array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates);
-        $logService->log(LogService::LEVEL_INFO,$logCode, $logMessage, $logData, $logEntities);
+        $logService->log(LogService::LEVEL_INFO,$logCode, $logMessage, $logDataNumbers, $logEntities);
 
-        $startTimestamp = microtime(TRUE);
         $this->processUpdates();
-        $logMessage = $nodeClass.'->processUpdates() took '.round(microtime(TRUE) - $startTimestamp, 1).'s.';
-        $logData = array('message'=>$logMessage);
+        $runtime = round(-$startTimestamp + ($startTimestamp = microtime(TRUE)), 1);
+        $logMessage = $nodeClass.'->processUpdates() took '.$runtime.'s.';
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_pup', $logMessage, $logData);
 
-        $startTimestamp = microtime(TRUE);
         $this->processActions();
-        $logMessage = $nodeClass.'->processActions() took '.round(microtime(TRUE) - $startTimestamp, 1).'s.';
-        $logData = array('message'=>$logMessage);
+        $runtime = round(microtime(TRUE) - $startTimestamp, 1);
+        $logMessage = $nodeClass.'->processActions() took '.$runtime.'s.';
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_pac', $logMessage, $logData);
     }
 

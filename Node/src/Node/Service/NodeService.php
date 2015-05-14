@@ -81,13 +81,13 @@ class NodeService implements ServiceLocatorAwareInterface
         $logData = array();
         $logMessage = '->getPendingUpdates starts.';
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
+        $startTimestamp = microtime(TRUE);
 
-        $starttime = microtime(TRUE);
         $response = $this->getTableGateway('entity_update')
             ->select(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
-        $runtime = round(-$starttime + ($starttime = $start = microtime(TRUE)), 1);
-
+        $runtime = round(-$startTimestamp + ($startTimestamp = $start = microtime(TRUE)), 1);
         $logMessage = 'Select entity_update took '.$runtime.'s.';
+        $logData = array('runtime'=>&$runtime);
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
         $updates = array();
@@ -121,10 +121,10 @@ class NodeService implements ServiceLocatorAwareInterface
             $createUpdateTime += -$start + ($start = microtime(TRUE));
         }
 
-        $runtime = round(microtime(TRUE) - $starttime, 1);
+        $runtime = round(microtime(TRUE) - $startTimestamp, 1);
         $perEach = round($runtime / count($updates), 4);
-        $logMessage = 'Select entity_update_log loop took '.round(microtime(TRUE) - $starttime, 1).'s ('.$perEach
-            .' per each). Accumulated updateLog time: '.$updateLogTime.', createUpdate time: '.$createUpdateTime.'.';
+        $logMessage = 'Entity_update_log loop took '.$runtime.'s ('.$perEach.' per each). Accumulated updateLog time: '
+            .round($updateLogTime, 1).'s, createUpdate time: '.round($createUpdateTime, 1).'s.';
         $logData = array('runtime'=>$runtime, 'per each'=>$perEach);
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
