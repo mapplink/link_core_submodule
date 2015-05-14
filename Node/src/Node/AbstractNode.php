@@ -362,7 +362,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         }
 
         $logCode .= 'node_upd';
-        $logMessage = $nodeClass.' update starts.';
+        $logMessage = $nodeClass.' update started at '.date('d/m H:i:s').'.';
         $logData = array('class'=>$nodeClass);
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
         $startTimestamp = microtime(TRUE);

@@ -79,7 +79,7 @@ class NodeService implements ServiceLocatorAwareInterface
 
         $logCode = 'nodesvc_penu';
         $logData = array();
-        $logMessage = '->getPendingUpdates starts.';
+        $logMessage = 'NodeService->getPendingUpdates() started at '.date('d/m H:i:s').'.';
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
         $startTimestamp = microtime(TRUE);
 
