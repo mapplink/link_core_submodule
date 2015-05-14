@@ -1,7 +1,6 @@
 <?php
 /**
  * Represents an instance of a Magelink Entity Update.
- *
  * @category Entity
  * @package Entity
  * @author Matt Johnston
@@ -23,19 +22,37 @@ class Update
     const TYPE_DELETE = 2;
     const TYPE_ACTION = 9;
 
-    /** @var int $_logId */
-    protected $_logId;
-    /** @var Entity $_entity */
-    protected $_entity;
-    /** @var string $_type */
-    protected $_type;
-    /** @var int $_timestamp */
-    protected $_timestamp;
-    /** @var int $ */
-    protected $_sourceNode;
-    protected $_affectedNodes;
-    protected $_affectedAttributes;
+    /** @var int $logId */
+    protected $logId;
 
+    /** @var Entity $entity */
+    protected $entity;
+
+    /** @var string $type */
+    protected $type;
+
+    /** @var int $timestamp */
+    protected $timestamp;
+
+    /** @var int $sourceNode */
+    protected $sourceNode;
+
+    /** @var array $affectedNodes */
+    protected $affectedNodes;
+
+    /** @var array $affectedAttributes */
+    protected $affectedAttributes;
+
+
+    /**
+     * @param int $logId
+     * @param \Entity\Entity $entity
+     * @param string $type
+     * @param string $timestamp
+     * @param int $sourceNode
+     * @param array|string $affectedNodes
+     * @param array|string $affectedAttributes
+     */
     public function init($logId, Entity $entity, $type, $timestamp, $sourceNode, $affectedNodes, $affectedAttributes)
     {
         if (!is_array($affectedNodes)) {
@@ -45,53 +62,69 @@ class Update
             $affectedAttributes = explode(',', $affectedAttributes);
         }
 
-        $this->_logId = $logId;
-        $this->_entity = $entity;
-        $this->_type = $type;
-        $this->_timestamp = $timestamp;
-        $this->_sourceNode = $sourceNode;
-        $this->_affectedNodes = $affectedNodes;
-        $this->_affectedAttributes = $affectedAttributes;
+        $this->logId = $logId;
+        $this->entity = $entity;
+        $this->type = $type;
+        $this->timestamp = $timestamp;
+        $this->sourceNode = $sourceNode;
+        $this->affectedNodes = $affectedNodes;
+        $this->affectedAttributes = $affectedAttributes;
     }
 
     /**
-     * @return int
+     * @return int $this->logId
      */
     public function getLogId()
     {
-        return $this->_logId;
+        return $this->logId;
     }
 
     /**
-     * @return Entity
+     * @return Entity $this->entity
      */
     public function getEntity()
     {
-        return $this->_entity;
-    }
-
-    public function getType(){
-        return $this->_type;
-    }
-
-    public function getTimestamp(){
-        return $this->_timestamp;
-    }
-
-    public function getSourceNode(){
-        return $this->_sourceNode;
-    }
-
-    public function getNodesSimple(){
-        return $this->_affectedNodes;
+        return $this->entity;
     }
 
     /**
-     * Returns a simple array of attribute codes changed in this update
+     * @return string $this->type
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @return int $this->timestamp
+     */
+    public function getTimestamp()
+    {
+        return $this->timestamp;
+    }
+
+    /**
+     * @return int $this->sourceNode
+     */
+    public function getSourceNode()
+    {
+        return $this->sourceNode;
+    }
+
+    /**
+     * @return int[] $this->affectedNodes
+     */
+    public function getNodesSimple()
+    {
+        return $this->affectedNodes;
+    }
+
+    /**
      * @return string[]
      */
-    public function getAttributesSimple(){
-        return $this->_affectedAttributes;
+    public function getAttributesSimple()
+    {
+        return $this->affectedAttributes;
     }
     
 }
