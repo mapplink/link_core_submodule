@@ -88,7 +88,7 @@ class NodeService implements ServiceLocatorAwareInterface
         $runtime = round(-$starttime + ($starttime = microtime(TRUE)), 1);
 
         $logMessage = 'Select entity_update took '.$runtime.'s.';
-        $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+        $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
 $c = 0;$start = $starttime;
 
@@ -99,7 +99,7 @@ $c = 0;$start = $starttime;
 if (++$c < 11) {
     $runtime = round(-$start + ($start = microtime(TRUE)), 1);
     $logMessage = 'Select entity_update_log took '.$runtime.'s.';
-    $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+    $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 }
 
             $log = FALSE;
@@ -123,12 +123,12 @@ if (++$c < 11) {
 if ($c < 11) {
     $runtime = round(-$start + ($start = microtime(TRUE)), 1);
     $logMessage = 'Select entity_update_log took '.$runtime.'s.';
-    $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+    $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 }
         }
 
         $logMessage = 'Select entity_update_log loop took '.round(microtime(TRUE) - $starttime, 1).'s.';
-        $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+        $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
         return $updates;
     }
