@@ -12,6 +12,7 @@
 
 namespace Node\Service;
 
+use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Node\AbstractNode;
 use Node\Entity\Node;
@@ -73,26 +74,61 @@ class NodeService implements ServiceLocatorAwareInterface
      */
     public function getPendingUpdates(\Node\Entity\Node $nodeEntity)
     {
-        $updates = array();
+        /** @var LogService $logService */
+        $logService = $this->getServiceLocator()->get('logService');
 
-        $response = $this->getTableGateway('entity_update')->select(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
-        foreach($response as $row){
-            $logs = $this->getTableGateway('entity_update_log')->select(array('log_id'=>$row['log_id']));
-            $log = false;
-            foreach($logs as $logRow){
+        $logCode = 'nodesvc_penu';
+        $logData = array();
+        $logMessage = '->getPendingUpdates starts.';
+        $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
+
+        $starttime = microtime(TRUE);
+        $response = $this->getTableGateway('entity_update')
+            ->select(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
+        $runtime = round(-$starttime + ($starttime = microtime(TRUE)), 1);
+
+        $logMessage = 'Select entity_update took '.$runtime.'s.';
+        $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+
+$c = 0;$start = $starttime;
+
+        $updates = array();
+        foreach ($response as $row) {
+            $logs = $this->getTableGateway('entity_update_log')
+                ->select(array('log_id'=>$row['log_id']));
+if (++$c < 11) {
+    $runtime = round(-$start + ($start = microtime(TRUE)), 1);
+    $logMessage = 'Select entity_update_log took '.$runtime.'s.';
+    $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+}
+
+            $log = FALSE;
+            foreach ($logs as $logRow) {
                 $log = $logRow;
                 break;
             }
-            if($log === false){
+
+            if ($log === FALSE) {
                 throw new MagelinkException('Could not find log entry for update ' . $row['update_id']);
+                break;
             }
-            $ent = $this->getServiceLocator()->get('entityService')->loadEntityId($nodeEntity->getId(), $row['entity_id']);
+
+            $entity = $this->getServiceLocator()->get('entityService')
+                ->loadEntityId($nodeEntity->getId(), $row['entity_id']);
 
             $update = new \Entity\Update();
-            $update->init($log['log_id'], $ent, $log['type'], $log['timestamp'], $log['source_node'], $log['affected_nodes'], $log['affected_attributes']);
-
+            $update->init($log['log_id'], $entity, $log['type'], $log['timestamp'], $log['source_node'],
+                $log['affected_nodes'], $log['affected_attributes']);
             $updates[] = $update;
+if ($c < 11) {
+    $runtime = round(-$start + ($start = microtime(TRUE)), 1);
+    $logMessage = 'Select entity_update_log took '.$runtime.'s.';
+    $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+}
         }
+
+        $logMessage = 'Select entity_update_log loop took '.round(microtime(TRUE) - $starttime, 1).'s.';
+        $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
 
         return $updates;
     }
