@@ -35,14 +35,21 @@ class LogService implements ServiceLocatorAwareInterface
     const LEVEL_DEBUGINTERNAL = 'dbgint';
 
     /** @var AbstractLogger[] */
-    protected $_logger = array();
+    protected $logger = array();
 
-    protected $_enableDebug = FALSE;
-    protected $_enableDebugExtra = FALSE;
-    protected $_enableDebugInternal = FALSE;
+    /** @var bool $enableDebug */
+    protected $enableDebug = FALSE;
+    /** @var bool $enableDebugExtra */
+    protected $enableDebugExtra = FALSE;
+    /** @var bool $enableDebugInternal */
+    protected $enableDebugInternal = FALSE;
 
     /** @var AbstractLogger[] */
-    protected $_levelsToBeLogged = array();
+    protected $levelsToBeLogged = array();
+
+    /** @var ApplicationConfigService $this->applicationConfigService */
+    protected $applicationConfigService;
+
 
     /** @var ServiceLocatorInterface $serviceLocator */
     protected $_serviceLocator;
@@ -71,36 +78,41 @@ class LogService implements ServiceLocatorAwareInterface
      */
     protected function initLoggers()
     {
-        /** @var ApplicationConfigService $applicationConfigService */
-        $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
-
-        $this->_enableDebug = $applicationConfigService->isDebugLevelEnabled();
-        $this->_enableDebugExtra = $applicationConfigService->isDebugextraLevelEnabled();
-        $this->_enableDebugInternal = $applicationConfigService->isDebuginternalLevelEnabled();
-
-        $logger = $applicationConfigService->getConfigLoggerData();
-        if (!is_array($logger) || !count($logger)) {
-            $logger = array();
-            throw new MagelinkException('No logger class specified!');
+        if (!$this->applicationConfigService) {
+            $this->applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
         }
 
-        foreach ($logger as $name=>$loggerInfo) {
-            if (!is_null($loggerInfo)) {
-                try {
-                    $loggerObject = new $loggerInfo['class']();
-                    if ($loggerObject instanceof ServiceLocatorAwareInterface) {
-                        $loggerObject->setServiceLocator($this->getServiceLocator());
-                    }
-                }catch (\Exception $exception) {
-                    throw new MagelinkException('Invalid logger information specified: '.serialize($loggerInfo));
-                }
+        if (!$this->enableDebug) {
+            $this->enableDebug = $this->applicationConfigService->isDebugLevelEnabled();
+            $this->enableDebugExtra = $this->applicationConfigService->isDebugextraLevelEnabled();
+            $this->enableDebugInternal = $this->applicationConfigService->isDebuginternalLevelEnabled();
+        }
 
-                if ($loggerObject instanceof AbstractLogger) {
-                    if ($loggerObject->init($loggerInfo)) {
-                        $this->_logger[$name] = $loggerObject;
+        if (!$this->logger) {
+            $logger = $this->applicationConfigService->getConfigLoggerData();
+            if (!is_array($logger) || !count($logger)) {
+                $logger = array();
+                throw new MagelinkException('No logger class specified!');
+            }
+
+            foreach ($logger as $name => $loggerInfo) {
+                if (!is_null($loggerInfo)) {
+                    try{
+                        $loggerObject = new $loggerInfo['class']();
+                        if ($loggerObject instanceof ServiceLocatorAwareInterface) {
+                            $loggerObject->setServiceLocator($this->getServiceLocator());
+                        }
+                    }catch (\Exception $exception ) {
+                        throw new MagelinkException('Invalid logger information specified: '.serialize($loggerInfo));
                     }
-                }else {
-                    throw new MagelinkException('Invalid logger class specified: '.$loggerInfo['class']);
+
+                    if ($loggerObject instanceof AbstractLogger) {
+                        if ($loggerObject->init($loggerInfo)) {
+                            $this->logger[$name] = $loggerObject;
+                        }
+                    }else{
+                        throw new MagelinkException('Invalid logger class specified: '.$loggerInfo['class']);
+                    }
                 }
             }
         }
@@ -108,18 +120,18 @@ class LogService implements ServiceLocatorAwareInterface
 
     /**
      * @param string $level
-     * @return bool $this->_levelsToBeLogged[$level]
+     * @return bool $this->levelsToBeLogged[$level]
      */
     protected function isLevelToBeLogged($level)
     {
-        if (!array_key_exists($level, $this->_levelsToBeLogged)) {
-            $this->_levelsToBeLogged[$level] = ($level != self::LEVEL_DEBUG || $this->_enableDebug)
-                && ($level != self::LEVEL_DEBUGEXTRA || $this->_enableDebugExtra)
-                && ($level != self::LEVEL_DEBUGINTERNAL || $this->_enableDebugInternal);
+        if (!array_key_exists($level, $this->levelsToBeLogged)) {
+            $this->levelsToBeLogged[$level] = ($level != self::LEVEL_DEBUG || $this->enableDebug)
+                && ($level != self::LEVEL_DEBUGEXTRA || $this->enableDebugExtra)
+                && ($level != self::LEVEL_DEBUGINTERNAL || $this->enableDebugInternal);
         }
 
-        return $this->_levelsToBeLogged[$level];
-     }
+        return $this->levelsToBeLogged[$level];
+    }
 
     /**
      * Enters a new log message, routing it to appropriate destinations (i.e. DB, files, email, etc).
@@ -140,11 +152,8 @@ class LogService implements ServiceLocatorAwareInterface
      */
     public function log($logLevel, $logCode, $logMessage, array $logData, array $options = array())
     {
-        if (!$this->_logger) {
-            $this->initLoggers();
-        }
-
         if ($this->isLevelToBeLogged($logLevel)) {
+            $this->initLoggers();
             if (!isset($options['user']) && php_sapi_name() != 'cli') {
                 /** @var \Zend\Authentication\AuthenticationService $authService */
                 $authService = $this->getServiceLocator()->get('zfcuser_auth_service');
@@ -189,6 +198,7 @@ class LogService implements ServiceLocatorAwareInterface
                 'node'=>array('node', 'nodeid', 'node_id'),
                 'entity'=>array('entity', 'entityid', 'entity_id')
             );
+
             foreach ($logData as $code=>$value) {
                 $code = strtolower($code);
                 foreach ($optionTypeMap as $type=>$codesArray) {
@@ -196,7 +206,7 @@ class LogService implements ServiceLocatorAwareInterface
                         if (is_object($value)) {
                             $options = array_merge($this->parseObject($value), $options);
                             break;
-                        }else {
+                        }else{
                             if (is_numeric($value) && !isset($options[$type])) {
                                 $options[$type] = intval($value);
                                 break;
@@ -212,7 +222,7 @@ class LogService implements ServiceLocatorAwareInterface
                     $parsedObject = $this->parseObject($options[$type]);
                     if (isset($parsedObject[$type])) {
                         $options[$type] = $parsedObject[$type];
-                    }else {
+                    }else{
                         $options[$type] = 'Invalid '.$type.' option '.get_class($options[$type]);
                         unset($options[$type]);
                     }
@@ -225,7 +235,7 @@ class LogService implements ServiceLocatorAwareInterface
                 unset($options['exception']);
             }
 
-            foreach ($this->_logger as $name=>$logger) {
+            foreach ($this->logger as $name=>$logger) {
                 if ($logger->isLogLevel($logLevel)) {
                     $logger->printLog($logLevel, $logCode, $logMessage, $logData, $options, $topTrace);
                 }
