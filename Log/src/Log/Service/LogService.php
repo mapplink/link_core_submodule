@@ -59,7 +59,7 @@ class LogService implements ServiceLocatorAwareInterface
      * Set service locator
      * @param ServiceLocatorInterface $serviceLocator
      */
-    public function qsetServiceLocator(ServiceLocatorInterface $serviceLocator)
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
     {
         $this->_serviceLocator = $serviceLocator;
     }
