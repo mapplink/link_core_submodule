@@ -12,6 +12,8 @@
 
 namespace Node;
 
+use Entity\Action;
+use Entity\Update;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
@@ -33,22 +35,18 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
 
     /** @var array $_config */
     protected $_config = NULL;
-
     /** @var array $_typeConfig */
     protected $_typeConfig = NULL;
 
-    /** @var array $updates */
+    /** @var Update[] $updates */
     protected $updates = array();
-
-    /** @var array $actions */
+    /** @var Action[] $actions */
     protected $actions = array();
 
-    /** @var NodeService $nodeService */
-    protected $nodeService = NULL;
-
-    /** @var NodeService $nodeService */
-    protected $logService = NULL;
-
+    /** @var NodeService $_nodeService */
+    protected $_nodeService = NULL;
+    /** @var NodeService $_nodeService */
+    protected $_logService = NULL;
     /** @var ServiceLocatorInterface $_serviceLocator */
     protected $_serviceLocator;
 
@@ -85,10 +83,10 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $appConfig = $this->getServiceLocator()->get('Config');
         $this->_typeConfig = $appConfig['node_types'][$this->_entity->getType()];
 
-        $this->nodeService = $this->getServiceLocator()->get('nodeService');
-        $this->logService = $this->getServiceLocator()->get('logService');
+        $this->_nodeService = $this->getServiceLocator()->get('_nodeService');
+        $this->_logService = $this->getServiceLocator()->get('_logService');
 
-        $this->logService->log(LogService::LEVEL_INFO, 'node_init', 'AbstractNode init',
+        $this->_logService->log(LogService::LEVEL_INFO, 'node_init', 'AbstractNode init',
             array('node'=>get_class($this), 'id'=>$nodeEntity->getNodeId()), array('node'=>$this));
 
         $this->_init($nodeEntity);
@@ -147,7 +145,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             $gateways = $this->_typeConfig['entity_type_support'];
         }
 
-        $this->logService->log(LogService::LEVEL_INFO, 'node_retrieve',
+        $this->_logService->log(LogService::LEVEL_INFO, 'node_retrieve',
             'AbstractNode retrieve', array('gateways'=>$gateways), array('node'=>$this));
 
         foreach ($gateways as $gateway) {
@@ -161,7 +159,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 }catch (GatewayException $gatewayException) {
                     $logMessage = 'Uncaught exception while processing node '.$this->getNodeId().': '
                         .$gatewayException->getMessage();
-                    $this->logService->log(LogService::LEVEL_ERROR, 'gatewayex', $logMessage,
+                    $this->_logService->log(LogService::LEVEL_ERROR, 'gatewayex', $logMessage,
                             array($gatewayException->getMessage(), $gatewayException->getTraceAsString()),
                             array('exception'=>$gatewayException, 'node'=>$this->getNodeId())
                         );
@@ -177,7 +175,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     protected function getPendingActions()
     {
         if (!$this->actions) {
-            $this->actions = $this->nodeService->getPendingActions($this->_entity);
+            $this->actions = $this->_nodeService->getPendingActions($this->_entity);
         }
 
         return $this->actions;
@@ -189,7 +187,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     protected function getPendingUpdates()
     {
         if (!$this->updates) {
-            $this->updates = $this->nodeService->getPendingUpdates($this->_entity);
+            $this->updates = $this->_nodeService->getPendingUpdates($this->_entity);
         }
 
         return $this->updates;
@@ -203,7 +201,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $startMethod = microtime(TRUE);
         $logCode = 'node_procact';
         $logMessage = '->processActions() started at '.date('d/m H:i:s', $startMethod).'.';
-        $this->logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, array());
+        $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, array());
 
         $actions = $this->getPendingActions();
 
@@ -217,7 +215,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             try{
                 $result = TRUE;
                 if($this->_gateway[$entityType]){
-                    $this->logService->log(LogService::LEVEL_INFO,
+                    $this->_logService->log(LogService::LEVEL_INFO,
                         'send_action',
                         'Sending action '.$action->getId().' to '.$this->getNodeId().' ('.$action->getEntity()->getUniqueId().')',
                         array($action->getId()),
@@ -226,12 +224,12 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                     $result = $this->_gateway[$entityType]->writeAction($action);
                 }
                 if($result){
-                    $this->nodeService->setActionStatus($this->_entity, $action, 1);
+                    $this->_nodeService->setActionStatus($this->_entity, $action, 1);
                 }
             }catch(MagelinkException $exception){
                 $message = 'Uncaught exception during action processing for '.$action->getId()
                     .' to '.$this->getNodeId().': '.$exception->getMessage();
-                $this->logService->log(LogService::LEVEL_ERROR,
+                $this->_logService->log(LogService::LEVEL_ERROR,
                     'action_ex',
                     $message,
                     array($exception->getMessage(), $exception->getTraceAsString()),
@@ -242,7 +240,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         }
 
         $logMessage = '->processActions() took '.round(microtime(TRUE) - $startMethod, 1).'s.';
-        $this->logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, array());
+        $this->_logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, array());
     }
 
     /**
@@ -253,7 +251,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $startMethod = microtime(TRUE);
         $logCode = 'node_procupd';
         $logMessage = '->processUpdates() started at '.date('d/m H:i:s', $startMethod).'.';
-        $this->logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, array());
+        $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, array());
 
         $updatesByType = array();
         $this->getPendingUpdates();
@@ -283,7 +281,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 $this->_gateway[$entityType] = $this->_lazyLoad($entityType);
             }
 
-            $attributes = $this->nodeService->getSubscribedAttributeCodes($this->getNodeId(), $entityType);
+            $attributes = $this->_nodeService->getSubscribedAttributeCodes($this->getNodeId(), $entityType);
 
             $updates = array();
             if ($this->_gateway[$entityType]) {
@@ -297,7 +295,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                         'combined'=>array()
                     );
                     foreach ($updatesPerEntityId as $update) {
-                        $this->logService->log(LogService::LEVEL_INFO,
+                        $this->_logService->log(LogService::LEVEL_INFO,
                                 'comb_update',
                                 'Combining updates '.$update->getLogId().' to '.$this->getNodeId(),
                                 array('attributes'=>$update->getAttributesSimple()),
@@ -324,7 +322,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                     'combined'=>$update['combined']
                 );
 
-                $this->logService->log(LogService::LEVEL_INFO, 'push_update', 'Pushing update for '.$logMessage, $logData,
+                $this->_logService->log(LogService::LEVEL_INFO, 'push_update', 'Pushing update for '.$logMessage, $logData,
                         array('entity'=>$entityId, 'node'=>$this));
 
                 try{
@@ -339,7 +337,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                         'exception message'=>$gatewayException->getMessage(),
                         'exception trace'=>$gatewayException->getTraceAsString()
                     ));
-                    $this->logService->log(LogService::LEVEL_ERROR, 'update_ex_gw', $logMessage, $logData,
+                    $this->_logService->log(LogService::LEVEL_ERROR, 'update_ex_gw', $logMessage, $logData,
                             array('update'=>$update, 'exception'=>$gatewayException));
                     unset($this->_gateway[$entityType]);
                     break;
@@ -349,7 +347,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                         'exception message'=>$exception->getMessage(),
                         'exception trace'=>$exception->getTraceAsString()
                     ));
-                    $this->logService->log(LogService::LEVEL_ERROR, 'update_ex_ml', $logMessage, $logData,
+                    $this->_logService->log(LogService::LEVEL_ERROR, 'update_ex_ml', $logMessage, $logData,
                             array('update'=>$update, 'exception'=>$exception));
 
                     throw new NodeException($logMessage, 0, $exception);
@@ -357,7 +355,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 }
 
                 foreach ($entityTypeUpdates[$entityId] as $updateToBeMarkedAsCompleted) {
-                    $this->nodeService->setUpdateStatus($this->_entity, $updateToBeMarkedAsCompleted, 1);
+                    $this->_nodeService->setUpdateStatus($this->_entity, $updateToBeMarkedAsCompleted, 1);
                 }
             }
 
@@ -369,7 +367,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             .' Updates loop took '.round($endUpdatesLoop - $startMethod, 1).'s ('.count($updates).').'
             .' UpdatesByType loop took '.round($endUpdatesByTypeLoop - $endUpdatesLoop, 1).'s ('.count($updatesByType).'),'
             .' '.round($createUpdateData, 1).'s spend on preparing data, '.round($writeUpdates, 1).'s on writing.';
-        $this->logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, array());
+        $this->_logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, array());
     }
 
     /**
@@ -379,6 +377,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
      */
     public function update()
     {
+        $startMethod = microtime(TRUE);
+
         $nodeClass = get_called_class();
         if (strpos($nodeClass, 'Node') === 0) {
             $logCode = '';
@@ -387,9 +387,9 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         }
 
         $logCode .= 'node_upd';
-        $logMessage = $nodeClass.' update started at '.date('d/m H:i:s').'.';
+        $logMessage = $nodeClass.' update started at '.date('d/m H:i:s', $startMethod).'.';
         $logData = array('class'=>$nodeClass);
-        $this->logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+        $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
 
         $this->getPendingUpdates();
         $this->getPendingActions();
@@ -397,7 +397,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $logMessage = $nodeClass.' update: '.count($this->updates).' updates, '.count($this->actions).' actions.';
         $logDataNumbers = array('updates'=>count($this->updates), 'actions'=>count($this->actions));
         $logEntities = array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates);
-        $this->logService->log(LogService::LEVEL_INFO,$logCode, $logMessage, $logDataNumbers, $logEntities);
+        $this->_logService->log(LogService::LEVEL_INFO,$logCode, $logMessage, $logDataNumbers, $logEntities);
 
         $this->processUpdates();
         $this->processActions();
