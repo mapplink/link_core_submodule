@@ -206,7 +206,7 @@ class NodeService implements ServiceLocatorAwareInterface
         $logCode = 'nodesvc_pena';
         $logData = array();
         $logMessage = 'NodeService->getPendingActions() started at '.date('d/m H:i:s').'.';
-        $logService->log(LogService::INFO, $logCode, $logMessage, $logData);
+        $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
 
         $response = $this->getTableGateway('entity_action_status')
             ->select(array('node_id'=>$nodeEntity->getId(), 'status'=>0));
