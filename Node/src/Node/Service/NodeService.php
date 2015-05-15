@@ -136,7 +136,7 @@ class NodeService implements ServiceLocatorAwareInterface
         $logCode = 'nodesvc_penu';
         $logData = array();
         $logMessage = 'NodeService->getPendingUpdates() started at '.date('d/m H:i:s').'.';
-        $logService->log(LogService::INFO, $logCode, $logMessage, $logData);
+        $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
 
         $response = $this->getTableGateway('entity_update')
             ->select(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
