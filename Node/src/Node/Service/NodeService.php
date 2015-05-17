@@ -175,7 +175,7 @@ class NodeService implements ServiceLocatorAwareInterface
 
         $methodRuntime = round(microtime(TRUE) - $startMethod, 1);
         $loopRuntime = round(microtime(TRUE) - $startTimestamp, 1);
-        $perUpdate = !count($updates) ? : round($loopRuntime / count($updates), 4);
+        $perUpdate = count($updates) ? round($loopRuntime / count($updates), 4) : FALSE;
 
         $logMessage = 'NodeService->pendingUpdates() finished at '.date('m/d H:i:s').' and took '.$methodRuntime.'s.'
             .' Entity_update_log loop took '.$loopRuntime
@@ -240,7 +240,7 @@ class NodeService implements ServiceLocatorAwareInterface
 
         $methodRuntime = round(microtime(TRUE) - $startMethod, 1);
         $loopRuntime = round(microtime(TRUE) - $startTimestamp, 1);
-        $perUpdate = !count($actions) ? : round($loopRuntime / count($actions), 4);
+        $perUpdate = count($actions) ? round($loopRuntime / count($actions), 4) : FALSE;
 
         $logMessage = 'NodeService->pendingActions() finished at '.date('m/d H:i:s').' and took '.$methodRuntime.'s.'
             .' Entity_actions_status loop took '.$loopRuntime
