@@ -1,7 +1,6 @@
 <?php
 /**
  * Node\Abstract Node
- *
  * @category Node
  * @package Node
  * @author Matt Johnston
@@ -14,6 +13,7 @@ namespace Node;
 
 use Entity\Action;
 use Entity\Update;
+use Entity\Service\EntityService;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
@@ -38,15 +38,20 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     /** @var array $_typeConfig */
     protected $_typeConfig = NULL;
 
+    /** @var bool|NULL $isMethodEnd */
+    protected $isMethodEnd = NULL;
+
     /** @var Update[] $updates */
     protected $updates = array();
     /** @var Action[] $actions */
     protected $actions = array();
 
+    /** @var EntityService $_entityService */
+    protected $_entityService = NULL;
+    /** @var LogService $_logService */
+    protected $_logService = NULL;
     /** @var NodeService $_nodeService */
     protected $_nodeService = NULL;
-    /** @var NodeService $_nodeService */
-    protected $_logService = NULL;
     /** @var ServiceLocatorInterface $_serviceLocator */
     protected $_serviceLocator;
 
@@ -83,8 +88,9 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $appConfig = $this->getServiceLocator()->get('Config');
         $this->_typeConfig = $appConfig['node_types'][$this->_entity->getType()];
 
-        $this->_nodeService = $this->getServiceLocator()->get('_nodeService');
+        $this->_entityService = $this->getServiceLocator()->get('_entityService');
         $this->_logService = $this->getServiceLocator()->get('_logService');
+        $this->_nodeService = $this->getServiceLocator()->get('_nodeService');
 
         $this->_logService->log(LogService::LEVEL_INFO, 'node_init', 'AbstractNode init',
             array('node'=>get_class($this), 'id'=>$nodeEntity->getNodeId()), array('node'=>$this));
@@ -371,36 +377,59 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Updates all data into the node’s source - should load and collapse all pending updates and call writeUpdates,
-     *   as well as loading and sequencing all actions.
-     * @throws NodeException
+     * @param string $nodeClass
+     * @param bool $isMethodEnd
+     * @return string $logCode
      */
-    public function update()
+    protected function logTimes($nodeClass, $isMethodEnd = FALSE)
     {
-        $startMethod = microtime(TRUE);
+        $currentTime = microtime(TRUE);
 
-        $nodeClass = get_called_class();
         if (strpos($nodeClass, 'Node') === 0) {
             $logCode = '';
         }else{
             $logCode = strtolower(substr($nodeClass, 0, 3)).'_';
         }
 
-        $logCode .= 'node_upd';
-        $logMessage = $nodeClass.' update started at '.date('d/m H:i:s', $startMethod).'.';
+        $logCode = '_node_upd';
         $logData = array('class'=>$nodeClass);
+        if (!$isMethodEnd) {
+            $logMessage = $nodeClass.' update started at '.date('d/m H:i:s', $currentTime).'.';
+            $this->methodStartTime = $currentTime;
+        }else {
+            $runtime = round($currentTime - $this->methodStartTime, 1);
+            $logCode .= '_end';
+            $logMessage = $nodeClass.' update finished at '.date('d/m H:i:s', $currentTime).'. Runtime: '.$runtime.'s.';
+            $logData['runtime'] = $runtime;
+            $this->methodStartTime = NULL;
+        }
         $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+
+        return $logCode;
+    }
+
+    /**
+     * Updates all data into the node’s source - should load and collapse all pending updates and call writeUpdates,
+     *   as well as loading and sequencing all actions.
+     * @throws NodeException
+     */
+    public function update()
+    {
+        $nodeClass = get_called_class();
+        $logCode = $this->logTimes($nodeClass);
 
         $this->getPendingUpdates();
         $this->getPendingActions();
 
         $logMessage = $nodeClass.' update: '.count($this->updates).' updates, '.count($this->actions).' actions.';
-        $logDataNumbers = array('updates'=>count($this->updates), 'actions'=>count($this->actions));
+        $logData = array('updates'=>count($this->updates), 'actions'=>count($this->actions));
         $logEntities = array('node'=>$this, 'actions'=>$this->actions, 'updates'=>$this->updates);
-        $this->_logService->log(LogService::LEVEL_INFO,$logCode, $logMessage, $logDataNumbers, $logEntities);
+        $this->_logService->log(LogService::LEVEL_INFO, $logCode.'_no', $logMessage, $logData, $logEntities);
 
         $this->processUpdates();
         $this->processActions();
+
+        $this->logTimes($nodeClass, TRUE);
     }
 
     /**
