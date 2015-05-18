@@ -24,22 +24,24 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
 
     /** @var ServiceLocatorInterface The service locator */
     protected $_serviceLocator;
-    /** @var  \Node\Service\NodeService */
-    protected $_nodeService;
     /** @var  \Entity\Service\EntityService */
     protected $_entityService;
     /** @var  \Entity\Service\EntityConfigService */
     protected $_entityConfigService;
+    /** @var  \Node\Service\NodeService */
+    protected $_logService;
+    /** @var  \Node\Service\NodeService */
+    protected $_nodeService;
 
     /** @var  \Entity\Entity */
     protected $_entity;
     /** @var  \Router\Entity\RouterTransform */
     protected $_transformEntity;
 
-    /** @var array The update data  */
-    protected $_updateData = array();
     /** @var array The entity data, accounting for new changes */
     protected $_newData = array();
+    /** @var array The update data  */
+    protected $_updateData = array();
 
 
     /**
@@ -51,11 +53,13 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
      */
     public function init(Entity $entity, $sourceNodeId, RouterTransform $transform, array $updateData)
     {
-        $this->_nodeService = $this->getServiceLocator()->get('nodeService');
         $this->_entityService = $this->getServiceLocator()->get('entityService');
         $this->_entityConfigService = $this->getServiceLocator()->get('entityConfigService');
-        $this->_transformEntity = $transform;
+        $this->_logService = $this->getServiceLocator()->get('logService');
+        $this->_nodeService = $this->getServiceLocator()->get('nodeService');
+
         $this->_entity = $entity;
+        $this->_transformEntity = $transform;
 
         $this->_newData = $this->_updateData = $updateData;
         foreach ($entity->getAllSetData() as $code=>$value) {
