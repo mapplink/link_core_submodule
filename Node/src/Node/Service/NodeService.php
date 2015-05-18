@@ -133,7 +133,7 @@ class NodeService implements ServiceLocatorAwareInterface
         /** @var LogService $logService */
         $logService = $this->getServiceLocator()->get('logService');
 
-        $logCode = 'nodesvc_penu';
+        $logCode = 'node_svc_pen_upd';
         $logData = array();
         $logMessage = 'NodeService->getPendingUpdates() started at '.date('d/m H:i:s').'.';
         $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
@@ -205,7 +205,7 @@ class NodeService implements ServiceLocatorAwareInterface
         /** @var LogService $logService */
         $logService = $this->getServiceLocator()->get('logService');
 
-        $logCode = 'nodesvc_pena';
+        $logCode = 'node_svc_pen_act';
         $logData = array();
         $logMessage = 'NodeService->getPendingActions() started at '.date('d/m H:i:s').'.';
         $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
