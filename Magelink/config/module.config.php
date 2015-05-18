@@ -1,7 +1,6 @@
 <?php
 
 return array (
-    
     'service_manager'=>array(
         'invokables'=>array(
             'configService'=>'Magelink\Service\ConfigService',
@@ -49,10 +48,11 @@ return array (
             'class'=>'\Magelink\Cron\Synchronizer',
             'interval'=>30,
             'offset'=>0,
-            'lockTime'=>135
+            'lockTime'=>135,
+            'overdue'=>TRUE
         )
     ),
-    // Map of country codes vs. country names
+
     'country_iso2_mapping'=>array (
         'AF'=>'Afghanistan',
         'AX'=>'Åland Islands',
