@@ -26,12 +26,13 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     const LOCKS_DIRECTORY = 'data/locks';
     const FIRST_CUSTOMER_LOCK_NOTIFICATION = 2;
 
+    /** @var bool $throwCronLockError */
+    protected $throwCronLockError = TRUE;
+
     /** @var string|NULL $name */
     protected $name = NULL;
-
     /** @var string|NULL $filename */
     protected $filename = NULL;
-
     /** @var array $attributes  default values */
     protected $attributes = array(
         'interval'=>6,
@@ -40,8 +41,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         'overdue'=>FALSE
     );
 
-    /** @var TableGateway $_cronTableGateway */
-    protected $_cronTableGateway;
+    /** @var  array|FALSE $cronData */
+    protected $cronData;
 
     /** @var  LogService $_logService */
     protected $_logService;
@@ -95,19 +96,30 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     protected function getCronTableGateway()
     {
-        if (!$this->_cronTableGateway) {
-            $this->_cronTableGateway = new TableGateway('cron', $this->getServiceLocator()->get('zend_db'));
-        }
 
         return $this->_cronTableGateway;
     }
 
+    /**
+     * @return \ArrayObject|FALSE
+     */
+    protected function getCronDataFromDatabase()
+    {
+        if (!$this->cronData) {
+            $cronTableGateway = new TableGateway('cron', $this->getServiceLocator()->get('zend_db'));
+            $rowset = $cronTableGateway->select(array('cron_name' => $this->getName()));
+            $this->cronData = (array) $rowset->current();
+        }
+
+        return $this->cronData;
+    }
+
+    /**
+     * @return bool $isCronExisting
+     */
     protected function isCronExisting()
     {
-        $tableGateway = $this->getCronTableGateway();
-        $response = $tableGateway->select(array('cron_name'=>$this->getName()));
-
-        return ($response || $response['cron_name'] ? TRUE : FALSE);
+        return (bool) $this->getCronDataFromDatabase();
 
     }
     /**
@@ -117,10 +129,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     protected function isOverdue()
     {
-        $tableGateway = $this->getCronTableGateway();
-        $response = $tableGateway->select(array('cron_name'=>$this->getName()));
-
-        return ($response || $response['overdue'] ? TRUE : FALSE);
+        $cronData = $this->getCronDataFromDatabase();
+        return ($cronData || $cronData['overdue'] ? TRUE : FALSE);
     }
 
     protected function flagCronAsOverdue()
@@ -195,10 +205,20 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      * @param array $cronData
      * @return bool $run
      */
-    public function cronCheck($minutes)
+    public function cronCheck($minutes, $checkOnOverdueAsWell = TRUE)
     {
-        $run = ($minutes % $this->getInterval() == $this->getOffset() ? : $this->isOverdue());
+        $standardRun = $this->throwCronLockError = ($minutes % $this->getInterval() == $this->getOffset());
+        $run = $standardRun || $this->isOverdue();
+
         return $run;
+    }
+
+    /**
+     * @return bool $this->throwCronLockError
+     */
+    protected function throwCronLockError()
+    {
+        return $this->throwCronLockError;
     }
 
     /**
@@ -209,8 +229,9 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     {
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m', $start);
+        $unlocked = $this->checkIfUnlocked();
 
-        if (!$this->checkIfUnlocked()) {
+        if (!$unlocked && $this->throwCronLockError()) {
             $logCode = 'cron_lock_'.$this->getCode();
             $logMessage = 'Cron job '.$this->getName().' locked.';
             if ($this->notifyCustomer()) {
@@ -224,15 +245,15 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logData, $logEntities);
 
             $this->flagCronAsOverdue();
-        }else{
+        }elseif ($unlocked) {
             $lock = $this->acquireLock();
             $this->removeOverdueFlag();
 
             $logMessage = 'Cron '.$this->getName().' started at '.$startDate;
             $logData = array('name'=>$this->getName(), 'class'=>get_class($this), 'start'=>$startDate);
             $logEntities = array('magelinkCron'=>$this);
-            $this->_logService
-                ->log(LogService::LEVEL_DEBUGEXTRA, 'cron_run_'.$this->getCode(), $logMessage, $logData);
+            $this->_logService->log(LogService::LEVEL_DEBUGEXTRA,
+                'cron_run_'.$this->getCode(), $logMessage, $logData);
 
             $this->_cronRun();
 
