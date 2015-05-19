@@ -84,37 +84,20 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         $ran = FALSE;
         /** @var Cronrunnable $magelinkCron */
         foreach ($applicationConfigService->getCronjobs() as $name=>$magelinkCron) {
-
             if ($job === NULL || $job == $name) {
                 $ran = TRUE;
 
-                $runCron = $magelinkCron->cronCheck($minutes);
                 if ($job == $name) {
                     $runCron = TRUE;
+                }else{
+                    $runCron = $magelinkCron->cronCheck($minutes);
                 }
-
-                $logData = array(
-                    'time'=>date('H:i:s d/m/y', time()),
-                    'name'=>$name,
-                    'class'=>get_class($magelinkCron),
-                );
-                $logEntities = array('magelinkCron'=>$magelinkCron);
 
                 if (!$runCron) {
                     $logMessage = 'Skipping cron job '.$name;
+                    $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$name);
                     $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_INFO, 'cron_skip', $logMessage, $logData, $logEntities);
-                }elseif (!$magelinkCron->checkIfUnlocked()) {
-                    $logCode = 'cron_lock';
-                    $logMessage = 'Cron job '.$name.' locked.';
-                    if ($magelinkCron->notifyCustomer()) {
-                        $logCode = EmailLogger::ERROR_TO_CLIENT_CODE.$logCode;
-                        $logMessage .= ' Please check the synchronisation process `'.$name.'` in the admin area.';
-                    }else {
-                        $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
-                    }
-                    $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logData, $logEntities);
+                        ->log(LogService::LEVEL_INFO, 'cron_skip', $logMessage, $logData);
                 }else{
                     $magelinkCron->cronRun();
                 }
