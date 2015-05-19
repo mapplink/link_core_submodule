@@ -113,7 +113,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         if (!$this->cronData) {
             $cronTableGateway = $this->getCronTableGateway();
             $rowset = $cronTableGateway->select(array('cron_name'=>$this->getName()));
-            $this->cronData = (array) $rowset->current();
+            $this->cronData = $rowset->current();
         }
 
         return $this->cronData;
@@ -133,7 +133,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     protected function isOverdue()
     {
         $cronData = $this->getCronDataFromDatabase();
-        return ($cronData || $cronData['overdue'] ? TRUE : FALSE);
+        return ($cronData && $cronData['overdue'] ? TRUE : FALSE);
     }
 
     /**
