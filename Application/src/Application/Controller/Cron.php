@@ -86,7 +86,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         foreach ($applicationConfigService->getCronjobs() as $name=>$magelinkCron) {
             if ($job === NULL || $job == $name) {
                 $ran = TRUE;
-
+var_dump($name);
                 if ($job == $name) {
                     $runCron = TRUE;
                 }else{

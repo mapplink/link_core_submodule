@@ -41,6 +41,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         'overdue'=>FALSE
     );
 
+    /** @var TableGateway $_cronTableGateway */
+    protected $_cronTableGateway;
     /** @var  array|FALSE $cronData */
     protected $cronData;
 
@@ -96,6 +98,9 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     protected function getCronTableGateway()
     {
+        if (!$this->_cronTableGateway) {
+            $this->_cronTableGateway = new TableGateway('cron', $this->getServiceLocator()->get('zend_db'));
+        }
 
         return $this->_cronTableGateway;
     }
@@ -106,8 +111,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     protected function getCronDataFromDatabase()
     {
         if (!$this->cronData) {
-            $cronTableGateway = new TableGateway('cron', $this->getServiceLocator()->get('zend_db'));
-            $rowset = $cronTableGateway->select(array('cron_name' => $this->getName()));
+            $cronTableGateway = $this->getCronTableGateway();
+            $rowset = $cronTableGateway->select(array('cron_name'=>$this->getName()));
             $this->cronData = (array) $rowset->current();
         }
 
@@ -115,17 +120,15 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @return bool $isCronExisting
+     * @return bool $isCronDataExisting
      */
-    protected function isCronExisting()
+    protected function isCronDataExisting()
     {
         return (bool) $this->getCronDataFromDatabase();
-
     }
+
     /**
-     * Returns a new TableGateway instance for the requested table
-     * @param string $table
-     * @return \Zend\Db\TableGateway\TableGateway
+     * @return bool
      */
     protected function isOverdue()
     {
@@ -133,12 +136,14 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         return ($cronData || $cronData['overdue'] ? TRUE : FALSE);
     }
 
+    /**
+     * @return int $flaggedCronAsOverdue
+     */
     protected function flagCronAsOverdue()
     {
         $tableGateway = $this->getCronTableGateway();
         $set = array('overdue'=>1, 'updated_at'=>date('Y-m-d H:i:s'));
-
-        if ($isCronExisting = $this->isCronExisting()) {
+        if ($isCronDataExisting = $this->isCronDataExisting()) {
             $where = array('cron_name'=>$this->getName());
         }else{
             $set['cron_name'] = $this->getName();
@@ -148,12 +153,12 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $maxTries = 5;
         do {
             usleep(($try - 1) * 600);
-            if ($isCronExisting) {
+            if ($isCronDataExisting) {
                 $success = $tableGateway->update($set, $where);
             }else{
                 $success = $tableGateway->insert($set);
             }
-        }while (!$success || $try++ < $maxTries);
+        }while ($try++ < $maxTries && !$success);
 
         $logCode = 'cron_'.$this->getCode().'_sof';
         $logData = array('dateTime'=>date('d/m H:i:s'), 'magelinkCron'=>$this->getName());
@@ -168,9 +173,12 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         return $success;
     }
 
+    /**
+     * @return bool|int $removedOverdueFlag
+     */
     protected function removeOverdueFlag()
     {
-        if ($this->isCronExisting()) {
+        if ($this->isCronDataExisting()) {
             $tableGateway = $this->getCronTableGateway();
             $set = array('overdue'=>0, 'updated_at'=>date('Y-m-d H:i:s'));
             $where = array('cron_name'=>$this->getName());
@@ -180,7 +188,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             do {
                 usleep(($try - 1) * 600);
                 $success = $tableGateway->update($set, $where);
-            }while (!$success || $try++ < $maxTries);
+            }while ($try++ < $maxTries && !$success);
 
             $logCode = 'cron_'.$this->getCode().'_rof';
             $logData = array('dateTime'=>date('d/m H:i:s'), 'magelinkCron'=>$this->getName());
@@ -205,20 +213,12 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      * @param array $cronData
      * @return bool $run
      */
-    public function cronCheck($minutes, $checkOnOverdueAsWell = TRUE)
+    public function cronCheck($minutes)
     {
         $standardRun = $this->throwCronLockError = ($minutes % $this->getInterval() == $this->getOffset());
         $run = $standardRun || $this->isOverdue();
 
         return $run;
-    }
-
-    /**
-     * @return bool $this->throwCronLockError
-     */
-    protected function throwCronLockError()
-    {
-        return $this->throwCronLockError;
     }
 
     /**
@@ -231,7 +231,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $startDate = date('H:i:s d/m', $start);
         $unlocked = $this->checkIfUnlocked();
 
-        if (!$unlocked && $this->throwCronLockError()) {
+        if (!$unlocked && $this->throwCronLockError) {
             $logCode = 'cron_lock_'.$this->getCode();
             $logMessage = 'Cron job '.$this->getName().' locked.';
             if ($this->notifyCustomer()) {
@@ -252,7 +252,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $logMessage = 'Cron '.$this->getName().' started at '.$startDate;
             $logData = array('name'=>$this->getName(), 'class'=>get_class($this), 'start'=>$startDate);
             $logEntities = array('magelinkCron'=>$this);
-            $this->_logService->log(LogService::LEVEL_DEBUGEXTRA,
+            $this->_logService->log(LogService::LEVEL_INFO,
                 'cron_run_'.$this->getCode(), $logMessage, $logData);
 
             $this->_cronRun();
@@ -340,7 +340,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         do {
             usleep(($try - 1) * 700);
             unlink($this->filename);
-        }while (!($unlocked = $this->checkIfUnlocked()) && $try++ < $maxTries);
+            $unlocked = $this->checkIfUnlocked();
+        }while ($try++ < $maxTries && !$unlocked);
 
         return $unlocked;
     }
