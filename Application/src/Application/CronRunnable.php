@@ -164,7 +164,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $logData = array('dateTime'=>date('d/m H:i:s'), 'magelinkCron'=>$this->getName());
         if ($success) {
             $logMessage = 'Flagged cron '.$this->getName().' successfully as overdue.';
-            $this->_logService->log(LogService::LEVEL_INFO, $logCode.'_err', $logMessage, $logData);
+            $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
         }else{
             $logMessage = 'Overdue flagging of cron '.$this->getName().' failed';
             $this->_logService->log(LogService::LEVEL_ERROR, $logCode.'_err', $logMessage, $logData);
@@ -178,7 +178,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     protected function removeOverdueFlag()
     {
-        if ($this->isCronDataExisting()) {
+        if ($this->isOverdue()) {
             $tableGateway = $this->getCronTableGateway();
             $set = array('overdue'=>0, 'updated_at'=>date('Y-m-d H:i:s'));
             $where = array('cron_name'=>$this->getName());
@@ -194,8 +194,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $logData = array('dateTime'=>date('d/m H:i:s'), 'magelinkCron'=>$this->getName());
             if ($success) {
                 $logMessage = 'Removed overdue flag on cron '.$this->getName().' successfully.';
-                $this->_logService->log(LogService::LEVEL_INFO, $logCode.'_err', $logMessage, $logData);
-            }else {
+                $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
+            }else{
                 $logMessage = 'Overdue flag removal on cron '.$this->getName().' failed';
                 $this->_logService->log(LogService::LEVEL_ERROR, $logCode.'_err', $logMessage, $logData);
             }
