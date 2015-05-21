@@ -149,7 +149,7 @@ class NodeService implements ServiceLocatorAwareInterface
         $selectTime = -$startMethod + ($start = microtime(TRUE));
 
         foreach ($updateRowSet as $row) {
-            if (!$entities[$row['entity_id']]) {
+            if (!isset($entities[$row['entity_id']])) {
                 $entities[$row['entity_id']] = $this->getServiceLocator()->get('entityService')
                     ->loadEntityId($nodeEntity->getId(), $row['entity_id']);
             }
