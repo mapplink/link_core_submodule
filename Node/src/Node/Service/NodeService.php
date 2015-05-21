@@ -156,7 +156,7 @@ class NodeService implements ServiceLocatorAwareInterface
 
             try{
                 $update = new Update();
-                $update->init($entities[$row['entity_id']], $row);
+                $update->init($entities[$row['entity_id']], (array) $row);
                 $updates[] = $update;
             }catch (\Exception $exception) {
                 $logService->log(LogService::LEVEL_ERROR, $logCode.'_err', $exception->getMessage(), $row);
