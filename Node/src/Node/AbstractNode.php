@@ -280,7 +280,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         }
         $endUpdatesLoop = $start = microtime(TRUE);
 
-        $createUpdateData = $writeUpdates = $markedAsCompleted = 0;
+        $markedAsCompleted = array();
+        $createUpdateData = $writeUpdates = 0;
         foreach ($updatesByType as $entityType=>$entityTypeUpdates) {
 
             if (!isset($this->_gateway[$entityType])) {
