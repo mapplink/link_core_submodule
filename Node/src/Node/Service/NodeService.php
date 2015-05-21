@@ -133,59 +133,45 @@ class NodeService implements ServiceLocatorAwareInterface
         /** @var LogService $logService */
         $logService = $this->getServiceLocator()->get('logService');
 
-        $logCode = 'node_svc_pen_upd';
+        $logCode = 'nodesvc_pupd';
         $logData = array();
         $logMessage = 'NodeService->getPendingUpdates() started at '.date('d/m H:i:s').'.';
         $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
 
         $sqlSelect = $this->getTableGateway('entity_update')->getSql()->select()
-            ->columns(array('entity_id', 'log_id'))
+            ->columns(array('update_id', 'entity_id', 'log_id'))
             ->join('entity_update_log', 'entity_update_log.log_id = entity_update.log_id',
                 array('type', 'timestamp', 'source_node', 'affected_nodes', 'affected_attributes'), 'left')
             ->where(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
         $updateRowSet = $this->getTableGateway('entity_update')->selectWith($sqlSelect);
-var_dump($updateRowSet);var_dump(get_class($updateRowSet));die();
-        $updates = array();
-        $selectTime = $createTime = 0;
-        $startTimestamp = $start = microtime(TRUE);
+
+        $updates = $entities = array();
+        $selectTime = -$startMethod + ($start = microtime(TRUE));
 
         foreach ($updateRowSet as $row) {
-            $logs = $this->getTableGateway('entity_update_log')
-                ->select(array('log_id'=>$row['log_id']));
-
-            $log = FALSE;
-            foreach ($logs as $logRow) {
-                $log = $logRow;
-                break;
+            if (!$entities[$row['entity_id']]) {
+                $entities[$row['entity_id']] = $this->getServiceLocator()->get('entityService')
+                    ->loadEntityId($nodeEntity->getId(), $row['entity_id']);
             }
 
-            if ($log === FALSE) {
-                throw new MagelinkException('Could not find log entry for update ' . $row['update_id']);
-                break;
+            try{
+                $update = new Update();
+                $update->init($entities[$row['entity_id']], $row);
+                $updates[] = $update;
+            }catch (\Exception $exception) {
+                $logService->log(LogService::LEVEL_ERROR, $logCode.'_err', $exception->getMessage(), $row);
             }
-
-            $selectTime += -$start + ($start = microtime(TRUE));
-
-            $entity = $this->getServiceLocator()->get('entityService')
-                ->loadEntityId($nodeEntity->getId(), $row['entity_id']);
-
-            $update = new Update();
-            $update->init($log['log_id'], $entity, $log['type'], $log['timestamp'], $log['source_node'],
-                $log['affected_nodes'], $log['affected_attributes']);
-            $updates[] = $update;
-
-            $createTime += -$start + ($start = microtime(TRUE));
         }
 
+        unset($entities);
+
         $methodRuntime = round(microtime(TRUE) - $startMethod, 1);
-        $loopRuntime = round(microtime(TRUE) - $startTimestamp, 1);
+        $loopRuntime = round(microtime(TRUE) - $start, 1);
         $perUpdate = count($updates) ? round($loopRuntime / count($updates), 4) : FALSE;
 
         $logMessage = 'NodeService->pendingUpdates() finished at '.date('m/d H:i:s').' and took '.$methodRuntime.'s.'
-            .' Entity_update_log loop took '.$loopRuntime
-                .($perUpdate ? 's ('.count($updates).' x '.$perUpdate.'s per each). Accumulated updateLog time: '
-                    .round($selectTime, 1).'s, createUpdate time: '.round($createTime, 1) : '')
-            .'s.';
+            .' Entity_update query took '.round($selectTime, 1).'s, the update creation loop '
+            .round($loopRuntime, 1).'s'.($perUpdate ? ' ('.count($updates).' x '.$perUpdate.'s per each).' : '.');
         $logData = array('method runtime'=>$methodRuntime, 'loop runtime'=>$loopRuntime, 'per each'=>$perUpdate);
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
@@ -244,14 +230,14 @@ var_dump($updateRowSet);var_dump(get_class($updateRowSet));die();
 
         $methodRuntime = round(microtime(TRUE) - $startMethod, 1);
         $loopRuntime = round(microtime(TRUE) - $startTimestamp, 1);
-        $perUpdate = count($actions) ? round($loopRuntime / count($actions), 4) : FALSE;
+        $perAction = count($actions) ? round($loopRuntime / count($actions), 4) : FALSE;
 
         $logMessage = 'NodeService->pendingActions() finished at '.date('m/d H:i:s').' and took '.$methodRuntime.'s.'
             .' Entity_actions_status loop took '.$loopRuntime
-                .($perUpdate ? 's ('.count($actions).' x '.$perUpdate.'s per each). Accumulated updateLog time: '
-                     .round($loadTime, 1).'s, createUpdate time: '.round($createTime, 1) : '')
+                .($perAction ? 's ('.count($actions).' x '.$perAction.'s per each). Accumulated actionLog time: '
+                     .round($loadTime, 1).'s, createAction time: '.round($createTime, 1) : '')
             .'s.';
-        $logData = array('method runtime'=>$methodRuntime, 'loop runtime'=>$loopRuntime, 'per each'=>$perUpdate);
+        $logData = array('method runtime'=>$methodRuntime, 'loop runtime'=>$loopRuntime, 'per each'=>$perAction);
         $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
 
         return $actions;
