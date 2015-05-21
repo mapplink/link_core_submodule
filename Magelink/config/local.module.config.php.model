@@ -1,0 +1,14 @@
+<?php
+
+return array(
+    'magelink_cron'=>array(
+        'synchronizer'=>array(
+            'class'=>'\Magelink\Cron\Synchronizer',
+            'interval'=>30,
+            'offset'=>0,
+            'lockTime'=>135,
+            'overdue'=>TRUE
+        )
+    )
+);
+
