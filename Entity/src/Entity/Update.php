@@ -50,13 +50,14 @@ class Update
      */
     public function init(Entity $entity, array $data)
     {
-        $dataKeys = array('log_id', 'type', 'timestamp', 'source_node', 'affected_nodes', 'affected_attributes');
         $this->entity = $entity;
+
+        $dataKeys = array('log_id', 'type', 'timestamp', 'source_node', 'affected_nodes', 'affected_attributes');
         foreach ($dataKeys as $key) {
             if (!array_key_exists($key, $data)) {
                 throw new MagelinkException('Could not find value of '.$key.' for update '.$data['update_id']);
                 break;
-            }else {
+            }else{
                 if (strpos($key, 'affected_') === 0 && !is_array($data[$key])) {
                     $data[$key] = explode(',', $data[$key]);
                 }
@@ -80,6 +81,14 @@ class Update
     public function getEntity()
     {
         return $this->entity;
+    }
+
+    /**
+     * @return Entity $this->entity->getId()
+     */
+    public function getEntityId()
+    {
+        return $this->entity->getId();
     }
 
     /**
