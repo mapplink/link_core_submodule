@@ -26,8 +26,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     const LOCKS_DIRECTORY = 'data/locks';
     const FIRST_CUSTOMER_LOCK_NOTIFICATION = 2;
 
-    /** @var bool $throwCronLockError */
-    protected $throwCronLockError = TRUE;
+    /** @var bool $scheduledRun */
+    protected $scheduledRun;
 
     /** @var string|NULL $name */
     protected $name = NULL;
@@ -215,8 +215,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     public function cronCheck($minutes)
     {
-        $standardRun = $this->throwCronLockError = ($minutes % $this->getInterval() == $this->getOffset());
-        $run = $standardRun || $this->isOverdue();
+        $this->scheduledRun = ($minutes % $this->getInterval() == $this->getOffset());
+        $run = $this->scheduledRun || $this->isOverdue() && $this->checkIfUnlocked();
 
         return $run;
     }
@@ -231,7 +231,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $startDate = date('H:i:s d/m', $start);
         $unlocked = $this->checkIfUnlocked();
 
-        if (!$unlocked && $this->throwCronLockError) {
+        if (!$unlocked && $this->scheduledRun) {
             $logCode = 'cron_lock_'.$this->getCode();
             $logMessage = 'Cron job '.$this->getName().' locked.';
             if ($this->notifyCustomer()) {
