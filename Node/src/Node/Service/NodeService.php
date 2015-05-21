@@ -138,14 +138,18 @@ class NodeService implements ServiceLocatorAwareInterface
         $logMessage = 'NodeService->getPendingUpdates() started at '.date('d/m H:i:s').'.';
         $logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
 
-        $response = $this->getTableGateway('entity_update')
-            ->select(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
-
+        $sqlSelect = $this->getTableGateway('entity_update')->getSql()->select()
+            ->columns(array('entity_id', 'log_id'))
+            ->join('entity_update_log', 'entity_update_log.log_id = entity_update.log_id',
+                array('type', 'timestamp', 'source_node', 'affected_nodes', 'affected_attributes'), 'left')
+            ->where(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
+        $updateRowSet = $this->getTableGateway('entity_update')->selectWith($sqlSelect);
+var_dump($updateRowSet);var_dump(get_class($updateRowSet));die();
         $updates = array();
         $selectTime = $createTime = 0;
         $startTimestamp = $start = microtime(TRUE);
 
-        foreach ($response as $row) {
+        foreach ($updateRowSet as $row) {
             $logs = $this->getTableGateway('entity_update_log')
                 ->select(array('log_id'=>$row['log_id']));
 
