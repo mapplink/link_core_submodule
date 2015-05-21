@@ -361,7 +361,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 }
 
                 foreach ($entityTypeUpdates[$entityId] as $updateToBeMarkedAsCompleted) {
-                    $markedAsCompleted = $updateToBeMarkedAsCompleted->getLogId();
+                    $markedAsCompleted[] = $updateToBeMarkedAsCompleted->getLogId();
                     $this->_nodeService->setUpdateStatus($this->_entity, $updateToBeMarkedAsCompleted, 1);
                 }
             }
@@ -375,7 +375,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             .' UpdatesByType took '.round($endUpdatesByTypeLoop - $endUpdatesLoop, 1).'s ('.count($updatesByType).'),'
             .' '.round($createUpdateData, 1).'s spend on preparing data, '.round($writeUpdates, 1).'s on writing.'
             .' '.count($markedAsCompleted).' updates marked as completed.';
-        $this->_logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, array());
+        $logData = array('marked as completed'=>implode(', ', $markedAsCompleted));
+        $this->_logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, $logData);
     }
 
     /**
