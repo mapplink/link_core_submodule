@@ -22,8 +22,8 @@ class Update
     const TYPE_DELETE = 2;
     const TYPE_ACTION = 9;
 
-    /** @var int $logId */
-    protected $logId;
+    /** @var int $log_id */
+    protected $log_id;
 
     /** @var Entity $entity */
     protected $entity;
@@ -34,49 +34,45 @@ class Update
     /** @var int $timestamp */
     protected $timestamp;
 
-    /** @var int $sourceNode */
-    protected $sourceNode;
+    /** @var int $source_node */
+    protected $source_node;
 
-    /** @var array $affectedNodes */
-    protected $affectedNodes;
+    /** @var array $affected_nodes */
+    protected $affected_nodes;
 
-    /** @var array $affectedAttributes */
-    protected $affectedAttributes;
+    /** @var array $affected_attributes */
+    protected $affected_attributes;
 
 
     /**
-     * @param int $logId
      * @param \Entity\Entity $entity
-     * @param string $type
-     * @param string $timestamp
-     * @param int $sourceNode
-     * @param array|string $affectedNodes
-     * @param array|string $affectedAttributes
+     * @param array $data
      */
-    public function init($logId, Entity $entity, $type, $timestamp, $sourceNode, $affectedNodes, $affectedAttributes)
+    public function init(Entity $entity, array $data)
     {
-        if (!is_array($affectedNodes)) {
-            $affectedNodes = explode(',', $affectedNodes);
-        }
-        if (!is_array($affectedAttributes)) {
-            $affectedAttributes = explode(',', $affectedAttributes);
-        }
-
-        $this->logId = $logId;
         $this->entity = $entity;
-        $this->type = $type;
-        $this->timestamp = $timestamp;
-        $this->sourceNode = $sourceNode;
-        $this->affectedNodes = $affectedNodes;
-        $this->affectedAttributes = $affectedAttributes;
+
+        $dataKeys = array('log_id', 'type', 'timestamp', 'source_node', 'affected_nodes', 'affected_attributes');
+        foreach ($dataKeys as $key) {
+            if (!array_key_exists($key, $data)) {
+                throw new MagelinkException('Could not find value of '.$key.' for update '.$data['update_id']);
+                break;
+            }else{
+                if (strpos($key, 'affected_') === 0 && !is_array($data[$key])) {
+                    $data[$key] = explode(',', $data[$key]);
+                }
+
+                $this->$key = $data[$key];
+            }
+        }
     }
 
     /**
-     * @return int $this->logId
+     * @return int $this->log_id
      */
     public function getLogId()
     {
-        return $this->logId;
+        return $this->log_id;
     }
 
     /**
@@ -85,6 +81,14 @@ class Update
     public function getEntity()
     {
         return $this->entity;
+    }
+
+    /**
+     * @return Entity $this->entity->getId()
+     */
+    public function getEntityId()
+    {
+        return $this->entity->getId();
     }
 
     /**
@@ -104,11 +108,11 @@ class Update
     }
 
     /**
-     * @return int $this->sourceNode
+     * @return int $this->source_node
      */
     public function getSourceNode()
     {
-        return $this->sourceNode;
+        return $this->source_node;
     }
 
     /**
@@ -116,7 +120,7 @@ class Update
      */
     public function getNodesSimple()
     {
-        return $this->affectedNodes;
+        return $this->affected_nodes;
     }
 
     /**
@@ -124,7 +128,7 @@ class Update
      */
     public function getAttributesSimple()
     {
-        return $this->affectedAttributes;
+        return $this->affected_attributes;
     }
     
 }

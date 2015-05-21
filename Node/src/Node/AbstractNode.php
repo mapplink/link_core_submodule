@@ -280,6 +280,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         }
         $endUpdatesLoop = $start = microtime(TRUE);
 
+        $markedAsCompleted = array();
         $createUpdateData = $writeUpdates = 0;
         foreach ($updatesByType as $entityType=>$entityTypeUpdates) {
 
@@ -361,6 +362,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 }
 
                 foreach ($entityTypeUpdates[$entityId] as $updateToBeMarkedAsCompleted) {
+                    $markedAsCompleted[] = $updateToBeMarkedAsCompleted->getLogId();
                     $this->_nodeService->setUpdateStatus($this->_entity, $updateToBeMarkedAsCompleted, 1);
                 }
             }
@@ -370,10 +372,12 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $endUpdatesByTypeLoop = microtime(TRUE);
 
         $logMessage = '->processUpdates() took '.round($endUpdatesByTypeLoop - $startMethod, 1).'s.'
-            .' Updates loop took '.round($endUpdatesLoop - $startMethod, 1).'s ('.count($updates).').'
-            .' UpdatesByType loop took '.round($endUpdatesByTypeLoop - $endUpdatesLoop, 1).'s ('.count($updatesByType).'),'
-            .' '.round($createUpdateData, 1).'s spend on preparing data, '.round($writeUpdates, 1).'s on writing.';
-        $this->_logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, array());
+            .' Updates loop took '.round($endUpdatesLoop - $startMethod, 1).'s ('.count($this->updates).').'
+            .' UpdatesByType took '.round($endUpdatesByTypeLoop - $endUpdatesLoop, 1).'s ('.count($updatesByType).'),'
+            .' '.round($createUpdateData, 1).'s spend on preparing data, '.round($writeUpdates, 1).'s on writing.'
+            .' '.count($markedAsCompleted).' updates marked as completed.';
+        $logData = array('marked as completed'=>implode(', ', $markedAsCompleted));
+        $this->_logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, $logData);
     }
 
     /**
