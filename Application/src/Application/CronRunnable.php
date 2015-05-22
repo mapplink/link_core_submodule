@@ -128,7 +128,15 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @return bool
+     * @return bool $isOverdueEnabled
+     */
+    protected function isOverdueEnabled()
+    {
+        return $this->attributes['overdue'];
+    }
+
+    /**
+     * @return bool $isOverdue
      */
     protected function isOverdue()
     {
@@ -216,7 +224,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     public function cronCheck($minutes)
     {
         $this->scheduledRun = ($minutes % $this->getInterval() == $this->getOffset());
-        $run = $this->scheduledRun || $this->isOverdue() && $this->checkIfUnlocked();
+        $run = $this->scheduledRun || $this->isOverdueEnabled() && $this->isOverdue() && $this->checkIfUnlocked();
 
         return $run;
     }
