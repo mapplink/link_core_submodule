@@ -48,7 +48,7 @@ return array (
             'class'=>'\Magelink\Cron\Synchronizer',
             'interval'=>30,
             'offset'=>0,
-            'lockTime'=>135,
+            'lockTime'=>180,
             'overdue'=>TRUE
         )
     ),
@@ -337,3 +337,4 @@ return array (
     )
 );
 
+?>
