@@ -254,7 +254,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         if (!$unlocked && $this->scheduledRun) {
             $logCode = 'cron_lock_'.$this->getCode();
             $logMessage = 'Cron job '.$this->getName().' locked.';
-            if ($this->notifyCustomer()) {
+            if ($this->notifyClient()) {
                 $logCode = EmailLogger::ERROR_TO_CLIENT_CODE.$logCode;
                 $logMessage .= ' Please check the synchronisation process `'.$this->getName().'` in the admin area.';
             }else{
@@ -445,14 +445,18 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @return bool $notifyCustomer
+     * @return bool $notifyClient
      */
-    public function notifyCustomer()
+    public function notifyClient()
     {
-        $numberOfIntervalsBeforeNotifying = $this->_applicationConfigService->getConfigFirstClientNotification();
-        $notifyAfter = $this->lockedSince() + $this->getIntervalSeconds() * $numberOfIntervalsBeforeNotifying;
+        if ($numberOfIntervalsBeforeNotifying = $this->_applicationConfigService->getConfigFirstClientNotification()) {
+            $notifyAfter = $this->lockedSince() + $this->getIntervalSeconds() * $numberOfIntervalsBeforeNotifying;
+            $notify = (time() >= $notifyAfter);
+        }else{
+            $notify = FALSE;
+        }
 
-        return time() >= $notifyAfter;
+        return $notify;
     }
 
     /**
