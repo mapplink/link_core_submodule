@@ -11,6 +11,7 @@ namespace Application\Service;
 
 use Application\CronRunnable;
 use Log\Service\LogService;
+use Magelink\Exception\MagelinkException;
 use Magelink\Exception\SyncException;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
@@ -86,6 +87,59 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @return array $configSystemCronData
+     */
+    protected function getConfigSystemCronData()
+    {
+        return $this->getConfigData('system_cron');
+    }
+
+    /**
+     * @return string $cronLockDirectory
+     */
+    public function getConfigCronLockDirectory()
+    {
+        $systemCronData = $this->getConfigData('system_cron');
+        return $systemCronData['lock_directory'];
+    }
+
+    /**
+     * @return array $firstNotification
+     */
+    protected function getConfigFirstNotifications()
+    {
+        $systemCronData = $this->getConfigData('system_cron');
+        return $systemCronData['first_notification'];
+    }
+
+    /**
+     * @return int $firstNotificationTolerance
+     */
+    protected function getConfigFirstNotificationTolerance()
+    {
+        $firstNotifications = $this->getConfigFirstNotifications();
+        return min(max($firstNotifications['tolerance'], 0.01), 0.99);
+    }
+
+    /**
+     * @return array $firstAdminNotification
+     */
+    public function getConfigFirstAdminNotification()
+    {
+        $firstNotifications = $this->getConfigFirstNotifications();
+        return max($firstNotifications['admin'] - $this->getConfigFirstNotificationTolerance(), 0);
+    }
+
+    /**
+     * @return array $firstClientNotification
+     */
+    public function getConfigFirstClientNotification()
+    {
+        $firstNotifications = $this->getConfigFirstNotifications();
+        return max($firstNotifications['client'] - $this->getConfigFirstNotificationTolerance(), 0);
+    }
+
+    /**
      * @return array $configCronData
      */
     protected function getConfigCronData()
@@ -100,7 +154,6 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     {
         return $this->getConfigData('system_log');
     }
-
     /**
      * @return array $configCronData
      */
