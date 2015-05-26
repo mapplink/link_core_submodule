@@ -29,6 +29,8 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
         LogService::LEVEL_WARN,
         LogService::LEVEL_ERROR
     );
+    /** @var bool $_notifyClient */
+    protected $_notifyClient = FALSE;
 
     /** @var ServiceLocatorInterface $serviceLocator */
     protected $_serviceLocator;
@@ -58,6 +60,24 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
      * @return bool Whether this logger is able to log messages (i.e. whether all dependencies are fulfilled)
      */
     abstract public function init(array $config = array());
+
+    /**
+     * @param bool $notifyClient
+     */
+    public function setNotifyClient($notifyClient)
+    {
+        if (is_bool($notifyClient)) {
+            $this->_notifyClient = $notifyClient;
+        }
+    }
+
+    /**
+     * @return bool $this->_notifyClient
+     */
+    protected function notifyClient()
+    {
+        return $this->_notifyClient;
+    }
 
     /**
      * @param string $level

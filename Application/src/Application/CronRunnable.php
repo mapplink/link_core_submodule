@@ -252,17 +252,19 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $unlocked = $this->checkIfUnlocked();
 
         if (!$unlocked && $this->scheduledRun) {
+            $logLevel = LogService::LEVEL_ERROR;
             $logCode = 'cron_lock_'.$this->getCode();
             $logMessage = 'Cron job '.$this->getName().' locked.';
-            if ($this->notifyClient()) {
-                $logCode = EmailLogger::ERROR_TO_CLIENT_CODE.$logCode;
-                $logMessage .= ' Please check the synchronisation process `'.$this->getName().'` in the admin area.';
-            }else{
-                $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
-            }
             $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$this->getName(), 'class'=>get_class($this));
             $logEntities = array('magelinkCron'=>$this);
-            $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logData, $logEntities);
+
+            if ($this->notifyClient()) {
+                $logMessage .= ' Please check the synchronisation process `'.$this->getName().'` in the admin area.';
+                $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities, TRUE);
+            }else{
+                $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
+                $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities);
+            }
 
             $this->flagCronAsOverdue();
         }elseif ($unlocked) {
