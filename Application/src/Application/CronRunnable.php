@@ -96,12 +96,14 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $this->filename = $this->lockDirectory.'/'.bin2hex(crc32('cron-'.$this->name)).'.lock';
 
             foreach ($this->attributes as $code=>$defaultValue) {
-                if (isset($cronData[$code]) && is_int($cronData[$code]) && $cronData[$code] > 0) {
+                if (isset($cronData[$code]) && is_int($cronData[$code]) && $cronData[$code] > 0
+                    || $code == 'interval' && isset($cronData[$code]) && is_string($cronData[$code])) {
+
                     $this->attributes[$code] = $cronData[$code];
                 }
             }
 
-            if ($this->attributes['lockTime'] === NULL && isset($this->attributes['interval'])) {
+            if (is_null($this->attributes['lockTime']) && isset($this->attributes['interval'])) {
                 $this->attributes['lockTime'] = $this->attributes['interval'] * $this->attributes['autoLockMultiplier'];
             }
             foreach ($this->attributes as $code=>$value) {
