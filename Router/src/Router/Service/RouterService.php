@@ -114,6 +114,7 @@ class RouterService implements ServiceLocatorAwareInterface
                     $transforms[$code] = $transformFactory->getTransform($transformEntity);
                 }
                 $transform = $transforms[$code];
+                $transformClass = get_class($transform);
 
                 $logLevel = LogService::LEVEL_INFO;
                 $logCode = 'trans_';
@@ -134,8 +135,8 @@ class RouterService implements ServiceLocatorAwareInterface
                     $logMessage = 'invalid transform or error creating';
                     $logMessageSuffix .= ' (type: '.$transformEntity->getTransformType().')';
                 }else{
-                    $logCode .= strtolower(substr(end(explode('\\', get_class($transform))), 0, 4));
-                    $logMessageSuffix .= ' (class: '.get_class($transform).')';
+                    $logCode .= strtolower(substr(end(explode('\\', $transformClass)), 0, 4));
+                    $logMessageSuffix .= ' (class: '.$transformClass.')';
 
                     if (!$this->checkFiltersTransform($entity, $transformEntity, $type, $updatedData)) {
                         $logCode .= '_skip';
