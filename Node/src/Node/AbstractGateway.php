@@ -1,17 +1,23 @@
 <?php
-
 /**
- *
+ * @category Node
+ * @package Node
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Node;
 
+use Entity\Service\EntityService;
+use Magelink\Exception\MagelinkException;
+use Node\Service\NodeService;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
+
 abstract class AbstractGateway implements ServiceLocatorAwareInterface
 {
-
     /** @var \Magento\Node */
     protected $_node;
     /** @var \Node\Entity\Node $_nodeEntity */
@@ -22,6 +28,10 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
 
     /** @var ServiceLocatorAwareInterface $_serviceLocator */
     protected $_serviceLocator;
+    /** @var NodeService $_nodeService */
+    protected $_nodeService;
+    /** @var EntityService $_entityService */
+    protected $_entityService;
 
 
     /**
