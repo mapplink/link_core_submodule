@@ -265,7 +265,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
                     extract($cronjobData, EXTR_IF_EXISTS);
 
                     try{
-                        $cronjob = new $class($name, $cronjobData);
+                        $cronjob = new $class($name);
                     }catch( SyncException $syncException ){
                         $this->getServiceLocator()->get('logService')->log(
                             LogService::LEVEL_ERROR,
@@ -278,6 +278,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
 
                     if ($cronjob instanceof CronRunnable) {
                         $cronjob->setServiceLocator($this->getServiceLocator());
+                        $cronjob->init($cronjobData);
                         $this->cronjobs[$name] = $cronjob;
 
                         $logLevel = LogService::LEVEL_DEBUGEXTRA;

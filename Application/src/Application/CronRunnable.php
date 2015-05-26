@@ -76,14 +76,24 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
     /**
      * @param string $name
-     * @param array $cronData
      */
-    public function __construct($name, array $cronData)
+    public function __construct($name)
     {
         if ($name && is_string($name)) {
             $this->name = $name;
+        }else{
+            throw new SyncException(get_class($this).' creation failed. No valid name provided.');
+        }
+    }
+
+    /**
+     * @param array $cronData
+     */
+    public function init(array $cronData)
+    {
+        if (!($this->getServiceLocator() instanceof ServiceLocatorAwareInterface)) {
             $this->lockDirectory = $this->_applicationConfigService->getConfigCronLockDirectory();
-            $this->filename = $this->lockDirectory.'/'.bin2hex(crc32('cron-'.$name)).'.lock';
+            $this->filename = $this->lockDirectory.'/'.bin2hex(crc32('cron-'.$this->name)).'.lock';
 
             foreach ($this->attributes as $code=>$defaultValue) {
                 if (isset($cronData[$code]) && is_int($cronData[$code]) && $cronData[$code] > 0) {
@@ -96,11 +106,11 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             }
             foreach ($this->attributes as $code) {
                 if ($cronData[$code] === NULL) {
-                    throw new SyncException(get_class($this).' setup failed. No valid '.$code.' value provided.');
+                    throw new SyncException(get_class($this).' init failed. No valid '.$code.' value provided.');
                 }
             }
         }else{
-            throw new SyncException(get_class($this).' creation failed. No valid name provided.');
+            throw new SyncException(get_class($this).' init failed. No valid service locator provided.');
         }
     }
 
