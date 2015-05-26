@@ -38,9 +38,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     /** @var array $_typeConfig */
     protected $_typeConfig = NULL;
 
-    /** @var bool|NULL $isMethodEnd */
-    protected $isMethodEnd = NULL;
-
+    /** @var bool $isOverdueRun */
+    protected $isOverdueRun = NULL;
     /** @var Update[] $updates */
     protected $updates = array();
     /** @var Action[] $actions */
@@ -77,12 +76,16 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     /**
      * Sets up internal data structures, calls local _init method, and creates appropriate gateways.
      * @param NodeEntity $nodeEntity
+     * @param bool $isOverdueRun
+     * @throws MagelinkException
      * @see _init()
      */
-    public function init(NodeEntity $nodeEntity)
+    public function init(NodeEntity $nodeEntity, $isScheduledRun = TRUE)
     {
         $this->_entity = $nodeEntity;
         $nodeEntity->loadSimpleData();
+        $this->isOverdueRun = !$isScheduledRun;
+
         $this->_config = $nodeEntity->getSimpleData();
 
         $appConfig = $this->getServiceLocator()->get('Config');
@@ -131,10 +134,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $gateway = $this->_createGateway($entityType);
         if ($gateway instanceof ServiceLocatorAwareInterface) {
             $gateway->setServiceLocator($this->getServiceLocator());
-        }
-
-        if ($gateway) {
-            $gateway->init($this, $this->_entity, $entityType);
+            $gateway->init($this, $this->_entity, $entityType, $this->isOverdueRun);
         }
 
         return $gateway;
@@ -400,7 +400,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         if (!$isMethodEnd) {
             $logMessage = $nodeClass.' update started at '.date('d/m H:i:s', $currentTime).'.';
             $this->methodStartTime = $currentTime;
-        }else {
+        }else{
             $runtime = round($currentTime - $this->methodStartTime, 1);
             $logCode .= '_end';
             $logMessage = $nodeClass.' update finished at '.date('d/m H:i:s', $currentTime).'. Runtime: '.$runtime.'s.';

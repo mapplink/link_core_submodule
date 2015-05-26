@@ -9,16 +9,70 @@ namespace Node;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
-abstract class AbstractGateway implements ServiceLocatorAwareInterface {
+abstract class AbstractGateway implements ServiceLocatorAwareInterface
+{
+
+    /** @var \Magento\Node */
+    protected $_node;
+    /** @var \Node\Entity\Node $_nodeEntity */
+    protected $_nodeEntity;
+
+    /** @var bool $isOverdueRun */
+    protected $isOverdueRun = NULL;
+
+    /** @var ServiceLocatorAwareInterface $_serviceLocator */
+    protected $_serviceLocator;
+
+
+    /**
+     * @param ServiceLocatorInterface $serviceLocator
+     */
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+    }
+
+    /**
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
+    }
 
     /**
      * Initialize the gateway and perform any setup actions required.
      * @param AbstractNode $node
      * @param Entity\Node $nodeEntity
-     * @param string $entity_type
+     * @param string $entityType
      * @return boolean
      */
-    public abstract function init(AbstractNode $node, Entity\Node $nodeEntity, $entity_type);
+    public function init(AbstractNode $node, Entity\Node $nodeEntity, $entityType, $isOverdueRun)
+    {
+        if (!($node instanceof \Magento\Node)) {
+            throw new MagelinkException('Invalid node type for this gateway');
+            $success = FALSE;
+        }else{
+            $this->_node = $node;
+            $this->_nodeEntity = $nodeEntity;
+            $this->isOverdueRun = $isOverdueRun;
+
+            $this->_nodeService = $this->getServiceLocator()->get('nodeService');
+            $this->_entityService = $this->getServiceLocator()->get('entityService');
+            //$this->_entityConfigService = $this->getServiceLocator()->get('entityConfigService');
+
+            $success = $this->_init($entityType);
+        }
+
+        return $success;
+    }
+
+    /**
+     * Initialize the gateway and perform any setup actions required. (module implementation)
+     * @param $entityType
+     * @return bool $success
+     */
+    abstract protected function _init($entityType);
 
     /**
      * Retrieve and action all updated records (either from polling, pushed data, or other sources).
@@ -39,29 +93,5 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface {
      * @return bool Whether to mark the action as complete
      */
     public abstract function writeAction(\Entity\Action $action);
-
-
-
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     *
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     *
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
-    }
 
 }

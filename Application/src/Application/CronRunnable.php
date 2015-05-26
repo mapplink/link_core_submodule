@@ -46,9 +46,9 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     /** @var  array|FALSE $cronData */
     protected $cronData;
 
-    /** @var  ApplicationConfigService $_applicationConfigService */
+    /** @var ApplicationConfigService $_applicationConfigService */
     protected $_applicationConfigService;
-    /** @var  LogService $_logService */
+    /** @var LogService $_logService */
     protected $_logService;
     /** @var ServiceLocatorInterface $_serviceLocator */
     protected $_serviceLocator;
