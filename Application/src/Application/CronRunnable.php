@@ -266,6 +266,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         if (!$unlocked) {
             if ($this->scheduledRun) {
                 $logLevel = LogService::LEVEL_ERROR;
+                $this->flagCronAsOverdue();
             }else{
                 $logLevel = LogService::LEVEL_DEBUGINTERNAL;
             }
@@ -282,8 +283,6 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
                 $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities);
             }
-
-            $this->flagCronAsOverdue();
         }elseif ($unlocked) {
             $lock = $this->acquireLock();
             $this->removeOverdueFlag();
