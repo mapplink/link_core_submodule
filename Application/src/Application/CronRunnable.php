@@ -101,11 +101,11 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 }
             }
 
-            if ($cronData['lockTime'] === NULL && isset($cronData['interval'])) {
-                $cronData['lockTime'] = $cronData['interval'] * $cronData['autoLockMultiplier'];
+            if ($this->attributes['lockTime'] === NULL && isset($this->attributes['interval'])) {
+                $this->attributes['lockTime'] = $this->attributes['interval'] * $this->attributes['autoLockMultiplier'];
             }
-            foreach ($this->attributes as $code) {
-                if ($cronData[$code] === NULL) {
+            foreach ($this->attributes as $code=>$value) {
+                if (is_null($value)) {
                     throw new SyncException(get_class($this).' init failed. No valid '.$code.' value provided.');
                 }
             }
