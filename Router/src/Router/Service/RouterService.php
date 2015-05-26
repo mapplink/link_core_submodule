@@ -119,8 +119,8 @@ class RouterService implements ServiceLocatorAwareInterface
                 $logCode = 'trans_';
                 $logMessagePrefix = 'processTransforms: ';
                 $logMessage = '';
-                $logMessageSuffix = ' from node '.$sourceNodeId.' on entity '.$entity->getId()
-                    .' with transform '.$transformEntity->getTransformId();
+                $logMessageSuffix = ' from node '.$sourceNodeId.' on entity '.$entity->getId().' ('
+                    .$entity->getUniqueId().') with transform '.$transformEntity->getTransformId();
                 $logData = array(
                     'tfid'=>$transformEntity->getTransformid(),
                     'type'=>$transformEntity->getTransformType(),
@@ -134,8 +134,8 @@ class RouterService implements ServiceLocatorAwareInterface
                     $logMessage = 'invalid transform or error creating';
                     $logMessageSuffix .= ' (type: '.$transformEntity->getTransformType().')';
                 }else{
-                    $logCode .= substr(get_class($transform), 0, 4);
-                    $logMessageSuffix .= ' (class: '.get_class($transform).')';
+                    $logCode .= strtolower(substr(end(explode('\\', get_called_class($transform))), 0, 4));
+                    $logMessageSuffix .= ' (class: '.get_called_class($transform).')';
 
                     if (!$this->checkFiltersTransform($entity, $transformEntity, $type, $updatedData)) {
                         $logCode .= '_skip';
