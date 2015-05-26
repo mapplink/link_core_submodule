@@ -263,8 +263,13 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $startDate = date('H:i:s d/m', $start);
         $unlocked = $this->checkIfUnlocked();
 
-        if (!$unlocked && $this->scheduledRun) {
-            $logLevel = LogService::LEVEL_ERROR;
+        if (!$unlocked) {
+            if ($this->scheduledRun) {
+                $logLevel = LogService::LEVEL_ERROR;
+            }else{
+                $logLevel = LogService::LEVEL_DEBUGINTERNAL;
+            }
+
             $logCode = 'cron_lock_'.$this->getCode();
             $logMessage = 'Cron job '.$this->getName().' locked.';
             $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$this->getName(), 'class'=>get_class($this));
