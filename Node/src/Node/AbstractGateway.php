@@ -59,8 +59,12 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
      */
     public function init(AbstractNode $node, Entity\Node $nodeEntity, $entityType, $isOverdueRun)
     {
-        if (!($node instanceof \Magento\Node)) {
-            throw new MagelinkException('Invalid node type for this gateway');
+        $namespace = strtok(get_called_class(), '\\');
+        $allowedNodeClass = $namespace.'\Node';
+        $allowedNode = new $allowedNodeClass();
+
+        if (!($node instanceof $allowedNode)) {
+            throw new MagelinkException('Invalid node type '.get_class($this->_node).' for '.$namespace.' gateways');
             $success = FALSE;
         }else{
             $this->_node = $node;
@@ -87,7 +91,7 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     /**
      * Retrieve and action all updated records (either from polling, pushed data, or other sources).
      */
-    public abstract function retrieve();
+    abstract public function retrieve();
 
     /**
      * Write out all the updates to the given entity.
@@ -95,13 +99,13 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
      * @param string[] $attributes
      * @param int $type
      */
-    public abstract function writeUpdates(\Entity\Entity $entity, $attributes, $type = \Entity\Update::TYPE_UPDATE);
+    abstract public function writeUpdates(\Entity\Entity $entity, $attributes, $type = \Entity\Update::TYPE_UPDATE);
 
     /**
      * Write out the given action.
      * @param \Entity\Action $action
      * @return bool Whether to mark the action as complete
      */
-    public abstract function writeAction(\Entity\Action $action);
+    abstract public function writeAction(\Entity\Action $action);
 
 }
