@@ -29,6 +29,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
 
     /** @var \Node\AbstractGateway[] $_gateway */
     protected $_gateway = array();
+    /** @var ServiceLocatorAwareInterface[] $_api */
+    protected $_api = array();
 
     /** @var NodeEntity $_entity */
     protected $_entity = NULL;
@@ -455,30 +457,26 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Implemented in each NodeModule
+     * To be implemented in each NodeModule
      * Should set up any initial data structures, connections, and open any required files that the node needs to operate.
-     * In the case of any errors that mean a successful sync is unlikely, a Magelink\Exception\InitException MUST be thrown.
-     *
+     * In the case of any errors that mean a successful sync is unlikely, a InitException MUST be thrown.
      * @param NodeEntity $nodeEntity
      */
-    protected abstract function _init(NodeEntity $nodeEntity);
+    abstract protected function _init(NodeEntity $nodeEntity);
 
     /**
-     * Implemented in each NodeModule
-     * The opposite of _init - close off any connections / files / etc that were opened at the beginning.
-     * This will always be the last call to the Node.
-     * NOTE: This will be called even if the Node has thrown a NodeException, but NOT if a SyncException
-     *   or other Exception is thrown (which represents an irrecoverable error)
+     * To be implemented in each NodeModule
+     * The opposite of _init. It will always be the last call to the Node to close off any open connections, files, etc.
+     * NB: Will be called even if a NodeException has been thrown but NOT any other (represents an irrecoverable error)
      */
-    protected abstract function _deinit();
+    abstract protected function _deinit();
 
     /**
-     * Implemented in each NodeModule
-     * Returns an instance of a subclass of AbstractGateway that can handle the provided entity type.
-     *
-     * @param string $entity_type
-     * @return AbstractGateway
+     * To be implemented in each NodeModule
+     * Returns an subclass instance of AbstractGateway for provided entity type.
+     * @param string $entityType
+     * @return AbstractGateway|NULL $gateway
      */
-    protected abstract function _createGateway($entity_type);
+    abstract protected function _createGateway($entityType);
 
 }
