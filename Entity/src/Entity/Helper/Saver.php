@@ -295,7 +295,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
-                    'sav_update_att',
+                    'sav_upd_atcr',
                     'updateData - '.$entity->getId().' - create '.$code,
                     array('type'=>'create', 'attribute code'=>$code, 'new'=>$updatedData[$code]),
                     array('entity'=>$entity)
@@ -306,7 +306,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }catch (\Exception $exception) {
                 $this->getServiceLocator()->get('logService')
                     ->log(LogService::LEVEL_ERROR,
-                        'insert_sql_error',
+                        'sav_upd_atcr_err',
                         'Exception during the insert',
                         array(
                             'entity data'=>$entity->getFullArrayCopy(),
@@ -335,7 +335,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
-                    'sav_update_att',
+                    'sav_upd_atde',
                     'updateData - '.$entity->getId().' - delete '.$code,
                     array('type'=>'delete', 'att'=>$code),
                     array('entity'=>$entity)
@@ -351,7 +351,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
-                    'sav_update_att',
+                    'sav_upd_atup',
                     'updateData - '.$entity->getId().' - update '.$code,
                     array(
                         'type'=>'update',
@@ -368,7 +368,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }catch (\Exception $exception) {
                 $this->getServiceLocator()->get('logService')
                     ->log(LogService::LEVEL_ERROR,
-                        'insert_sql_error',
+                        'sav_upd_atup_err',
                         'Exception during the insert',
                         array(
                             'entity data'=>$entity->getFullArrayCopy(),
@@ -398,7 +398,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
-                    'sav_update_att',
+                    'sav_upd_atme',
                     'updateData - '.$entity->getId().' - merge '.$code,
                     array(
                         'type'=>'merge',
@@ -427,7 +427,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 foreach ($sqls as $sql) {
                     $this->getServiceLocator()->get('logService')
                         ->log(LogService::LEVEL_DEBUGEXTRA,
-                            'sav_update_sql',
+                            'sav_upd_sql',
                             'updateData - '.$entity->getId().' SQL: '.$sql,
                             array('sql'=>$sql),
                             array('entity'=>$entity)
@@ -440,7 +440,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
 
                 $this->getServiceLocator()->get('logService')
                     ->log(LogService::LEVEL_DEBUGEXTRA,
-                        'sav_update_commit_'.$try,
+                        'sav_upd_commit'.$try,
                         'updateData - '.$entity->getId().' committed, '.count($sqls).' queries ran',
                         array('sqls'=>implode('; ', $sqls)),
                         array('entity'=>$entity)
