@@ -113,7 +113,8 @@ class EmailLogger extends AbstractLogger
      */
     protected function sendAlert($errorCode, $subjectMessage)
     {
-        $subject = 'MageLink ERROR: ['.$errorCode.'] '.$subjectMessage;
+        $subject = 'MageLink ERROR'.($this->notifyClient() ? ' - Client notified' : '')
+            .': ['.$errorCode.'] '.$subjectMessage;
         $content = 'MageLink error thrown! Details:'.PHP_EOL.PHP_EOL
             .implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
 

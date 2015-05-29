@@ -63,12 +63,15 @@ abstract class AbstractLogger implements ServiceLocatorAwareInterface
 
     /**
      * @param bool $notifyClient
+     * @return bool $success
      */
     public function setNotifyClient($notifyClient)
     {
         if (is_bool($notifyClient)) {
             $this->_notifyClient = $notifyClient;
         }
+
+        return ($notifyClient === $this->_notifyClient);
     }
 
     /**
