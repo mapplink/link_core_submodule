@@ -26,20 +26,19 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 
 class EntityService implements ServiceLocatorAwareInterface
 {
-    /** @var ServiceLocatorInterface */
-    protected $_serviceLocator;
 
     /** @var TableGateway[]  Cache of preloaded table gateways */
     protected $_tgCache = array();
 
+    /** @var \Entity\Helper\Loader  Helper used for loading records from the database */
+    protected $_loader;
+    /** @var \Entity\Helper\Querier  Helper used for loading records from the database using MLQL */
+    protected $_querier;
     /** @var \Entity\Helper\Saver  Helper used for saving records to the database */
     protected $_saver;
 
-    /** @var \Entity\Helper\Loader  Helper used for loading records from the database */
-    protected $_loader;
-
-    /** @var \Entity\Helper\Querier  Helper used for loading records from the database using MLQL */
-    protected $_querier;
+    /** @var ServiceLocatorInterface */
+    protected $_serviceLocator;
 
 
     /**
@@ -85,32 +84,17 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Retreive Saving helper
-     * @see $_saver
-     * @return \Entity\Helper\Saver
-     */
-    protected function getSaver()
-    {
-        if($this->_saver){
-            return $this->_saver;
-        }
-        $this->_saver = new \Entity\Helper\Saver();
-        $this->_saver->setServiceLocator($this->getServiceLocator());
-        return $this->_saver;
-    }
-
-    /**
      * Retrieve Loading helper
      * @see $_loader
      * @return Loader
      */
     protected function getLoader()
     {
-        if($this->_loader){
-            return $this->_loader;
+        if (!$this->_loader) {
+            $this->_loader = new Loader();
+            $this->_loader->setServiceLocator($this->getServiceLocator());
         }
-        $this->_loader = new Loader();
-        $this->_loader->setServiceLocator($this->getServiceLocator());
+
         return $this->_loader;
     }
 
@@ -119,13 +103,29 @@ class EntityService implements ServiceLocatorAwareInterface
      * @see $_querier
      * @return Querier
      */
-    protected function getQuerier(){
-        if($this->_querier){
-            return $this->_querier;
+    protected function getQuerier()
+    {
+        if (!$this->_querier) {
+            $this->_querier = new Querier();
+            $this->_querier->setServiceLocator($this->getServiceLocator());
         }
-        $this->_querier = new Querier();
-        $this->_querier->setServiceLocator($this->getServiceLocator());
+
         return $this->_querier;
+    }
+
+    /**
+     * Retreive Saving helper
+     * @see $_saver
+     * @return \Entity\Helper\Saver
+     */
+    protected function getSaver()
+    {
+        if (!$this->_saver) {
+            $this->_saver = new \Entity\Helper\Saver();
+            $this->_saver->setServiceLocator($this->getServiceLocator());
+        }
+
+        return $this->_saver;
     }
 
     /**
@@ -305,10 +305,10 @@ class EntityService implements ServiceLocatorAwareInterface
                 array('linked_to_node'=>$nodeId, 'limit'=>1, 'node_id'=>$nodeId)
             );
 
-        if(!$result || !count($result)){
+        if (!$result || !count($result)) {
             return NULL;
         }else{
-            foreach($result as $entity){
+            foreach ($result as $entity) {
                 // Return first row
                 return $entity;
             }
@@ -347,7 +347,7 @@ class EntityService implements ServiceLocatorAwareInterface
             array('PARENT_ID'=>'eq'), array('node_id'=>$nodeId)
         );
 
-        if(!$result || !count($result)){
+        if (!$result || !count($result)) {
             return array();
         }else{
             return $result;
@@ -373,7 +373,7 @@ class EntityService implements ServiceLocatorAwareInterface
             );
 
 
-        if($child->getParentId()){
+        if ($child->getParentId()) {
             return $this->loadEntityId($nodeId, $child->getParentId());
         }else{
             return null;
@@ -427,7 +427,7 @@ class EntityService implements ServiceLocatorAwareInterface
     public function locateEntity($nodeId, $entityType, $store_id, $searchData, $searchType = array(),
         $options = array(), $attributes = NULL)
     {
-        if($nodeId !== 0){
+        if ($nodeId !== 0) {
             $this->verifyNodeId($nodeId);
         }
         $this->verifyEntityType($entityType);
@@ -440,11 +440,11 @@ class EntityService implements ServiceLocatorAwareInterface
                 array('node'=>$nodeId)
             );
 
-        if($attributes == null){
+        if ($attributes == null) {
             $attributes = $this->getServiceLocator()->get('nodeService')->getSubscribedAttributeCodes($nodeId, $entityType);
         }
 
-        if(!isset($options['node_id'])){
+        if (!isset($options['node_id'])) {
             $options['node_id'] = $nodeId;
         }
 
@@ -464,32 +464,31 @@ class EntityService implements ServiceLocatorAwareInterface
      * @return int
      * @throws \Magelink\Exception\MagelinkException
      */
-    public function countEntity($nodeId, $entityType, $store_id, $searchData, $searchType = array(), $options = array()) {
-        if($nodeId !== 0){
+    public function countEntity($nodeId, $entityType, $store_id, $searchData, $searchType = array(), $options = array())
+    {
+        if ($nodeId !== 0) {
             $this->verifyNodeId($nodeId);
         }
         $this->verifyEntityType($entityType);
 
-        if(!array_key_exists('count', $options)){
+        if (!array_key_exists('count', $options)) {
             $options['count'] = '*';
         }
 
-        if(!array_key_exists('node_id', $options)){
+        if (!array_key_exists('node_id', $options)) {
             $options['node_id'] = $nodeId;
         }
 
+        $logMessage = 'countEntity - '.$nodeId.' - '.$entityType.' - '.$store_id.'. '.PHP_EOL.'SD: '.PHP_EOL
+            .var_export($searchData, TRUE).PHP_EOL.'; ST: '.PHP_EOL.var_export($searchType, TRUE).PHP_EOL
+            .'; OPT: '.PHP_EOL.var_export($options, TRUE).PHP_EOL;
         $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_DEBUG,
-                'count',
-                'countEntity - '.$nodeId.' - '.$entityType.' - '.$store_id.'. '.PHP_EOL.'SD: '.PHP_EOL.var_export($searchData, TRUE).PHP_EOL.'; ST: '.PHP_EOL.var_export($searchType, TRUE).PHP_EOL.'; OPT: '.PHP_EOL.var_export($options, TRUE).PHP_EOL,
-                array(),
-                array('node'=>$nodeId)
-            );
+            ->log(LogService::LEVEL_DEBUG, 'count', $logMessage, array(), array('node'=>$nodeId));
 
         $attributes = $this->getServiceLocator()->get('nodeService')->getSubscribedAttributeCodes($nodeId, $entityType);
 
         $result = $this->getLoader()->loadEntities($entityType, $store_id, $searchData, $attributes, $searchType, $options);
-        if(!is_int($result)){
+        if (!is_int($result)) {
             throw new \Magelink\Exception\MagelinkException('Invalid result for countEntity - ' . gettype($result));
         }
         return $result;
@@ -515,7 +514,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->verifyNodeId($nodeId);
         $this->verifyEntityType($entityType);
 
-        if(!array_key_exists('node_id', $options)){
+        if (!array_key_exists('node_id', $options)) {
             $options['node_id'] = $nodeId;
         }
 
@@ -613,8 +612,8 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->verifyNodeId($nodeId);
         $this->verifyEntityType($entityType);
 
-        if(is_object($parent)){
-            if($parent instanceof \Entity\Entity){
+        if (is_object($parent)) {
+            if ($parent instanceof \Entity\Entity) {
                 $parent = $parent->getId();
             }else{
                 throw new NodeException('Invalid object type '.get_class($parent).' passed to createEntity!');
@@ -623,13 +622,13 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $allowedAttributes = $this->getServiceLocator()->get('nodeService')
             ->getSubscribedAttributeCodes($nodeId, $entityType, TRUE);
-        foreach ($data as $k=>$v) {
-            if (strlen(trim($k)) == 0){
-                unset($data[$k]);
+        foreach ($data as $key=>$value) {
+            if (strlen(trim($key)) == 0) {
+                unset($data[$key]);
                 continue;
             }
-            if(!in_array($k, $allowedAttributes)){
-                throw new NodeException('Invalid attribute specified for update ' . $k);
+            if (!in_array($key, $allowedAttributes)) {
+                throw new NodeException('Invalid attribute specified for update ' . $key);
             }
         }
 
@@ -647,7 +646,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $transformedData = $this->getServiceLocator()->get('routerService')
             ->processTransforms($entity, $data, $nodeId, \Entity\Update::TYPE_CREATE);
-        if(count($transformedData)){
+        if (count($transformedData)) {
             $this->silentUpdateEntity($entity, $transformedData, false);
             $data = array_merge($data, $transformedData);
         }
@@ -655,7 +654,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $sql = 'UPDATE router_stat_type SET `count` = `count` + 1 WHERE entity_type_id = '.$entityType.';';
         $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
 
-        if($nodeId !== 0){
+        if ($nodeId !== 0) {
             $this->getServiceLocator()->get('routerService')
                 ->distributeUpdate($entity, $data, $nodeId, \Entity\Update::TYPE_CREATE);
         }
@@ -682,7 +681,7 @@ class EntityService implements ServiceLocatorAwareInterface
             if ($entityType && $attributeCode) {
                 if (array_key_exists($entityType, $entityAttributeArray)) {
                     $entityAttributeArray[$entityType][] = $attributeCode;
-                }else {
+                }else{
                     $entityAttributeArray[$entityType] = array($attributeCode);
                 }
             }
@@ -739,10 +738,10 @@ class EntityService implements ServiceLocatorAwareInterface
             throw new MagelinkException('Unknown error in linkEntity');
         }
     }
-    
+
     /**
      * Removes the entity identifier entry to unlink the given entity from this node.
-     * 
+     *
      * @param int $nodeId
      * @param \Entity\Entity $entity
      * @throws MagelinkException
@@ -763,7 +762,7 @@ class EntityService implements ServiceLocatorAwareInterface
             'entity_id'=>$entity->getId(),
             'node_id'=>$nodeId,
         ));
-        if(!$res){
+        if (!$res) {
             throw new NodeException('Tried to unlink entity that was not linked');
         }
     }
@@ -807,30 +806,30 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->verifyNodeId($nodeId);
 
         $nodeRes = $this->getTableGateway('node')->select(array('type'=>$remote_type));
-        if(!$nodeRes || !count($nodeRes)){
+        if (!$nodeRes || !count($nodeRes)) {
             return ($allowMultiple ? array() : NULL);
         }
 
         $nodeIds = array();
-        foreach($nodeRes as $row){
+        foreach ($nodeRes as $row) {
             $nodeIds[] = $row['node_id'];
         }
 
         $ret = array();
 
         $res = $this->getTableGateway('entity_identifier')->select(array('node_id'=>$nodeIds, 'entity_id'=>$entity->getId()));
-        foreach($res as $row){
-            if($row['local_id'] == null || $row['local_id'] == ''){
+        foreach ($res as $row) {
+            if ($row['local_id'] == null || $row['local_id'] == '') {
                 continue;
             }
-            if(!$allowMultiple){
+            if (!$allowMultiple) {
                 return $row['local_id'];
             }else{
                 $ret[] = $row['local_id'];
             }
         }
 
-        if($allowMultiple){
+        if ($allowMultiple) {
             return $ret;
         }else{
             return null;
@@ -843,25 +842,26 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param \Entity\Entity|int $entity
      * @return string[] Array with keys being Node IDs and values being local IDs
      */
-    public function getAllLinks( $entity ){
-        if(is_object($entity)){
+    public function getAllLinks( $entity )
+    {
+        if (is_object($entity)) {
             $entity = $entity->getId();
         }
         $res = $this->getTableGateway('entity_identifier')->select(array(
             'entity_id'=>$entity,
         ));
         $return = array();
-        foreach($res as $row){
+        foreach ($res as $row) {
             $return[$row['node_id']] = $row['local_id'];
         }
         return $return;
     }
-    
+
     /**
      * Updates the entities updated_at timestamp.
      * If an array of attribute codes is provided, also updates their updated_at timestamps.
      * No update or event entries are created.
-     * 
+     *
      * @param \Entity\Entity $entity
      * @param string[] $attributes
      */
@@ -884,17 +884,17 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param \Entity\Entity|int $parent
      * @throws \Magelink\Exception\MagelinkException
      */
-    public function setEntityParent( $child, $parent ) {
-
-        if(is_object($parent)){
-            if($parent instanceof \Entity\Entity){
+    public function setEntityParent ($child, $parent)
+    {
+        if (is_object($parent)) {
+            if ($parent instanceof \Entity\Entity) {
                 $parent = $parent->getId();
             }else{
                 throw new NodeException('Invalid object type ' . get_class($parent) . ' passed to setEntityParent!');
             }
         }
-        if(is_object($child)){
-            if($child instanceof \Entity\Entity){
+        if (is_object($child)) {
+            if ($child instanceof \Entity\Entity) {
                 $child = $child->getId();
             }else{
                 throw new NodeException('Invalid object type ' . get_class($child) . ' passed to setEntityParent!');
@@ -902,12 +902,12 @@ class EntityService implements ServiceLocatorAwareInterface
         }
         $this->getSaver()->setEntityParent($child, $parent);
     }
-    
+
     /**
      * Updates the given entity with the provided data.
      * The $merge parameter represents whether the provided data should replace the existing data or be merged into it. If this is set to true all values that are already arrays will have the new data provided appended to the end, and any multi-type attributes will be run through array_merge with the new data taking precedence where keys are the same.
      * Alternatively, $merge can be provided as an associative array with the key being the attribute code, and the value being a boolean representing whether to merge or replace data. When specified individually this allows turning single values into array values. All non-specified keys default to false (i.e. replace only).
-     * 
+     *
      * @param int $nodeId
      * @param \Entity\Entity $entity
      * @param array $data
@@ -964,7 +964,7 @@ class EntityService implements ServiceLocatorAwareInterface
             $success = FALSE;
         }else{
             $changedData = array();
-            foreach($attributes as $att){
+            foreach ($attributes as $att) {
                 $changedData[$att] = $data[$att];
             }
 
@@ -992,7 +992,8 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param array|bool merge
      * @return array
      */
-    public function silentUpdateEntity(\Entity\Entity $entity, $data, $merge=false){
+    public function silentUpdateEntity(\Entity\Entity $entity, $data, $merge = FALSE)
+    {
         return $this->getSaver()->saveEntity($entity, $data, $merge);
     }
 
@@ -1032,8 +1033,8 @@ class EntityService implements ServiceLocatorAwareInterface
         $res = $this->getTableGateway('entity_identifier')->select(array(
             'entity_id'=>$entity->getId(),
         ));
-        foreach($res as $row){
-            if($row['node_id'] == $nodeId){
+        foreach ($res as $row) {
+            if ($row['node_id'] == $nodeId) {
                 continue; // Don't care about this node
             }
             throw new NodeException('Cannot delete entity ' . $entity->getId() . ' - still linked to node ' . $row['node_id']);
@@ -1162,7 +1163,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $res = $this->getTableGateway('entity_comment')->insert($row);
         $row['comment_id'] = $this->getAdapter()->getDriver()->getLastGeneratedValue();
 
-        if(!$res || !$row['comment_id']){
+        if (!$res || !$row['comment_id']) {
             throw new MagelinkException('Error creating entity comment for ' . $entity->getId());
         }
 
@@ -1209,7 +1210,7 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $methodCcType = $method.($ccType ? '{{'.$ccType.'}}' : '');
-        $payments = array($methodCcType => $amount);
+        $payments = array($methodCcType=>$amount);
 
         return $payments;
     }
@@ -1231,7 +1232,7 @@ class EntityService implements ServiceLocatorAwareInterface
             $ccType = '';
         }
 
-        return array('method' => $method, 'ccType' => $ccType);
+        return array('method'=>$method, 'ccType'=>$ccType);
     }
 
     /**
@@ -1243,7 +1244,7 @@ class EntityService implements ServiceLocatorAwareInterface
     {
         if (is_string($dataType)) {
             $paymentData = array();
-            foreach ($paymentMethod as $extendMethod => $amount) {
+            foreach ($paymentMethod as $extendMethod=>$amount) {
                 extract($this->getMethodCcType($extendMethod));
                 if (in_array($dataType, array('method', 'ccType', 'amount'))) {
                     $paymentData[$extendMethod] = $$dataType;
@@ -1319,7 +1320,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     array('querier response'=>$response)
                 );
             return $response;
-        }catch(\Exception $e){
+        }catch(\Exception $e) {
             throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $e);
         }
     }
@@ -1344,7 +1345,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     'Result: '.var_export($response, TRUE),
                     array('return'=>$response)
                 );
-        }catch(\Exception $exception){
+        }catch(\Exception $exception) {
             throw new MagelinkException('Error executing SQL: '.$sql, 0, $exception);
             $response = NULL;
         }
@@ -1368,13 +1369,13 @@ class EntityService implements ServiceLocatorAwareInterface
             );
         try{
             $data = $this->getQuerier()->executeQuery($mlql);
-        }catch(\Exception $exception){
+        }catch(\Exception $exception) {
             throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $exception);
             $data = NULL;
         }
 
         $return = array();
-        foreach($data as $row){
+        foreach ($data as $row) {
             $return[] = array_shift($row);
         }
         $this->getServiceLocator()->get('logService')
@@ -1403,7 +1404,7 @@ class EntityService implements ServiceLocatorAwareInterface
             );
         try{
             $data = $this->getQuerier()->executeQuery($mlql);
-        }catch(\Exception $exception){
+        }catch(\Exception $exception) {
             throw new MagelinkException('Error executing MLQL: '.$mlql, 0, $exception);
         }
 
@@ -1458,7 +1459,7 @@ class EntityService implements ServiceLocatorAwareInterface
                     'Result: '.var_export($response, TRUE),
                     array('querier response'=>$response));
             return $response;
-        }catch(\Exception $e){
+        }catch(\Exception $e) {
             throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $e);
         }
     }
@@ -1485,16 +1486,16 @@ class EntityService implements ServiceLocatorAwareInterface
 
         try{
             $data = $this->getQuerier()->executeQuery($mlql);
-        }catch(\Exception $e){
+        }catch(\Exception $e) {
             throw new MagelinkException('Error executing MLQL: ' . $mlql, 0, $e);
         }
         $ret = array();
         $ids = array();
-        foreach($data as $row){
+        foreach ($data as $row) {
             $id = intval($row['entity_id']);
             $ids[] = $id;
             $ent = $this->loadEntityId($nodeId, $id);
-            if(isset($row['key'])){
+            if (isset($row['key'])) {
                 $ret[$row['key']] = $ent;
             }else{
                 $ret[] = $ent;
