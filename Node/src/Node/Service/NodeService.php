@@ -173,7 +173,7 @@ class NodeService implements ServiceLocatorAwareInterface
             .' Entity_update query took '.round($selectTime, 1).'s, the update creation loop '
             .round($loopRuntime, 1).'s'.($perUpdate ? ' ('.count($updates).' x '.$perUpdate.'s per each).' : '.');
         $logData = array('method runtime'=>$methodRuntime, 'loop runtime'=>$loopRuntime, 'per each'=>$perUpdate);
-        $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode, $logMessage, $logData);
+        $logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_end', $logMessage, $logData);
 
         return $updates;
     }

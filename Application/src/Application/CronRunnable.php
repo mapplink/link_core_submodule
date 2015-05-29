@@ -1,7 +1,6 @@
 <?php
 /*
  * The base abstract class for all Magelink Cron Tasks.
- *
  * @category Application
  * @package Application
  * @author Andreas Gerhards <andreas@lero9.co.nz>
@@ -12,6 +11,7 @@
 namespace Application;
 
 use Application\Helper\ErrorHandler;
+use Application\Service\ApplicationConfigService;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\SyncException;
@@ -23,21 +23,21 @@ use Zend\ServiceManager\ServiceLocatorAwareInterface;
 abstract class CronRunnable implements ServiceLocatorAwareInterface
 {
 
-    const LOCKS_DIRECTORY = 'data/locks';
-    const FIRST_CUSTOMER_LOCK_NOTIFICATION = 2;
-
     /** @var bool $scheduledRun */
     protected $scheduledRun;
 
     /** @var string|NULL $name */
     protected $name = NULL;
+    /** @var string|NULL $lockDirectory */
+    protected $lockDirectory = NULL;
     /** @var string|NULL $filename */
     protected $filename = NULL;
     /** @var array $attributes  default values */
     protected $attributes = array(
-        'interval'=>6,
+        'interval'=>NULL,
         'offset'=>0,
-        'lockTime'=>180,
+        'lockTime'=>NULL,
+        'autoLockMultiplier'=>10,
         'overdue'=>FALSE
     );
 
@@ -46,9 +46,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     /** @var  array|FALSE $cronData */
     protected $cronData;
 
-    /** @var  LogService $_logService */
+    /** @var ApplicationConfigService $_applicationConfigService */
+    protected $_applicationConfigService;
+    /** @var LogService $_logService */
     protected $_logService;
-
     /** @var ServiceLocatorInterface $_serviceLocator */
     protected $_serviceLocator;
 
@@ -60,6 +61,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
     {
         $this->_serviceLocator = $serviceLocator;
+        $this->_applicationConfigService = $serviceLocator->get('applicationConfigService');
         $this->_logService = $serviceLocator->get('logService');
     }
 
@@ -74,21 +76,43 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
     /**
      * @param string $name
-     * @param array $cronData
      */
-    public function __construct($name, array $cronData)
+    public function __construct($name)
     {
         if ($name && is_string($name)) {
             $this->name = $name;
-            $this->filename = self::LOCKS_DIRECTORY.'/'.bin2hex(crc32('cron-'.$name)).'.lock';
+        }else{
+            throw new SyncException(get_class($this).' creation failed. No valid name provided.');
+        }
+    }
+
+    /**
+     * @param array $cronData
+     */
+    public function init(array $cronData)
+    {
+        if (!($this->getServiceLocator() instanceof ServiceLocatorAwareInterface)) {
+            $this->lockDirectory = $this->_applicationConfigService->getConfigCronLockDirectory();
+            $this->filename = $this->lockDirectory.'/'.bin2hex(crc32('cron-'.$this->name)).'.lock';
 
             foreach ($this->attributes as $code=>$defaultValue) {
-                if (isset($cronData[$code]) && is_int($cronData[$code]) && $cronData[$code] > 0) {
+                if (isset($cronData[$code]) && (is_int($cronData[$code]) && $cronData[$code] > 0
+                    || $code == 'interval' && is_string($cronData[$code]) && strlen($cronData[$code]) > 0)) {
+
                     $this->attributes[$code] = $cronData[$code];
                 }
             }
+
+            if (is_null($this->attributes['lockTime']) && isset($this->attributes['interval'])) {
+                $this->attributes['lockTime'] = $this->attributes['interval'] * $this->attributes['autoLockMultiplier'];
+            }
+            foreach ($this->attributes as $code=>$value) {
+                if (is_null($value)) {
+                    throw new SyncException(get_class($this).' init failed. No valid '.$code.' value provided.');
+                }
+            }
         }else{
-            throw new SyncException(get_class($this).' creation failed. No valid name provided.');
+            throw new SyncException(get_class($this).' init failed. No valid service locator provided.');
         }
     }
 
@@ -128,7 +152,15 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @return bool
+     * @return bool $isOverdueEnabled
+     */
+    protected function isOverdueEnabled()
+    {
+        return $this->attributes['overdue'];
+    }
+
+    /**
+     * @return bool $isOverdue
      */
     protected function isOverdue()
     {
@@ -216,7 +248,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     public function cronCheck($minutes)
     {
         $this->scheduledRun = ($minutes % $this->getInterval() == $this->getOffset());
-        $run = $this->scheduledRun || $this->isOverdue() && $this->checkIfUnlocked();
+        $run = $this->scheduledRun || $this->isOverdueEnabled() && $this->isOverdue() && $this->checkIfUnlocked();
 
         return $run;
     }
@@ -231,20 +263,26 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $startDate = date('H:i:s d/m', $start);
         $unlocked = $this->checkIfUnlocked();
 
-        if (!$unlocked && $this->scheduledRun) {
+        if (!$unlocked) {
+            if ($this->scheduledRun) {
+                $logLevel = LogService::LEVEL_ERROR;
+                $this->flagCronAsOverdue();
+            }else{
+                $logLevel = LogService::LEVEL_DEBUGINTERNAL;
+            }
+
             $logCode = 'cron_lock_'.$this->getCode();
             $logMessage = 'Cron job '.$this->getName().' locked.';
-            if ($this->notifyCustomer()) {
-                $logCode = EmailLogger::ERROR_TO_CLIENT_CODE.$logCode;
-                $logMessage .= ' Please check the synchronisation process `'.$this->getName().'` in the admin area.';
-            }else{
-                $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
-            }
             $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$this->getName(), 'class'=>get_class($this));
             $logEntities = array('magelinkCron'=>$this);
-            $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logData, $logEntities);
 
-            $this->flagCronAsOverdue();
+            if ($this->notifyClient()) {
+                $logMessage .= ' Please check the synchronisation process `'.$this->getName().'` in the admin area.';
+                $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities, TRUE);
+            }else{
+                $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
+                $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities);
+            }
         }elseif ($unlocked) {
             $lock = $this->acquireLock();
             $this->removeOverdueFlag();
@@ -302,10 +340,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     protected function acquireLock()
     {
-        if (!is_dir(self::LOCKS_DIRECTORY)) {
-            mkdir(self::LOCKS_DIRECTORY);
+        if (!is_dir($this->lockDirectory)) {
+            mkdir($this->lockDirectory);
         }
-        if (!is_writable(self::LOCKS_DIRECTORY)) {
+        if (!is_writable($this->lockDirectory)) {
             throw new SyncException('Lock directory not writable!');
         }
 
@@ -355,11 +393,11 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $name = $this->getName();
         $user = $this->getServiceLocator()->get('zfcuser_auth_service')->getIdentity();
 
-        if (!is_writable(self::LOCKS_DIRECTORY)) {
+        if (!is_writable($this->lockDirectory)) {
             $this->_logService->log(LogService::LEVEL_ERROR,
                     'cron_unlock_dir_fail_'.$name,
                     'Unlock failed on cron job '.$name.'. Directory not writable.',
-                    array('cron job'=>$name, 'directory'=>realpath(self::LOCKS_DIRECTORY), 'user id'=>$user->getId())
+                    array('cron job'=>$name, 'directory'=>realpath($this->lockDirectory), 'user id'=>$user->getId())
                 );
             $success = FALSE;
         }elseif (!$this->canAdminUnlock()) {
@@ -425,15 +463,18 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @return bool $notifyCustomer
+     * @return bool $notifyClient
      */
-    public function notifyCustomer()
+    public function notifyClient()
     {
-        $tolerance = 0.2;
-        $numberOfIntervalsBeforeNotifyingTheClient = self::FIRST_CUSTOMER_LOCK_NOTIFICATION - $tolerance;
-        $notifyAfter = $this->lockedSince() + $this->getIntervalSeconds() * $numberOfIntervalsBeforeNotifyingTheClient;
+        if ($numberOfIntervalsBeforeNotifying = $this->_applicationConfigService->getConfigFirstClientNotification()) {
+            $notifyAfter = $this->lockedSince() + $this->getIntervalSeconds() * $numberOfIntervalsBeforeNotifying;
+            $notify = (time() >= $notifyAfter);
+        }else{
+            $notify = FALSE;
+        }
 
-        return time() >= $notifyAfter;
+        return $notify;
     }
 
     /**

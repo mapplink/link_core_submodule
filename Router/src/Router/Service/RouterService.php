@@ -173,7 +173,8 @@ class RouterService implements ServiceLocatorAwareInterface
      * @param int $type The original update type (CUD)
      * @throws MagelinkException If invalid data is passed
      */
-    public function distributeUpdate(Entity $entity, $attributes, $sourceNodeId, $type=Update::TYPE_UPDATE){
+    public function distributeUpdate(Entity $entity, $attributes, $sourceNodeId, $type=Update::TYPE_UPDATE)
+    {
         /** @var \Router\Entity\RouterEdge[] $edges */
         $edges = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager')
             ->getRepository('Router\Entity\RouterEdge')
@@ -213,7 +214,7 @@ class RouterService implements ServiceLocatorAwareInterface
             array('entity'=>$entity, 'node'=>$sourceNodeId)
         );
 
-        $response = $this->getTableGateway('entity_update_log')->insert(array(
+        $affectedRows = $this->getTableGateway('entity_update_log')->insert(array(
             'entity_id'=>$entity->getId(),
             'entity_type'=>$entity->getType(),
             // 'timestamp'=>'', should be auto generated
@@ -222,36 +223,43 @@ class RouterService implements ServiceLocatorAwareInterface
             'affected_attributes'=>implode(',', array_keys($attributes)),
             'type'=>$type,
         ));
-        $uid = $this->getAdapter()->getDriver()->getLastGeneratedValue();
-        if(!$response || !$uid){
+
+        $logId = $this->getAdapter()->getDriver()->getLastGeneratedValue();
+        if (!$affectedRows || !$logId){
             throw new MagelinkException('Error recording update to entity ' . $entity->getId());
-        }
+        }else{
+            foreach ($affectedNodes as $node) {
+                try{
+                    $affectedRows = $this->getTableGateway('entity_update')->insert(
+                        array(
+                            'entity_id'=>$entity->getId(),
+                            'node_id'=>$node->getId(),
+                            'log_id'=>$logId,
+                            'type'=>$type,
+                            'complete'=>0,
+                        )
+                    );
 
-        foreach ($affectedNodes as $node) {
-            try{
-                $response = $this->getTableGateway('entity_update')->insert(array(
-                    'entity_id'=>$entity->getId(),
-                    'node_id'=>$node->getId(),
-                    'log_id'=>$uid,
-                    'type'=>$type,
-                    'complete'=>0,
-                ));
-
-                if (!$response) {
+                    if (!$affectedRows) {
+                        $this->getServiceLocator()->get('logService')
+                            ->log(
+                                LogService::LEVEL_ERROR,
+                                'distup_err',
+                                'distributeUpdate had error while inserting update entries (unknown)',
+                                array('log id'=>$logId, 'type'=>'unknown'),
+                                array('entity'=>$entity, 'node'=>$sourceNodeId)
+                            );
+                    }
+                }catch (\Exception $exception){
                     $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_ERROR, 'distup_err',
-                            'distributeUpdate had error while inserting update entries (unknown)',
-                            array('uid'=>$uid, 'type'=>'unknown'),
-                            array('entity'=>$entity, 'node'=>$sourceNodeId)
+                        ->log(
+                            LogService::LEVEL_ERROR,
+                            'distup_err',
+                            'distributeUpdate had error while inserting update entries (ex)',
+                            array('log id'=>$logId, 'type'=>'ex'),
+                            array('entity'=>$entity, 'node'=>$sourceNodeId, 'exception'=>$exception)
                         );
                 }
-            }catch(\Exception $e){
-                $this->getServiceLocator()->get('logService')
-                    ->log(LogService::LEVEL_ERROR, 'distup_err',
-                        'distributeUpdate had error while inserting update entries (ex)',
-                        array('uid'=>$uid, 'type'=>'ex'),
-                        array('entity'=>$entity, 'node'=>$sourceNodeId, 'exception'=>$e)
-                    );
             }
         }
     }

@@ -68,7 +68,7 @@ class Synchronizer extends CronRunnable
                     $logData = array('node id'=>$nodeId);
 
                     try{
-                        $node->init($nodeEntity);
+                        $node->init($nodeEntity, $this->scheduledRun);
                         $logService->log(LogService::LEVEL_INFO, 'cron_sync_node', $logMessage.'(init)', $logData);
                         $node->retrieve();
                         $logService->log(LogService::LEVEL_INFO, 'cron_sync_node', $logMessage.'(retrieve)', $logData);

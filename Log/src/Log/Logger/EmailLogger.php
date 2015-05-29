@@ -18,9 +18,6 @@ use Log\Service\LogService;
 class EmailLogger extends AbstractLogger
 {
 
-    // ToDo : Implement as a logService ->log parameter
-    const ERROR_TO_CLIENT_CODE = 'cno_';
-
     protected $lastCache = array();
     protected $cacheSize = 20;
 
@@ -112,6 +109,7 @@ class EmailLogger extends AbstractLogger
     /**
      * @param string $errorCode
      * @param string $subjectMessage
+     * @param bool $clientNotification
      */
     protected function sendAlert($errorCode, $subjectMessage)
     {
@@ -121,10 +119,8 @@ class EmailLogger extends AbstractLogger
 
         mail(ErrorHandler::ERROR_TO, $subject, $content, 'Content-Type: text/plain');
 
-        $clientCodeMatching = strpos($errorCode, self::ERROR_TO_CLIENT_CODE) !== FALSE;
         $daytime = (date('H') > $this->clientEmailStarthour) && (date('H') < $this->clientEmailEndhour);
-
-        if ($this->clientEmail && $clientCodeMatching && $daytime) {
+        if ($this->clientEmail && $daytime && $this->notifyClient()) {
             $additionalHeader = 'Content-Type: text/plain'."\r\n".'From: '.ErrorHandler::ERROR_FROM;
             mail($this->clientEmail, $subject, $content, $additionalHeader);
         }

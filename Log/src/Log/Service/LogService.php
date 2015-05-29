@@ -99,7 +99,7 @@ class LogService implements ServiceLocatorAwareInterface
                 throw new MagelinkException('No logger class specified!');
             }
 
-            foreach ($logger as $name => $loggerInfo) {
+            foreach ($logger as $name=>$loggerInfo) {
                 if (!is_null($loggerInfo)) {
                     try{
                         $loggerObject = new $loggerInfo['class']();
@@ -152,9 +152,11 @@ class LogService implements ServiceLocatorAwareInterface
      *     user: User ID to attach to the entry
      *     exception: An exception class, that will be used to find the module & calling class
      *   All other keys will be silently ignored (to allow for backwards-compatibility)
+     * @param bool $notifyClient
      * @return int ID of the new log entry
      */
-    public function log($logLevel, $logCode, $logMessage, array $logData, array $options = array())
+    public function log($logLevel, $logCode, $logMessage, array $logData, array $options = array(),
+        $notifyClient = FALSE)
     {
         $this->init();
 
@@ -242,6 +244,7 @@ class LogService implements ServiceLocatorAwareInterface
             }
 
             foreach ($this->logger as $name=>$logger) {
+                $logger->setNotifyClient($notifyClient);
                 if ($logger->isLogLevel($logLevel)) {
                     $logger->printLog($logLevel, $logCode, $logMessage, $logData, $options, $topTrace);
                 }
