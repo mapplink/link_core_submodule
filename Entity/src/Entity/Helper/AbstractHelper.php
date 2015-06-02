@@ -173,7 +173,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
             self::$_inRollback = FALSE;
             $logLevel = LogService::LEVEL_DEBUGEXTRA;
             $logCode = 'tract_rback_real';
-            $logMessage = 'Rollback real transaction '.$id.;
+            $logMessage = 'Rollback real transaction '.$id;
         }else{
             self::$_inRollback = TRUE;
             $logLevel = LogService::LEVEL_DEBUG;
