@@ -25,6 +25,8 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
 
     /** @var array $_transactionStack */
     protected static $_transactionStack = array();
+    /** @var bool|NULL $_inRollback  */
+    protected static $_inRollback = NULL;
 
     /** @var array $_attributeCache */
     protected $_attributeCache = array();
@@ -124,6 +126,13 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
             $top = array_pop(self::$_transactionStack);
             if ($top != $id) {
                 throw new MagelinkException('Transaction not at top of stack (top was '.$top.', we were '.$id.')!');
+            }elseif (self::$_inRollback) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(LogService::LEVEL_WARN,
+                        'tract_rback_cmit',
+                        'Commit '.$id.' could not be executed. Rollback was already triggered.',
+                        array('id'=>$id, 'stack'=>self::$_transactionStack));
+                throw new MagelinkException('Commit '.$id.' could not be executed. Rollback was already triggered.');
             }else{
                 if (count(self::$_transactionStack) == 0) {
                     $logCode .= '_real';
@@ -152,25 +161,31 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      */
     protected function rollBackRealTransaction($id)
     {
-        if (count(self::$_transactionStack) == 0) {
-            $logLevel = LogService::LEVEL_DEBUGEXTRA;
-            $logCode = 'tract_rback_real';
-            $logMessage = 'Rollback real transaction '.$id;
-
+        if (self::$_inRollback !== TRUE) {
             $adapter = $this->getAdapter();
             $adapter->getDriver()->getConnection()->rollback();
-            $rolledBack = TRUE;
-        }else {
-            $logLevel = LogService::LEVEL_ERROR;
-            $logCode = 'tract_rback_err';
-            $logMessage = 'Tried to rollback '.$id.' as a real transaction but it was a fake one.';
-            $rolledBack = FALSE;
+            $rolledBackReal = TRUE;
+        }else{
+            $rolledBackReal = FALSE;
+        }
+
+        if (count(self::$_transactionStack) == 0) {
+            self::$_inRollback = FALSE;
+            $logLevel = LogService::LEVEL_DEBUGEXTRA;
+            $logCode = 'tract_rback_real';
+            $logMessage = 'Rollback real transaction '.$id.;
+        }else{
+            self::$_inRollback = TRUE;
+            $logLevel = LogService::LEVEL_DEBUG;
+            $logCode = 'tract_rback_fake';
+            $logMessage = 'Rollback fake transaction '.$id;
         }
 
         $this->getServiceLocator()->get('logService')
-            ->log($logLevel, $logCode, $logMessage, array('id'=>$id, 'stack'=>self::$_transactionStack));
+            ->log($logLevel, $logCode, $logMessage.' (',
+                array('id'=>$id, 'stack'=>self::$_transactionStack, 'rolledBackReal'=>$rolledBackReal));
 
-        return $rolledBack;
+        return $rolledBackReal;
     }
 
     /**
@@ -189,14 +204,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
             $top = array_pop(self::$_transactionStack);
             if ($top != $id) {
                 $this->rollBackRealTransaction($id);
-                throw new MagelinkException('Transaction not at top of stack (top was '.$top.', we were '.$id.')!');
-            }elseif (count(self::$_transactionStack)) {
-                $this->getServiceLocator()->get('logService')
-                    ->log(LogService::LEVEL_DEBUGEXTRA,
-                        'tract_rback_fake',
-                        'Rollback fake transaction '.$id,
-                        array('id'=>$id, 'stack'=>self::$_transactionStack)
-                    );
+//                throw new MagelinkException('Transaction not at top of stack (top was '.$top.', we were '.$id.')!');
             }else {
                 $this->rollBackRealTransaction($id);
             }

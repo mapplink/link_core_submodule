@@ -418,11 +418,12 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         $try = 0;
         $maxTries = 10;
         $success = FALSE;
+
         $adapter = $this->getAdapter();
+        $transactionLabel = 'save-'.$entity->getId().'-'.$entity->getUniqueId();
+        $this->beginTransaction($transactionLabel);
 
         do {
-            $transactionLabel = 'save-'.$entity->getId().'-'.$try;
-            $this->beginTransaction($transactionLabel);
             try{
                 foreach ($sqls as $sql) {
                     $this->getServiceLocator()->get('logService')
@@ -445,11 +446,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                         array('sqls'=>implode('; ', $sqls)),
                         array('entity'=>$entity)
                    );
-                $this->commitTransaction($transactionLabel);
-                $success = TRUE;
+                $success = $this->commitTransaction($transactionLabel);
             }catch (\Exception $exception) {
-                $this->rollbackTransaction($transactionLabel);
-
                 if (self::isRestartTransaction($exception)) {
                     $logCode = $try;
                     $isLast = (++$try >= $maxTries);
@@ -460,6 +458,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
 
                 if ($isLast) {
                     $logLevel = LogService::LEVEL_ERROR;
+                    $this->rollbackTransaction($transactionLabel);
                 }else {
                     usleep(390 + $try * 30);
                     $logLevel = LogService::LEVEL_WARN;
