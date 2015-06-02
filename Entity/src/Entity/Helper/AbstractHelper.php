@@ -11,6 +11,7 @@
 
 namespace Entity\Helper;
 
+use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
 use Zend\Db\RowGateway\RowGateway;
@@ -22,9 +23,12 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
 
     const MYSQL_ER_LOCK_DEADLOCK = '40001';
 
+    /** @var array $_transactionStack */
     protected static $_transactionStack = array();
 
+    /** @var array $_attributeCache */
     protected $_attributeCache = array();
+    /** @var array $_attributeCodeCache */
     protected $_attributeCodeCache = array();
 
     /** @var \Zend\ServiceManager\ServiceLocatorInterface The service locator */
@@ -87,23 +91,86 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     public function beginTransaction($id)
     {
         self::$_transactionStack[] = $id;
+        $logData = array('id'=>$id, 'stack'=>self::$_transactionStack);
+
         if (count(self::$_transactionStack) == 1) {
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
-                    'trans_begin_actual',
-                    'beginTransaction - actual - '.$id,
-                    array('id'=>$id, 'stack'=>self::$_transactionStack)
-                );
+                ->log(LogService::LEVEL_DEBUGEXTRA, 'tract_begin_real', 'Begin real transaction '.$id, $logData);
             // This is our only transaction, so start one in MySQL.
             $adapter = $this->getAdapter();
             $adapter->getDriver()->getConnection()->beginTransaction();
         }else{
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
-                    'trans_begin_fake',
-                    'beginTransaction - fake - '.$id, array('id'=>$id, 'stack'=>self::$_transactionStack)
-                );
+                ->log(LogService::LEVEL_DEBUGEXTRA, 'tract_begin_fake', 'Begin fake transaction '.$id, $logData);
         }
+    }
+
+    /**
+     * Commit a transaction with the given ID (only forced to DB if at bottom of stack)
+     * @param string $id
+     * @return bool $commited
+     * @throws MagelinkException If an invalid transaction ID is passed
+     */
+    public function commitTransaction($id)
+    {
+        $commited = FALSE;
+
+        $logCode = 'tract_cmmit';
+        $logData = array('id'=>$id, 'stack'=>self::$_transactionStack);
+
+        if (!in_array($id, self::$_transactionStack)) {
+            throw new MagelinkException('Invalid transaction to commit - '.$id);
+        }else {
+            $top = array_pop(self::$_transactionStack);
+            if ($top != $id) {
+                throw new MagelinkException('Transaction not at top of stack (top was '.$top.', we were '.$id.')!');
+            }else{
+                if (count(self::$_transactionStack) == 0) {
+                    $logCode .= '_real';
+                    $logMessage = 'Commited real transaction '.$id;
+
+                    $adapter = $this->getAdapter();
+                    $adapter->getDriver()->getConnection()->commit();
+                }else{
+                    $logCode .= '_fake';
+                    $logMessage = 'Commited fake transaction '.$id;
+                }
+
+                $this->getServiceLocator()->get('logService')
+                    ->log(LogService::LEVEL_DEBUGEXTRA, $logCode, $logMessage, $logData);
+                $commited = TRUE;
+            }
+        }
+
+        return $commited;
+    }
+
+    /**
+     * Internal function to rollback a transaction, used in error cases of above functions.
+     * @param $id
+     * @return bool $rolledBack
+     */
+    protected function rollBackRealTransaction($id)
+    {
+        if (count(self::$_transactionStack) == 0) {
+            $logLevel = LogService::LEVEL_DEBUGEXTRA;
+            $logCode = 'tract_rback_real';
+            $logMessage = 'Rollback real transaction '.$id;
+
+            $adapter = $this->getAdapter();
+            $adapter->getDriver()->getConnection()->rollback();
+            $rolledBack = TRUE;
+        }else {
+            $logLevel = LogService::LEVEL_ERROR;
+            $logCode = 'tract_rback_err';
+            $logMessage = 'Tried to rollback '.$id.' as a real transaction but it was a fake one.';
+            $rolledBack = FALSE;
+        }
+
+        $this->getServiceLocator()->get('logService')
+            ->log($logLevel, $logCode, $logMessage, array('id'=>$id, 'stack'=>self::$_transactionStack));
+
+        return $rolledBack;
     }
 
     /**
@@ -114,72 +181,32 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
     public function rollbackTransaction($id)
     {
         if (!in_array($id, self::$_transactionStack)) {
-            $this->rollbackTransactionInternal();
-            throw new MagelinkException('Invalid transaction to roll back - '.$id);
-        }
-        $top = array_pop(self::$_transactionStack);
-        if ($top != $id) {
-            $this->rollbackTransactionInternal();
-            throw new MagelinkException('Transaction not at top of stack (top was '.$top.', we were '.$id.')!');
-        }
-        $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA, 'trans_rollback', 'rollbackTransaction - '.$id, array('id'=>$id, 'stack'=>self::$_transactionStack));
-
-        $this->rollbackTransactionInternal();
-    }
-
-    /**
-     * Commit a transaction with the given ID (only forced to DB if at bottom of stack)
-     * @param string $id
-     * @throws MagelinkException If an invalid transaction ID is passed
-     */
-    public function commitTransaction($id)
-    {
-        if (!in_array($id, self::$_transactionStack)) {
-            throw new MagelinkException('Invalid transaction to commit - '.$id);
-        }
-        $top = array_pop(self::$_transactionStack);
-        if ($top != $id) {
-            throw new MagelinkException('Transaction not at top of stack (top was '.$top.', we were '.$id.')!');
-        }
-        if (count(self::$_transactionStack) == 0) {
-            $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
-                    'trans_commit_actual',
-                    'commitTransaction - actual - '.$id,
-                    array('id'=>$id, 'stack'=>self::$_transactionStack)
-                );
-            // End of stack, commit
-            $adapter = $this->getAdapter();
-            $adapter->getDriver()->getConnection()->commit();
+//            $this->rollBackRealTransaction($id);
+            throw new MagelinkException('Invalid transaction to roll back: '.$id.'. No rollback done.');
+            $rolledBack = FALSE;
         }else{
-            $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
-                    'trans_commit_fake',
-                    'commitTransaction - fake - '.$id,
-                    array('id'=>$id, 'stack'=>self::$_transactionStack)
-                );
+            $rolledBack = TRUE;
+            $top = array_pop(self::$_transactionStack);
+            if ($top != $id) {
+                $this->rollBackRealTransaction($id);
+                throw new MagelinkException('Transaction not at top of stack (top was '.$top.', we were '.$id.')!');
+            }elseif (count(self::$_transactionStack)) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(LogService::LEVEL_DEBUGEXTRA,
+                        'tract_rback_fake',
+                        'Rollback fake transaction '.$id,
+                        array('id'=>$id, 'stack'=>self::$_transactionStack)
+                    );
+            }else {
+                $this->rollBackRealTransaction($id);
+            }
         }
-    }
 
-    /**
-     * Internal function to rollback a transaction, used in error cases of above functions.
-     */
-    protected function rollbackTransactionInternal()
-    {
-        $this->getServiceLocator()->get('logService')
-            ->log(\Log\Service\LogService::LEVEL_DEBUGEXTRA,
-                'trans_rollback_int',
-                'rollbackTransactionInternal',
-                array('stack'=>self::$_transactionStack)
-            );
-        $adapter = $this->getAdapter();
-        $adapter->getDriver()->getConnection()->rollback();
+        return $rolledBack;
     }
 
     /**
      * Escape a value for use in raw SQL
-     *
      * @param mixed $value Should be a scalar value or something that will automatically convert to a string.
      * @return string
      */
@@ -188,7 +215,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
         // ToDo (maybe): Remove if the source is found
         if (is_array($value)) {
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                ->log(LogService::LEVEL_ERROR,
                     'escape_array',
                     'Tries to escape an array',
                     array(
@@ -203,7 +230,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
         }catch (\Exception $exception) {
             // ToDo (maybe): Remove if the source is found
             $this->getServiceLocator()->get('logService')
-                ->log(\Log\Service\LogService::LEVEL_ERROR,
+                ->log(LogService::LEVEL_ERROR,
                     'escape_array',
                     'Tried to escape an array',
                     array(
@@ -244,7 +271,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                 }
             }catch (\Exception $exception) {
                 $this->getServiceLocator()->get('logService')
-                    ->log(\Log\Service\LogService::LEVEL_ERROR,
+                    ->log(LogService::LEVEL_ERROR,
                         'escape_error',
                         'Exception during the column/value escaping',
                         array(
