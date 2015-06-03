@@ -5,22 +5,23 @@
     <?php print $this->headTitle(''); ?>
     <?php
 print $this->headMeta()
+    ->appendName('robots', 'noindex,nofollow')
     ->appendName('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
     ->appendName('apple-mobile-web-app-capable', 'yes')
     ->appendHttpEquiv('X-UA-Compatible', 'IE=edge');
 ?>
     <?php
 print $this->headLink(array(
-        'rel' => 'shortcut icon',
-        'type' => 'image/vnd.microsoft.icon',
-        'href' => $this->basePath() . '/img/favicon.ico'
+        'rel'=>'shortcut icon',
+        'type'=>'image/vnd.microsoft.icon',
+        'href'=>$this->basePath().'/img/favicon.ico'
     ))
-    ->prependStylesheet($this->basePath() . '/css/pages/reports.css')
-    ->prependStylesheet($this->basePath() . '/css/style.css')
-    ->prependStylesheet($this->basePath() . '/css/jquery.datetimepicker.css')
-    ->prependStylesheet($this->basePath() . '/css/jquery.jqplot.css')
-    ->prependStylesheet($this->basePath() . '/css/ui-lightness/jquery-ui-1.10.4.custom.min.css')
-    ->prependStylesheet($this->basePath() . '/css/ui.jqgrid.css')
+    ->prependStylesheet($this->basePath().'/css/pages/reports.css')
+    ->prependStylesheet($this->basePath().'/css/style.css')
+    ->prependStylesheet($this->basePath().'/css/jquery.datetimepicker.css')
+    ->prependStylesheet($this->basePath().'/css/jquery.jqplot.css')
+    ->prependStylesheet($this->basePath().'/css/ui-lightness/jquery-ui-1.10.4.custom.min.css')
+    ->prependStylesheet($this->basePath().'/css/ui.jqgrid.css')
     ->prependStylesheet('//fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600')
     ->prependStylesheet('//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css')
     ->prependStylesheet('//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css')
@@ -30,30 +31,30 @@ print $this->headLink(array(
     <!--[if lt IE 9]>
         <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <script src="<?php echo $this->basePath() ?>/js/jquery.min.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/jquery.jqplot.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/plugins/jqplot.pieRenderer.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/plugins/jqplot.barRenderer.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/plugins/jqplot.categoryAxisRenderer.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/plugins/jqplot.pointLabels.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/plugins/jqplot.highlighter.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/i18n/grid.locale-en.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/jquery.jqGrid.min.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/plugins/grid.addons.js" type="text/javascript"></script>
-    <script src="<?php echo $this->basePath() ?>/js/spin.min.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/jquery.min.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/jquery.jqplot.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/plugins/jqplot.pieRenderer.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/plugins/jqplot.barRenderer.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/plugins/jqplot.categoryAxisRenderer.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/plugins/jqplot.pointLabels.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/plugins/jqplot.highlighter.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/i18n/grid.locale-en.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/jquery.jqGrid.min.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/plugins/grid.addons.js" type="text/javascript"></script>
+    <script src="<?php print $this->basePath(); ?>/js/spin.min.js" type="text/javascript"></script>
 </head>
 <body>
-    <?php echo $this->render('layout/header') ?>
+    <?php print $this->render('layout/header'); ?>
     <div class="main">
         <div class="main-inner">
             <div class="container">
-                <?php echo $this->render('web/default/flashMessage') ?>
-                <?php echo $this->content; ?>
+                <?php print $this->render('web/default/flashMessage'); ?>
+                <?php print $this->content; ?>
             </div> <!-- container -->
         </div> <!-- main-inner -->
     </div> <!-- main -->
-    <?php echo $this->render('layout/footer') ?>
+    <?php print $this->render('layout/footer'); ?>
     <?php
 print $this->headScript()
     ->prependFile($this->basePath(). '/js/magelink.js')
@@ -62,6 +63,6 @@ print $this->headScript()
     ->prependFile($this->basePath(). '/js/base.js')
     ->prependFile('//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js');
 ?>
-    <?php print $this->inlineScript() ?>
+    <?php print $this->inlineScript(); ?>
 </body>
 </html>
