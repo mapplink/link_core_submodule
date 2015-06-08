@@ -289,8 +289,8 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_DEBUG,
                 'loadeloc',
-                'loadEntityLocal - '.$nodeId.' - '.$entityType.' - '.$storeId.' - '.$localId,
-                array('node_id'=>$nodeId, 'entity_type'=>$entityType, 'store_id'=>$storeId, 'local_id'=>$localId)
+                'loadEntityLocal '.$localId.' on node '.$nodeId.' (entity type '.$entityType.' on store '.$storeId.')',
+                array('node_id'=>$nodeId, 'entity_type_id'=>$entityType, 'store_id'=>$storeId, 'local_id'=>$localId)
             );
 
         $attributes = $this->getServiceLocator()->get('entityConfigService')->getAttributesCode($entityType);
@@ -729,6 +729,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $entityIdentifier = $this->getTableGateway('entity_identifier')->insert(array(
             'entity_id'=>$entity->getId(),
+            'entity_type_id'=>$entity->getType(),
             'node_id'=>$nodeId,
             'store_id'=>$entity->getStoreId(),
             'local_id'=>$localId,
