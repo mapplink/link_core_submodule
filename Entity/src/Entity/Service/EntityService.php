@@ -299,9 +299,9 @@ class EntityService implements ServiceLocatorAwareInterface
             ->loadEntities(
                 $entityType,
                 $storeId,
-                array('LOCAL_ID'=>$localId),
+                array('LOCAL_ID'=>$localId), // ToDo: Check if this necessary: array('LOCAL_ID'=>$localId, 'type_id'=>$entityType),
                 $attributes,
-                array('LOCAL_ID'=>'eq'),
+                array('LOCAL_ID'=>'eq'), // ToDo: Check if this necessary: array('LOCAL_ID'=>'eq', 'type_id'=>'eq'),
                 array('linked_to_node'=>$nodeId, 'limit'=>1, 'node_id'=>$nodeId)
             );
 
@@ -754,7 +754,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_DEBUG,
                 'unlink',
-                'unlinkEntity - '.$nodeId.' - '.$entity->getId(),
+                'unlinkEntity '.$entity->getId().' on node '.$nodeId,
                 array(),
                 array('entity'=>$entity, 'node'=>$nodeId)
             );
@@ -782,7 +782,7 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $result = $this->getTableGateway('entity_identifier')
-            ->select(array('entity_id'=>$entity, 'node_id'=>$nodeId,));
+            ->select(array('entity_id'=>$entity, 'node_id'=>$nodeId));
 
         $return = NULL;
         foreach ($result as $row) {
