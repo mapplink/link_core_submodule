@@ -365,12 +365,12 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
      * Load an attribute from DB storage
      * @param int|string $id
      * @param string $field Which field to search by
-     * @param int $entity_type
+     * @param int $entityType
      * @return array
      */
-    protected function loadAttribute($id, $field, $entity_type = NULL)
+    protected function loadAttribute($id, $field, $entityType = NULL)
     {
-        $rs = $this->getTableGateway('entity_attribute')->select(array($field=>$id, 'entity_type_id'=>$entity_type));
+        $rs = $this->getTableGateway('entity_attribute')->select(array($field=>$id, 'entity_type_id'=>$entityType));
         foreach ($rs as $row) {
             return $row;
         }
