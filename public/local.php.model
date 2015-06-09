@@ -7,4 +7,6 @@ if (extension_loaded('newrelic') && $name) {
 }
 
 // Add more local code
+//error_reporting(E_ALL);
+//ini_set('display_errors', 1);
 ?>
