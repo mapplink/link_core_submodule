@@ -29,6 +29,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
     public function deleteEntity(Entity $entity)
     {
         $this->beginTransaction('delete-'.$entity->getId());
+        // ToDo: Implement proper Zend Framework functionality
         $sql = array(
             'DELETE FROM entity_value_datetime WHERE entity_id = :eid',
             'DELETE FROM entity_value_decimal WHERE entity_id = :eid',
@@ -63,6 +64,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      */
     public function setEntityUnique($entityId, $uniqueId)
     {
+        // ToDo: Implement proper Zend Framework functionality
         $sql = "UPDATE entity AS e SET e.unique_id = ".$this->escape($uniqueId)
             ." WHERE e.entity_id = ".$this->escape($entityId).";";
         $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
@@ -75,6 +77,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      */
     public function setEntityParent($childId, $parentId)
     {
+        // ToDo: Implement proper Zend Framework functionality
         $sql = "UPDATE entity AS e SET e.parent_id = ".$this->escape($parentId)
             ." WHERE e.entity_id = ".$this->escape($childId).";";
         $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
@@ -89,6 +92,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
     public function touchEntity(Entity $entity, array $attributeCodes = array())
     {
         $timestamp = date('Y-m-d H:i:s');
+        // ToDo: Implement proper Zend Framework functionality
         $sqls = array(
             "UPDATE entity AS e SET e.updated_at = ".$this->escape($timestamp)
                 ." WHERE e.entity_id = ".$this->escape($entity->getId()).";"
@@ -96,6 +100,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
 
         foreach ($attributeCodes as $attributeCode) {
             $attData = $this->getAttribute($attributeCode, $entity->getType());
+            // ToDo: Implement proper Zend Framework functionality
             $sqls[] = "UPDATE entity_value_".$attData['type']." AS ev SET ev.updated_at = ".$this->escape($timestamp)
                 ." WHERE ev.entity_id = ".$this->escape($entity->getId())
                     ." AND ev.attribute_id = ".$this->escape($attData['attribute_id']);
@@ -460,8 +465,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     $logLevel = LogService::LEVEL_ERROR;
                     $this->rollbackTransaction($transactionLabel);
                 }else {
-                    usleep(390 + $try * 30);
                     $logLevel = LogService::LEVEL_WARN;
+                    usleep(390 + $try * 30);
                 }
                 $logCode = 'sav_upd_fail'.$logCode;
                 $logMessage = 'updateData of entity '.$entity->getId().' - Exception in processing, rolling back'
@@ -580,6 +585,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      */
     protected function getValueDeleteSql($entityId, $attributes)
     {
+        // ToDo: Implement proper Zend Framework functionality
         $sql = "DELETE FROM entity_value_".$attributes['type']." WHERE entity_id = ".$this->escape($entityId)
             ." AND attribute_id = ".$this->escape($attributes['attribute_id']).";";
         return $sql;
