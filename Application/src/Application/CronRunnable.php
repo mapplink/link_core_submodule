@@ -87,28 +87,35 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @param array $cronData
+     * @param array $data
      */
-    public function init(array $cronData)
+    public function init(array $data)
     {
         if ($this->getServiceLocator() instanceof ServiceLocatorInterface) {
             $this->lockDirectory = $this->_applicationConfigService->getConfigCronLockDirectory();
             $this->filename = $this->lockDirectory.'/'.bin2hex(crc32('cron-'.$this->name)).'.lock';
 
-            foreach ($this->attributes as $code=>$defaultValue) {
-                if (isset($cronData[$code]) && (is_int($cronData[$code]) && $cronData[$code] > 0
-                    || $code == 'interval' && is_string($cronData[$code]) && strlen($cronData[$code]) > 0
-                    || $code == 'overdue' && is_bool($cronData[$code]))) {
-                    $this->attributes[$code] = $cronData[$code];
+            foreach ($this->attributes as $code=>$default) {
+                if (isset($data[$code])) {
+                    $new = $data[$code];
+                    $isValidValue = (is_null($default) && is_int($new) || gettype($default) === gettype($new))
+                        && ($new || $new === FALSE) || $code == 'interval' && is_string($new) && strlen($new) > 0;
+                    if ($isValidValue) {
+                        $this->attributes[$code] = $new;
+                    }
                 }
             }
 
             if (is_null($this->attributes['lockTime']) && isset($this->attributes['interval'])) {
                 $this->attributes['lockTime'] = $this->attributes['interval'] * $this->attributes['autoLockMultiplier'];
             }
+            unset($this->attributes['autoLockMultiplier']);
+
             foreach ($this->attributes as $code=>$value) {
-                if (is_null($value)) {
-                    throw new SyncException(get_class($this).' init failed. No valid '.$code.' value provided.');
+                if (is_null($value) || (is_int($value) || is_float($value)) && $value < 0) {
+                    $message = get_class($this).' init failed.'
+                        .' No valid '.$code.' value ('.var_export($value, TRUE).')provided.';
+                    throw new SyncException($message);
                 }
             }
         }else{
@@ -242,7 +249,6 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     /**
      * Checks whether we should run the cron task this run through.
      * @param int $minutes
-     * @param array $cronData
      * @return bool $run
      */
     public function cronCheck($minutes)
