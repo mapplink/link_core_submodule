@@ -397,7 +397,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             $logCode = strtolower(substr($nodeClass, 0, 3)).'_';
         }
 
-        $logCode = '_node_upd';
+        $logCode .= 'node_upd';
         $logData = array('class'=>$nodeClass);
         if (!$isMethodEnd) {
             $logMessage = $nodeClass.' update started at '.date('d/m H:i:s', $currentTime).'.';
