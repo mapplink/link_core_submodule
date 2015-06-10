@@ -91,14 +91,14 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     public function init(array $cronData)
     {
-        if (!($this->getServiceLocator() instanceof ServiceLocatorAwareInterface)) {
+        if (!($this->getServiceLocator() instanceof ServiceLocatorInterface)) {
             $this->lockDirectory = $this->_applicationConfigService->getConfigCronLockDirectory();
             $this->filename = $this->lockDirectory.'/'.bin2hex(crc32('cron-'.$this->name)).'.lock';
 
             foreach ($this->attributes as $code=>$defaultValue) {
                 if (isset($cronData[$code]) && (is_int($cronData[$code]) && $cronData[$code] > 0
-                    || $code == 'interval' && is_string($cronData[$code]) && strlen($cronData[$code]) > 0)) {
-
+                    || $code == 'interval' && is_string($cronData[$code]) && strlen($cronData[$code]) > 0
+                    || $code == 'overdue' && is_bool($cronData[$code]))) {
                     $this->attributes[$code] = $cronData[$code];
                 }
             }
