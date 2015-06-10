@@ -23,7 +23,7 @@ class DatabaseLogger extends AbstractLogger {
     protected $_tableGateway = FALSE;
 
     /** @var bool $_enableExtendedDatabase */
-    protected $_enableExtendedDatabase = FALSE;
+    protected $_extendedDatabaseLoggingEnabled = FALSE;
 
     /** @var array $_allowedLevels */
     protected $_allowedLevels = array(
@@ -48,7 +48,7 @@ class DatabaseLogger extends AbstractLogger {
 
         /** @var ApplicationConfigService $applicationConfigService */
         $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
-        $this->_extendedDatabaseEnabled = $applicationConfigService->isExtendedDatabaseLoggingEnabled();
+        $this->_extendedDatabaseLoggingEnabled = $applicationConfigService->isExtendedDatabaseLoggingEnabled();
 
         return $success;
     }
@@ -59,7 +59,7 @@ class DatabaseLogger extends AbstractLogger {
      */
     public function isLogLevel($level)
     {
-        $isLogLevel = ($this->_enableExtendedDatabase || parent::isLogLevel($level));
+        $isLogLevel = ($this->_extendedDatabaseLoggingEnabled || parent::isLogLevel($level));
         return $isLogLevel;
     }
 
