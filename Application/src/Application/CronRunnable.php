@@ -91,7 +91,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     public function init(array $cronData)
     {
-        if (!($this->getServiceLocator() instanceof ServiceLocatorInterface)) {
+        if ($this->getServiceLocator() instanceof ServiceLocatorInterface) {
             $this->lockDirectory = $this->_applicationConfigService->getConfigCronLockDirectory();
             $this->filename = $this->lockDirectory.'/'.bin2hex(crc32('cron-'.$this->name)).'.lock';
 
