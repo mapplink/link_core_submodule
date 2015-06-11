@@ -1260,7 +1260,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param \Entity\Entity $order
      * @return array $ccTypes
      */
-    public function getCcTypes(array $paymentMethod)
+    public function getPaymentCcTypes(array $paymentMethod)
     {
         return $this->getPaymentData($paymentMethod, 'ccType');
     }
