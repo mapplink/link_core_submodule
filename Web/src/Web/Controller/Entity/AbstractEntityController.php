@@ -17,13 +17,35 @@ use Entity\Service\EntityService;
 use Magelink\Exception\MagelinkException;
 use Web\Controller\BaseController;
 use Web\Helper\BaseEntityAttributes;
-
 use Zend\Db\TableGateway\TableGateway;
+use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\View\Model\ViewModel;
 
 
 abstract class AbstractEntityController extends BaseController
 {
+
+    /** @var EntityService $_entityService */
+    protected $_entityService;
+
+    /**
+     * Set serviceManager instance
+     * @param  ServiceLocatorInterface $serviceLocator
+     * @return void
+     */
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        parent::setServiceLocator($serviceLocator);
+        $this->setEntityService();
+    }
+
+    /**
+     * @return EntityService $this->_entityService
+     */
+    protected function setEntityService()
+    {
+        return $this->_entityService = $this->getServiceLocator()->get('entityService');
+    }
 
     /**
      * Should be overridden with the required route name, to be used in URL generation
