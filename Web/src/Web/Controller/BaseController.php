@@ -15,7 +15,8 @@ use Zend\Mvc\Controller\AbstractActionController;
 
 
 abstract class BaseController extends AbstractActionController
-{   
+{
+
     /**
      * Get Doctrine repository
      * @param string $entityName
@@ -53,9 +54,9 @@ abstract class BaseController extends AbstractActionController
      */
     public function persistEntity($entity)
     {
-        $em = $this->getEntityManager();
-        $em->persist($entity);
-        $em->flush($entity);
+        $entityManager = $this->getEntityManager();
+        $entityManager->persist($entity);
+        $entityManager->flush($entity);
     }
 
     /**
@@ -65,9 +66,9 @@ abstract class BaseController extends AbstractActionController
      */
     public function removeEntity($entity)
     {
-        $EntityManager = $this->getEntityManager();
-        $EntityManager->remove($entity);
-        $EntityManager->flush($entity);
+        $entityManager = $this->getEntityManager();
+        $entityManager->remove($entity);
+        $entityManager->flush($entity);
     }
 
     /**
@@ -88,7 +89,8 @@ abstract class BaseController extends AbstractActionController
      * Return the database adapter to be used to communicate with Entity storage.
      * @return \Zend\Db\Adapter\Adapter
      */
-    protected function getAdapter(){
+    protected function getAdapter()
+    {
         return $this->getServiceLocator()->get('zend_db');
     }
 }
