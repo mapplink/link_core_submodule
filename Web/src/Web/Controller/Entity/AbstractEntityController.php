@@ -13,6 +13,7 @@
 namespace Web\Controller\Entity;
 
 use Entity\Entity;
+use Entity\Service\EntityService;
 use Magelink\Exception\MagelinkException;
 use Web\Controller\BaseController;
 use Web\Helper\BaseEntityAttributes;
@@ -46,11 +47,11 @@ abstract class AbstractEntityController extends BaseController
     protected function getTitle()
     {
         $title = ucfirst($this->getEntityType()).' entity details';
-        // <<<Temporary solution : Revise till 13 Feb 2015 at latest
+        // <<<Temporary solution : Revise till 31.7.2015 at latest
         if ($this->getEntityType() == 'picklist' || strpos($this->getEntityType(), 'order') === 0) {
             $title .= ' - <span class="flagged">Please do NEVER change anything while the entity is in PICKING state!</span>';
         }
-        // Temporary solution : Revise till 13 Feb 2015 at latest
+        // Temporary solution : Revise till 31.7.2015 at latest
 
         return $title;
     }
