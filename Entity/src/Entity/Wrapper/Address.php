@@ -24,10 +24,13 @@ class Address extends AbstractWrapper
 
     public function getRelatedCustomerEntities($nodeId)
     {
+        /** @var EntityService $entityService */
+        $entityService = $this->getServiceLocator()->get('entityService');
+
         $entityId = $this->getId();
-        $customersWithThisBillingAddress = $this->_entityService->locateEntity($nodeId, 'customer', FALSE,
+        $customersWithThisBillingAddress = $entityService->locateEntity($nodeId, 'customer', FALSE,
             array('billing_address'=>$entityId));
-        $customersWithThisShippingAddress = $this->_entityService->locateEntity($nodeId, 'customer', FALSE,
+        $customersWithThisShippingAddress = $entityService->locateEntity($nodeId, 'customer', FALSE,
             array('shipping_address'=>$entityId));
         $customers = array_merge($customersWithThisBillingAddress, $customersWithThisShippingAddress);
 

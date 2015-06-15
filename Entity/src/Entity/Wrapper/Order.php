@@ -94,7 +94,9 @@ class Order extends AbstractWrapper
         if ($this->getData('original_order', FALSE)) {
             $isOriginal = FALSE;
         }else{
-            $this->_cachedSegregatedOrders = $this->_entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
+            /** @var \Entity\Service\EntityService $entityService */
+            $entityService = $this->getServiceLocator()->get('entityService');
+            $this->_cachedSegregatedOrders = $entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
             $isOriginal = TRUE;
         }
         return $isOriginal;
@@ -133,7 +135,9 @@ class Order extends AbstractWrapper
         if ($this->isOriginalOrder()) {
             $originalOrder = $this;
         }else{
-            $originalOrder = $this->_entityService->loadEntityId($this->getLoadedNodeId(), $this->getOriginalOrderId());
+            /** @var \Entity\Service\EntityService $entityService */
+            $entityService = $this->getServiceLocator()->get('entityService');
+            $originalOrder = $entityService->loadEntityId($this->getLoadedNodeId(), $this->getOriginalOrderId());
         }
 
         return $originalOrder;
@@ -293,7 +297,10 @@ class Order extends AbstractWrapper
      */
     public function getOrderitemsTotalQuantity()
     {
-        $totalItemAggregate = $this->_entityService->aggregateEntity(
+        /** @var \Entity\Service\EntityService $entityService */
+        $entityService = $this->getServiceLocator()->get('entityService');
+
+        $totalItemAggregate = $entityService->aggregateEntity(
             $this->getLoadedNodeId(), 'orderitem', FALSE,
             array('quantity'=>'SUM'),
             array('PARENT_ID'=>$this->getId()),
@@ -592,7 +599,10 @@ class Order extends AbstractWrapper
      */
     public function getPaymentMethods()
     {
-        return $this->_entityService->getPaymentMethods($this);
+        /** @var \Entity\Service\EntityService */
+        $entityService = $this->getServiceLocator()->get('entityService');
+
+        return $entityService->getPaymentMethods($this);
     }
 
     /**
@@ -609,7 +619,10 @@ class Order extends AbstractWrapper
      */
     public function getPaymentCcTypes()
     {
-        return $this->_entityService->getPaymentCcTypes($this);
+        /** @var \Entity\Service\EntityService */
+        $entityService = $this->getServiceLocator()->get('entityService');
+
+        return $entityService->getPaymentCcTypes($this);
     }
 
     /**
