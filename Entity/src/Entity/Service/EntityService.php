@@ -973,7 +973,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 ->log(LogService::LEVEL_INFO,
                     'update',
                     'updateEntity - Keys updated - '.$nodeId.' - '.$entity->getId(),
-                    array('updated'=>$attributes, 'keys'=>array_keys($data), 'tfkeys'=>array_keys($transformedData)),
+                    array('updated'=>$attributes, 'data'=>$data, 'transformed data'=>$transformedData),
                     array('entity'=>$entity, 'node'=>$nodeId)
                 );
             $this->getServiceLocator()->get('routerService')
