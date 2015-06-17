@@ -18,20 +18,21 @@ use Magelink\Exception\MagelinkException;
 
 class Order extends AbstractWrapper
 {
-    /** @var \Entity\Wrapper\Order[] $_cachedSegregatedOrders */
-    protected $_cachedSegregatedOrders = array();
 
     /** @var \Entity\Wrapper\Order[] $_cachedAllOrders */
     protected $_cachedAllOrders = array();
+    /** @var \Entity\Wrapper\Order[] $_cachedSegregatedOrders */
+    protected $_cachedSegregatedOrders = array();
 
     /** @var \Entity\Wrapper\Orderitem[] $_cachedOrderitems */
     protected $_cachedOrderitems = array();
-
     /** @var \Entity\Wrapper\Creditmemo[] $_cachedCreditmemos */
     protected $_cachedCreditmemos = array();
-
     /** @var \Entity\Wrapper\Creditmemo[] $_cachedCreditmemos */
     protected $_cachedCreditmemoitems = array();
+
+    /** @var float $_cachedOrderTotal */
+    protected $_cachedOrderTotal = 0;
 
 
     /**
@@ -155,7 +156,7 @@ class Order extends AbstractWrapper
 
     /**
      * Get all order which belong to the same original order inclusive this one
-     * @return array
+     * @return Order[] $this->_cachedAllOrders
      */
     public function getAllOrders()
     {
@@ -461,8 +462,7 @@ class Order extends AbstractWrapper
      */
     public function getGrandTotal()
     {
-        $grandTotal = $this->getData('grand_total', 0);
-        return $grandTotal;
+        return $this->getData('grand_total', 0);
     }
 
     /**
@@ -543,12 +543,13 @@ class Order extends AbstractWrapper
      */
     public function getOrderTotal()
     {
-        $orderTotal = 0;
-        foreach ($this->getOrderitems() as $item) {
-            $orderTotal += $item->getDiscountedPrice() * $item->getQuantity();
+        if (!$this->_cachedOrderTotal) {
+            foreach ($this->getOrderitems() as $item) {
+                $this->_cachedOrderTotal += $item->getDiscountedPrice() * $item->getQuantity();
+            }
         }
 
-        return $orderTotal;
+        return $this->_cachedOrderTotal;
     }
 
     /**
@@ -557,8 +558,11 @@ class Order extends AbstractWrapper
      */
     public function getOriginalOrderTotal()
     {
-        $orderTotal = $this->getOriginalGrandTotal() + $this->getOriginalNonCashPayments()
-            - $this->getOriginalDiscountedShippingTotal();
+        $orderTotal = 0;
+        foreach ($this->getAllOrders() as $order) {
+            $orderTotal += $order->getOrderTotal();
+        }
+
         return $orderTotal;
     }
 
