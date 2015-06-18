@@ -100,7 +100,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $this->_logService->log(LogService::LEVEL_INFO, 'node_init', 'AbstractNode init',
             array('node'=>get_class($this), 'id'=>$nodeEntity->getNodeId()), array('node'=>$this));
 
-        $this->_init($nodeEntity);
+        $this->_init();
     }
 
     /**
@@ -462,7 +462,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
      * In the case of any errors that mean a successful sync is unlikely, a InitException MUST be thrown.
      * @param NodeEntity $nodeEntity
      */
-    abstract protected function _init(NodeEntity $nodeEntity);
+    abstract protected function _init();
 
     /**
      * To be implemented in each NodeModule
