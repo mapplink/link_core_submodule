@@ -636,7 +636,7 @@ class Order extends AbstractWrapper
 
     /**
      * Get Aggregated Items Refunds
-     * @return float
+     * @return float $itemsRefund
      */
     public function getItemsRefunds()
     {
@@ -652,7 +652,7 @@ class Order extends AbstractWrapper
 
     /**
      * Get aggregated cash refunds
-     * @return float
+     * @return float $cashRefunds
      */
     public function getCashRefunds()
     {
@@ -664,6 +664,14 @@ class Order extends AbstractWrapper
         }
 
         return $cashRefundsAmount;
+    }
+
+    /**
+     * @return float $cashAndItemsRefunds
+     */
+    public function getCashAndItemsRefunds()
+    {
+        return $this->getCashRefunds() + $this->getItemsRefunds();
     }
 
     /**
