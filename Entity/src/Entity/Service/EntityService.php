@@ -647,6 +647,8 @@ class EntityService implements ServiceLocatorAwareInterface
         if (count($transformedData)) {
             $this->silentUpdateEntity($entity, $transformedData, false);
             $distributeData = array_merge($data, $transformedData);
+        }else{
+            $distributeData = $data;
         }
 
         $logCode .= '_detail';
