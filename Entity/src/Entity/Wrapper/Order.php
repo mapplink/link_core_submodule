@@ -81,7 +81,7 @@ class Order extends AbstractWrapper
     public function isOriginalOrder()
     {
         $originalOrder = $this->getData('original_order', FALSE);
-        return (bool) $originalOrder;
+        return !(bool) $originalOrder;
     }
 
     /**
