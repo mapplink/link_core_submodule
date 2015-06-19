@@ -180,9 +180,10 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 if (is_object($value) && $value instanceof Entity) {
                     if (!$value->getId()) {
                         throw new NodeException('Invalid ID for Entity-type value');
+                    }else{
+                        $data[$code] = $value->getId();
                     }
-                    $data[$code] = $value->getId();
-                }elseif (!$value) { // ToDo: Check if is_null($value) would be better
+                }elseif (is_null($value)) {
                     unset($data[$code]);
                 }
             }
