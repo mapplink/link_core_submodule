@@ -634,8 +634,8 @@ class EntityService implements ServiceLocatorAwareInterface
         $entity = $this->loadEntityId($nodeId, $entityId);
 
         $logCode = 'create_ent';
-        $logMessage = 'Created new '.$entityType.' on '.$nodeId.' with id '.$entityId.' ('.$uniqueId.').';
-        $logData = array('node'=>$nodeId, 'type'=>$entityType, 'unique id'=>$uniqueId, 'store'=>$storeId);
+        $logMessage = 'Created entity (type id:'.$entityType.') on '.$nodeId.' with id '.$entityId.' ('.$uniqueId.').';
+        $logData = array('node'=>$nodeId, 'type id'=>$entityType, 'unique id'=>$uniqueId, 'store'=>$storeId);
         $logEntities = array('entity'=>$entity);
 
         $this->getServiceLocator()->get('logService')
