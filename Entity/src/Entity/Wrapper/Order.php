@@ -419,17 +419,12 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * Get non-cash payments total on this order
-     * @return float
+     * Alias of getOriginalNonCashPayments() (All non cash payment stay with the original order.)
+     * @return float $nonCashPayments
      */
     public function getNonCashPayments()
     {
-        $nonCash = 0;
-        foreach (self::getNonCashPaymentCodes() as $code) {
-            $nonCash += $this->getOriginalOrder()->getData($code, 0);
-        }
-
-        return $nonCash;
+        return $this->getOriginalNonCashPayments();
     }
 
     /**
@@ -443,13 +438,13 @@ class Order extends AbstractWrapper
 
     /**
      * Get non-cash payments total on the original order (and segregated orders)
-     * @return float
+     * @return float $originalNonCashPayments
      */
     public function getOriginalNonCashPayments()
     {
         $nonCash = 0;
-        foreach ($this->getAllOrders() as $order) {
-            $nonCash += $order->getNonCashPayments();
+        foreach (self::getNonCashPaymentCodes() as $code) {
+            $nonCash += $this->getOriginalOrder()->getData($code, 0);
         }
 
         return $nonCash;
