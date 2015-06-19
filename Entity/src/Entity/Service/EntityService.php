@@ -623,9 +623,7 @@ class EntityService implements ServiceLocatorAwareInterface
         foreach ($data as $key=>$value) {
             if (strlen(trim($key)) == 0) {
                 unset($data[$key]);
-                continue;
-            }
-            if (!in_array($key, $allowedAttributes)) {
+            }elseif (!in_array($key, $allowedAttributes)) {
                 throw new NodeException('Invalid attribute specified for update ' . $key);
             }
         }
