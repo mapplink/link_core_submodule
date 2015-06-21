@@ -681,6 +681,18 @@ class Order extends AbstractWrapper
     }
 
     /**
+     * @return float $originalCashAndItemsRefunds
+     */
+    public function getOriginalCashAndItemsRefunds()
+    {
+        $originalCashAndItemsRefunds = 0;
+        foreach ($this->getAllOrders() as $order) {
+            $originalCashAndItemsRefunds += $order->getCashAndItemsRefunds();
+        }
+
+        return $originalCashAndItemsRefunds;
+    }
+    /**
      * Get Aggregated Non Cash Refunds
      * @return float $nonCashRefunds
      */
