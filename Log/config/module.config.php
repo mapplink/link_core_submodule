@@ -21,4 +21,12 @@ return array (
             )
         )
     ),
+
+    'magelink_cron'=>array(
+        'logclear'=>array(
+            'class'=>'\Log\Cron\LogClear',
+            'interval'=>180,
+            'offset'=>0,
+        )
+    )
 );
