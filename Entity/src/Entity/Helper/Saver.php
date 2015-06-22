@@ -463,15 +463,18 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 }
 
                 if ($isLast) {
+                    $sleepMicroseconds = 0;
                     $logLevel = LogService::LEVEL_ERROR;
+                    $logMessage = 'rolled back transaction';
                     $this->rollbackTransaction($transactionLabel);
                 }else {
+                    $sleepMicroseconds = 390 + $try * 30;
                     $logLevel = LogService::LEVEL_WARN;
-                    usleep(390 + $try * 30);
+                    $logMessage = 'retrying '.$sleepMicroseconds.' ms later';
                 }
                 $logCode = 'sav_upd_fail'.$logCode;
-                $logMessage = 'updateData of entity '.$entity->getId().' - Exception in processing, rolling back'
-                    .' ('.$try.'/'.$maxTries.')';
+                $logMessage = 'updateData of entity '.$entity->getId().', Exception in processing, '.$logMessage
+                    .' ('.$try.'/'.$maxTries.').';
                 $this->getServiceLocator()->get('logService')
                     ->log($logLevel, $logCode, $logMessage,
                         array(
@@ -483,6 +486,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                        ),
                         array('entity'=>$entity, 'exception'=>$exception)
                    );
+                usleep($sleepMicroseconds);
             }
         }while (!$success && !$isLast);
 
