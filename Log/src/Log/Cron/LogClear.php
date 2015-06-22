@@ -13,20 +13,19 @@ namespace Log\Cron;
 
 use Application\CronRunnable;
 use Log\Service\LogService;
+use Zend\Db\Sql\Where;
 use Zend\Db\TableGateway\TableGateway;
-
 
 class LogClear extends CronRunnable
 {
-
     protected $_tableGateway;
 
     /**
      * Performs any scheduled actions.
      */
-    public function cronRun()
+    protected function _cronRun()
     {
-        $intDate = '2 months';
+        $intDate = '14 days';
         $fromDate = date('Y-m-d H:i:s', strtotime('-'.$intDate));
         $where = new Where();
         $where->lessThan('timestamp', $fromDate);
