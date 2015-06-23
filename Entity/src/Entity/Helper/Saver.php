@@ -422,7 +422,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         $sqls = array_merge($sqls, $extraSqls);
 
         $try = 0;
-        $maxTries = 10;
+        $maxTries = 7;
         $success = FALSE;
 
         $adapter = $this->getAdapter();
@@ -454,6 +454,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                    );
                 $success = $this->commitTransaction($transactionLabel);
             }catch (\Exception $exception) {
+                $this->rollbackTransaction($transactionLabel);
+
                 if (self::isRestartTransaction($exception)) {
                     $logCode = $try;
                     $isLast = (++$try >= $maxTries);
@@ -466,9 +468,8 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                     $sleepMicroseconds = 0;
                     $logLevel = LogService::LEVEL_ERROR;
                     $logMessage = 'rolled back transaction';
-                    $this->rollbackTransaction($transactionLabel);
                 }else {
-                    $sleepMicroseconds = 390 + $try * 30;
+                    $sleepMicroseconds = sqrt($try) * 500;
                     $logLevel = LogService::LEVEL_WARN;
                     $logMessage = 'retrying '.$sleepMicroseconds.' ms later';
                 }
