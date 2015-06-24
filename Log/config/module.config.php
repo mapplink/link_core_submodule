@@ -21,4 +21,25 @@ return array (
             )
         )
     ),
+
+    'magelink_cron'=>array(
+        'logclear'=>array(
+            'class'=>'\Log\Cron\LogClear',
+            'interval'=>180,
+            'offset'=>0,
+        )
+    ),
+
+    'node_types'=>array(
+        'HOPS'=>array(
+            'config'=>array(
+                'logclear_time'=>array(
+                    'label'=>'Number of days to keep log data for (minimum is 10)',
+                    'type'=>'Text',
+                    'default'=>'10',
+                    'required'=>FALSE
+                ),
+            ),
+        )
+    )
 );
