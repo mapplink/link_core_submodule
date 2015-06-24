@@ -19,16 +19,16 @@ use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
 class LogClear extends CronRunnable
 {
-    protected $_tableGateway;
+    protected $tableGateway;
 
-    const INTERVAL_DAYS = 10;
+    const MIN_INTERVAL_DAYS = 10;
 
     /**
      * Performs any scheduled actions.
      */
     protected function _cronRun()
     {
-        $fromDate = date('Y-m-d H:i:s', strtotime('-' . $this->_getIntervalDays() . ' days'));
+        $fromDate = date('Y-m-d H:i:s', strtotime('-' . $this->getIntervalDays() . ' days'));
         $where = new Where();
         $where->lessThan('timestamp', $fromDate);
         $tableGateway = $this->getTableGateway('log_entry');
@@ -56,32 +56,32 @@ class LogClear extends CronRunnable
      */
     protected function getTableGateway($table)
     {
-        if (isset($this->_tableGateway)) {
-            return $this->_tableGateway;
+        if (isset($this->tableGateway)) {
+            return $this->tableGateway;
         }
-        $this->_tableGateway = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
+        $this->tableGateway = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
 
-        return $this->_tableGateway;
+        return $this->tableGateway;
     }
 
     /**
      * Return interval days using config value if set greater than constant
      * @return int
      */
-    protected function _getIntervalDays()
+    protected function getIntervalDays()
     {
-        $intDays = $this->_getIntervalDaysConfig();
-        if (is_numeric($intDays) && $intDays > self::INTERVAL_DAYS) {
+        $intDays = $this->getIntervalDaysConfig();
+        if (is_numeric($intDays) && $intDays > self::MIN_INTERVAL_DAYS) {
             return $intDays;
         }
-        return self::INTERVAL_DAYS;
+        return self::MIN_INTERVAL_DAYS;
     }
 
     /**
      * Get HOPS logclear_time config value
      * @return int|null
      */
-    protected function _getIntervalDaysConfig()
+    protected function getIntervalDaysConfig()
     {
         $nodeType = 'HOPS';
         $nodeEntities = $this->getServiceLocator()->get('nodeService')
