@@ -18,20 +18,23 @@ use Magelink\Exception\MagelinkException;
 
 class Order extends AbstractWrapper
 {
+
+    /** @var Order $_cachedOriginalOrder */
+    protected $_cachedOriginalOrder;
+    /** @var \Entity\Wrapper\Order[] $_cachedAllOrders */
+    protected $_cachedAllOrders = array();
     /** @var \Entity\Wrapper\Order[] $_cachedSegregatedOrders */
     protected $_cachedSegregatedOrders = array();
 
-    /** @var \Entity\Wrapper\Order[] $_cachedAllOrders */
-    protected $_cachedAllOrders = array();
-
     /** @var \Entity\Wrapper\Orderitem[] $_cachedOrderitems */
     protected $_cachedOrderitems = array();
-
     /** @var \Entity\Wrapper\Creditmemo[] $_cachedCreditmemos */
     protected $_cachedCreditmemos = array();
-
     /** @var \Entity\Wrapper\Creditmemo[] $_cachedCreditmemos */
     protected $_cachedCreditmemoitems = array();
+
+    /** @var float $_cachedOrderTotal */
+    protected $_cachedOrderTotal = 0;
 
 
     /**
@@ -94,9 +97,6 @@ class Order extends AbstractWrapper
         if ($this->getData('original_order', FALSE)) {
             $isOriginal = FALSE;
         }else{
-            /** @var \Entity\Service\EntityService $entityService */
-            $entityService = $this->getServiceLocator()->get('entityService');
-            $this->_cachedSegregatedOrders = $entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
             $isOriginal = TRUE;
         }
         return $isOriginal;
@@ -132,36 +132,48 @@ class Order extends AbstractWrapper
      */
     public function getOriginalOrder()
     {
-        if ($this->isOriginalOrder()) {
-            $originalOrder = $this;
-        }else{
-            /** @var \Entity\Service\EntityService $entityService */
-            $entityService = $this->getServiceLocator()->get('entityService');
-            $originalOrder = $entityService->loadEntityId($this->getLoadedNodeId(), $this->getOriginalOrderId());
+        if (!$this->_cachedOriginalOrder) {
+            if ($this->isOriginalOrder()) {
+                $this->_cachedOriginalOrder = $this;
+            }else{
+                $this->_cachedOriginalOrder = $this->_entityService
+                    ->loadEntityId($this->getLoadedNodeId(), $this->getOriginalOrderId());
+            }
         }
 
-        return $originalOrder;
+        return $this->_cachedOriginalOrder;
     }
 
     /**
      * Retrieve all orders, if this is an original order
      * @return \Entity\Wrapper\Order[]
      */
-    public function getSegregatedOrders()
+    public function getSegregatedOrders($getSegregatedOrdersEvenIsNoOriginalOrder = FALSE)
     {
-        $this->isOriginalOrder();
-        return $this->_cachedSegregatedOrders;
+        if (!$this->_cachedSegregatedOrders) {
+            if ($this->isOriginalOrder() || $this->_entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this)) {
+                $segregatedOrders = $this->_cachedSegregatedOrders =
+                    $this->_entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
+            }else{
+                $segregatedOrders = $this->_cachedSegregatedOrders = array();
+                if ($getSegregatedOrdersEvenIsNoOriginalOrder) {
+                    $segregatedOrders =$this->_entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
+                }
+            }
+        }
+
+        return $segregatedOrders;
     }
 
     /**
      * Get all order which belong to the same original order inclusive this one
-     * @return array
+     * @return Order[] $this->_cachedAllOrders
      */
     public function getAllOrders()
     {
         if (!$this->_cachedAllOrders) {
             $order = $this->getOriginalOrder();
-            $this->_cachedAllOrders = array_merge(array($order), $order->getSegregatedOrders());
+            $this->_cachedAllOrders = array_merge(array($order), $order->getSegregatedOrders(TRUE));
         }
 
         return $this->_cachedAllOrders;
@@ -297,10 +309,10 @@ class Order extends AbstractWrapper
      */
     public function getOrderitemsTotalQuantity()
     {
-        /** @var \Entity\Service\EntityService $entityService */
-        $entityService = $this->getServiceLocator()->get('entityService');
+        /** @var \Entity\Service\EntityService $this->_entityService */
+        $this->_entityService = $this->getServiceLocator()->get('entityService');
 
-        $totalItemAggregate = $entityService->aggregateEntity(
+        $totalItemAggregate = $this->_entityService->aggregateEntity(
             $this->getLoadedNodeId(), 'orderitem', FALSE,
             array('quantity'=>'SUM'),
             array('PARENT_ID'=>$this->getId()),
@@ -426,7 +438,7 @@ class Order extends AbstractWrapper
     {
         $nonCash = 0;
         foreach (self::getNonCashPaymentCodes() as $code) {
-            $nonCash += $this->getData($code, 0);
+            $nonCash += $this->getOriginalOrder()->getData($code, 0);
         }
 
         return $nonCash;
@@ -461,8 +473,7 @@ class Order extends AbstractWrapper
      */
     public function getGrandTotal()
     {
-        $grandTotal = $this->getData('grand_total', 0);
-        return $grandTotal;
+        return $this->getData('grand_total', 0);
     }
 
     /**
@@ -543,12 +554,13 @@ class Order extends AbstractWrapper
      */
     public function getOrderTotal()
     {
-        $orderTotal = 0;
-        foreach ($this->getOrderitems() as $item) {
-            $orderTotal += $item->getDiscountedPrice() * $item->getQuantity();
+        if (!$this->_cachedOrderTotal) {
+            foreach ($this->getOrderitems() as $item) {
+                $this->_cachedOrderTotal += $item->getDiscountedPrice() * $item->getQuantity();
+            }
         }
 
-        return $orderTotal;
+        return $this->_cachedOrderTotal;
     }
 
     /**
@@ -557,8 +569,11 @@ class Order extends AbstractWrapper
      */
     public function getOriginalOrderTotal()
     {
-        $orderTotal = $this->getOriginalGrandTotal() + $this->getOriginalNonCashPayments()
-            - $this->getOriginalDiscountedShippingTotal();
+        $orderTotal = 0;
+        foreach ($this->getAllOrders() as $order) {
+            $orderTotal += $order->getOrderTotal();
+        }
+
         return $orderTotal;
     }
 
@@ -595,14 +610,11 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * @return array
+     * @return array $paymentMethods
      */
     public function getPaymentMethods()
     {
-        /** @var \Entity\Service\EntityService */
-        $entityService = $this->getServiceLocator()->get('entityService');
-
-        return $entityService->getPaymentMethods($this);
+        return $this->_entityService->getPaymentMethods($this);
     }
 
     /**
@@ -615,19 +627,16 @@ class Order extends AbstractWrapper
     }
 
     /**
-     * @return mixed
+     * @return mixed $paymentCcTypes
      */
     public function getPaymentCcTypes()
     {
-        /** @var \Entity\Service\EntityService */
-        $entityService = $this->getServiceLocator()->get('entityService');
-
-        return $entityService->getPaymentCcTypes($this);
+        return $this->_entityService->getPaymentCcTypes($this);
     }
 
     /**
      * Get Aggregated Items Refunds
-     * @return float
+     * @return float $itemsRefund
      */
     public function getItemsRefunds()
     {
@@ -643,7 +652,7 @@ class Order extends AbstractWrapper
 
     /**
      * Get aggregated cash refunds
-     * @return float
+     * @return float $cashRefunds
      */
     public function getCashRefunds()
     {
@@ -655,6 +664,14 @@ class Order extends AbstractWrapper
         }
 
         return $cashRefundsAmount;
+    }
+
+    /**
+     * @return float $cashAndItemsRefunds
+     */
+    public function getCashAndItemsRefunds()
+    {
+        return $this->getCashRefunds() + $this->getItemsRefunds();
     }
 
     /**

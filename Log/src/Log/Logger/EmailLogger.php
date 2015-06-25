@@ -113,8 +113,10 @@ class EmailLogger extends AbstractLogger
      */
     protected function sendAlert($errorCode, $subjectMessage)
     {
-        $subject = 'MageLink ERROR'.($this->notifyClient() ? ' - Client notified' : '')
-            .': ['.$errorCode.'] '.$subjectMessage;
+        $subjectAddition = ' (Client notified)';
+        $subject = 'MageLink ERROR'.($this->notifyClient() ? $subjectAddition : '')
+            .' : ['.$errorCode.'] '.$subjectMessage;
+        $clientSubject = str_replace($subjectAddition, '', $subject);
         $content = 'MageLink error thrown! Details:'.PHP_EOL.PHP_EOL
             .implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
 
@@ -123,7 +125,7 @@ class EmailLogger extends AbstractLogger
         $daytime = (date('H') > $this->clientEmailStarthour) && (date('H') < $this->clientEmailEndhour);
         if ($this->clientEmail && $daytime && $this->notifyClient()) {
             $additionalHeader = 'Content-Type: text/plain'."\r\n".'From: '.ErrorHandler::ERROR_FROM;
-            mail($this->clientEmail, $subject, $content, $additionalHeader);
+            mail($this->clientEmail, $clientSubject, $content, $additionalHeader);
         }
     }
 

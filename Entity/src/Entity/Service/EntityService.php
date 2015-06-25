@@ -1,6 +1,5 @@
 <?php
 /**
- * Entity\Service
  * @category Entity
  * @package Entity\Service
  * @author Matt Johnston
@@ -75,10 +74,9 @@ class EntityService implements ServiceLocatorAwareInterface
      */
     protected function getTableGateway($table)
     {
-        if (isset($this->_tgCache[$table])) {
-            return $this->_tgCache[$table];
+        if (!isset($this->_tgCache[$table])) {
+            $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
         }
-        $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
 
         return $this->_tgCache[$table];
     }
@@ -289,8 +287,8 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_DEBUG,
                 'loadeloc',
-                'loadEntityLocal - '.$nodeId.' - '.$entityType.' - '.$storeId.' - '.$localId,
-                array('node_id'=>$nodeId, 'entity_type'=>$entityType, 'store_id'=>$storeId, 'local_id'=>$localId)
+                'loadEntityLocal '.$localId.' on node '.$nodeId.' (entity type '.$entityType.' on store '.$storeId.')',
+                array('node_id'=>$nodeId, 'entity_type_id'=>$entityType, 'store_id'=>$storeId, 'local_id'=>$localId)
             );
 
         $attributes = $this->getServiceLocator()->get('entityConfigService')->getAttributesCode($entityType);
@@ -299,9 +297,9 @@ class EntityService implements ServiceLocatorAwareInterface
             ->loadEntities(
                 $entityType,
                 $storeId,
-                array('LOCAL_ID'=>$localId),
+                array('LOCAL_ID'=>$localId), // ToDo: Check if this necessary: array('LOCAL_ID'=>$localId, 'type_id'=>$entityType),
                 $attributes,
-                array('LOCAL_ID'=>'eq'),
+                array('LOCAL_ID'=>'eq'), // ToDo: Check if this necessary: array('LOCAL_ID'=>'eq', 'type_id'=>'eq'),
                 array('linked_to_node'=>$nodeId, 'limit'=>1, 'node_id'=>$nodeId)
             );
 
@@ -600,14 +598,14 @@ class EntityService implements ServiceLocatorAwareInterface
      * This Entity is not linked to the node at this stage.
      * @param int $nodeId
      * @param int|string $entityType
-     * @param string $store_id
-     * @param string $unique_id
+     * @param string $storeId
+     * @param string $uniqueId
      * @param array $data
      * @param \Entity\Entity|int $parent
      * @throws MagelinkException
      * @return \Entity\Entity
      */
-    public function createEntity ($nodeId, $entityType, $store_id, $unique_id, $data, $parent = NULL)
+    public function createEntity ($nodeId, $entityType, $storeId, $uniqueId, $data, $parent = NULL)
     {
         $this->verifyNodeId($nodeId);
         $this->verifyEntityType($entityType);
@@ -625,38 +623,44 @@ class EntityService implements ServiceLocatorAwareInterface
         foreach ($data as $key=>$value) {
             if (strlen(trim($key)) == 0) {
                 unset($data[$key]);
-                continue;
-            }
-            if (!in_array($key, $allowedAttributes)) {
+            }elseif (!in_array($key, $allowedAttributes)) {
                 throw new NodeException('Invalid attribute specified for update ' . $key);
             }
         }
 
-        $id = $this->getSaver()->createEntity($entityType, $store_id, $unique_id, ($parent ? $parent : 0), $data);
+        $entityId = $this->getSaver()->createEntity($entityType, $storeId, $uniqueId, ($parent ? $parent : 0), $data);
+        $entity = $this->loadEntityId($nodeId, $entityId);
+
+        $logCode = 'create_ent';
+        $logMessage = 'Created entity (type id:'.$entityType.') on '.$nodeId.' with id '.$entityId.' ('.$uniqueId.').';
+        $logData = array('node'=>$nodeId, 'type id'=>$entityType, 'unique id'=>$uniqueId, 'store'=>$storeId);
+        $logEntities = array('entity'=>$entity);
 
         $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_DEBUG,
-                'create',
-                'createEntity - '.$nodeId.' - new entity '.$id.' is '.$entityType,
-                array('type'=>$entityType, 'store'=>$store_id, 'unique'=>$unique_id),
-                array('entity'=>$id, 'node'=>$nodeId)
-            );
-
-        $entity = $this->loadEntityId($nodeId, $id);
+            ->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
 
         $transformedData = $this->getServiceLocator()->get('routerService')
             ->processTransforms($entity, $data, $nodeId, \Entity\Update::TYPE_CREATE);
+
         if (count($transformedData)) {
             $this->silentUpdateEntity($entity, $transformedData, false);
-            $data = array_merge($data, $transformedData);
+            $distributeData = array_merge($data, $transformedData);
+        }else{
+            $distributeData = $data;
         }
+
+        $logCode .= '_detail';
+        $logData = array_merge($logData,
+            array('create data'=>$data, 'transformed data'=>$transformedData, 'distribute data'=>$distributeData));
+        $this->getServiceLocator()->get('logService')
+            ->log(LogService::LEVEL_DEBUGEXTRA, $logCode, $logMessage, $logData, $logEntities);
 
         $sql = 'UPDATE router_stat_type SET `count` = `count` + 1 WHERE entity_type_id = '.$entityType.';';
         $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
 
         if ($nodeId !== 0) {
             $this->getServiceLocator()->get('routerService')
-                ->distributeUpdate($entity, $data, $nodeId, \Entity\Update::TYPE_CREATE);
+                ->distributeUpdate($entity, $distributeData, $nodeId, \Entity\Update::TYPE_CREATE);
         }
 
         return $entity;
@@ -729,6 +733,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $entityIdentifier = $this->getTableGateway('entity_identifier')->insert(array(
             'entity_id'=>$entity->getId(),
+            'entity_type_id'=>$entity->getType(),
             'node_id'=>$nodeId,
             'store_id'=>$entity->getStoreId(),
             'local_id'=>$localId,
@@ -753,7 +758,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_DEBUG,
                 'unlink',
-                'unlinkEntity - '.$nodeId.' - '.$entity->getId(),
+                'unlinkEntity '.$entity->getId().' on node '.$nodeId,
                 array(),
                 array('entity'=>$entity, 'node'=>$nodeId)
             );
@@ -781,7 +786,7 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $result = $this->getTableGateway('entity_identifier')
-            ->select(array('entity_id'=>$entity, 'node_id'=>$nodeId,));
+            ->select(array('entity_id'=>$entity, 'node_id'=>$nodeId));
 
         $return = NULL;
         foreach ($result as $row) {
@@ -972,7 +977,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 ->log(LogService::LEVEL_INFO,
                     'update',
                     'updateEntity - Keys updated - '.$nodeId.' - '.$entity->getId(),
-                    array('updated'=>$attributes, 'keys'=>array_keys($data), 'tfkeys'=>array_keys($transformedData)),
+                    array('updated'=>$attributes, 'data'=>$data, 'transformed data'=>$transformedData),
                     array('entity'=>$entity, 'node'=>$nodeId)
                 );
             $this->getServiceLocator()->get('routerService')
@@ -1259,7 +1264,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param \Entity\Entity $order
      * @return array $ccTypes
      */
-    public function getCcTypes(array $paymentMethod)
+    public function getPaymentCcTypes(array $paymentMethod)
     {
         return $this->getPaymentData($paymentMethod, 'ccType');
     }

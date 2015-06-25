@@ -11,6 +11,7 @@
 
 namespace Entity;
 
+use Entity\Service\EntityService;
 use Magelink\Exception\MagelinkException;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
@@ -48,6 +49,47 @@ class Entity implements ServiceLocatorAwareInterface
 
     /** @var \Entity\Entity[] */
     protected $_resolveCache = array();
+
+    /** @var ServiceLocatorInterface The service locator */
+    protected $_serviceLocator;
+    /** @var EntityService $_entityService */
+    protected $_entityService;
+
+
+    /**
+     * Set service locator
+     * @param ServiceLocatorInterface $serviceLocator
+     */
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->_serviceLocator = $serviceLocator;
+        $this->setEntityService();
+    }
+
+    /**
+     * Get service locator
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->_serviceLocator;
+    }
+
+    /**
+     * @return EntityService $this->_entityService
+     */
+    protected function setEntityService()
+    {
+        return $this->_entityService = $this->getServiceLocator()->get('entityService');
+    }
+
+    /**
+     * @return \Entity\Service\EntityService
+     */
+    protected function getEavService()
+    {
+        return $this->getServiceLocator()->get('entityService');
+    }
 
 
     /**
@@ -352,37 +394,4 @@ class Entity implements ServiceLocatorAwareInterface
             ->loadChildren($this->_loadedFromNode, $this, $entityType));
     }
 
-    /**
-     * @var ServiceLocatorInterface The service locator
-     */
-    protected $_serviceLocator;
-
-    /**
-     * Set service locator
-     *
-     * @param ServiceLocatorInterface $serviceLocator
-     */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-    {
-        $this->_serviceLocator = $serviceLocator;
-    }
-
-    /**
-     * Get service locator
-     *
-     * @return ServiceLocatorInterface
-     */
-    public function getServiceLocator()
-    {
-        return $this->_serviceLocator;
-    }
-
-    /**
-     * @return \Entity\Service\EntityService
-     */
-    protected function getEavService()
-    {
-        return $this->getServiceLocator()->get('entityService');
-    }
-    
 }

@@ -19,6 +19,7 @@ use Magelink\Exception\SyncException;
 use Magelink\Exception\NodeException;
 use Node\AbstractNode;
 use Node\AbstractGateway;
+use Node\Entity\Node as NodeEntity;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 
 
@@ -44,7 +45,7 @@ class Synchronizer extends CronRunnable
             foreach ($nodes as $nodeEntity) {
                 $nodeId = $nodeEntity->getId();
                 if ($nodeId) {
-                    if (!($nodeEntity instanceof \Node\Entity\Node)) {
+                    if (!($nodeEntity instanceof NodeEntity)) {
                         throw new MagelinkException('Invalid node type passed (' . get_class($nodeEntity) . ')!');
                     }
 

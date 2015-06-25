@@ -129,7 +129,7 @@ EOF
         die();
 
         return;
-        //     public function locateEntityExtended ( $node_id, $entity_type, $store_id, $searchData, $searchType = array(), $options = array(), $extendedData = array() ) {
+//     public function locateEntityExtended ($node_id, $entityType, $store_id, $searchData, $searchType = array(), $options = array(), $extendedData = array()) {
 
         $entityService->locateEntityExtended(1, 'order', 1, array('UNIQUE_ID'=>array('100000001', '100000002')), array('UNIQUE_ID'=>'in'), array(), array(
             'join'=>array(
