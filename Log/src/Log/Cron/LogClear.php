@@ -23,14 +23,22 @@ class LogClear extends CronRunnable
 
     const MIN_INTERVAL_DAYS = 10;
 
+    const MAX_ROWS_DELETE = 200000;
+
     /**
      * Performs any scheduled actions.
      */
     protected function _cronRun()
     {
+        // Build where condition
+        $maxLogId = $this->getMaxLogId();
         $fromDate = date('Y-m-d H:i:s', strtotime('-' . $this->getIntervalDays() . ' days'));
         $where = new Where();
         $where->lessThan('timestamp', $fromDate);
+        if (!is_null($maxLogId)) {
+            $where->and->lessThan('log_id',$maxLogId);
+        }
+
         $tableGateway = $this->getTableGateway('log_entry');
         $sql = $tableGateway->getSql();
         $sqlDelete = $sql->delete()->where($where);
@@ -39,7 +47,8 @@ class LogClear extends CronRunnable
         $sqlString = $sql->getSqlStringForSqlObject($sqlDelete);
 
         // Log cron
-        $message = 'Deleted ' . $deletedRows . ' rows from log_entry table to clear entries older than '.$fromDate;
+        $message = 'Deleted ' . $deletedRows . ' rows from log_entry table older than ' .
+            $fromDate . ' with log_id less than ' . $maxLogId;
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_INFO,
                 'cron_logclear',
@@ -102,6 +111,27 @@ class LogClear extends CronRunnable
         }
 
         return false;
+    }
+
+    /**
+     * Return maximum log_id record to use for delete method
+     * @return int | null
+     */
+    protected function getMaxLogId()
+    {
+        $tableGateway = $this->getTableGateway('log_entry');
+        $sql = $tableGateway->getSql();
+
+        $sqlSelect = $sql->select()->columns(array('log_id'=>'log_id'))->order('log_id ASC')->limit(1);
+        $result = $tableGateway->selectWith($sqlSelect);
+
+        $logId = null;
+        foreach($result as $row){
+            // Only 1 row returned
+            $logId = $row['log_id'];
+        }
+
+        return ($logId) ? $logId + self::MAX_ROWS_DELETE : null;
     }
 
 }
