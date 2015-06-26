@@ -5,7 +5,7 @@ return array(
         'logclear'=>array(
             'class'=>'\Log\Cron\LogClear',
             'interval'=>180,
-            'offset'=>0,
+            'offset'=>20,
         )
     )
 );
