@@ -150,7 +150,9 @@ class Order extends AbstractWrapper
      */
     public function getSegregatedOrders($getSegregatedOrdersEvenIsNoOriginalOrder = FALSE)
     {
-        if (!$this->_cachedSegregatedOrders) {
+        if ($this->_cachedSegregatedOrders) {
+            $segregatedOrders = $this->_cachedSegregatedOrders;
+        }else{
             if ($this->isOriginalOrder() || $this->_entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this)) {
                 $segregatedOrders = $this->_cachedSegregatedOrders =
                     $this->_entityService->loadSegregatedOrders($this->getLoadedNodeId(), $this);
