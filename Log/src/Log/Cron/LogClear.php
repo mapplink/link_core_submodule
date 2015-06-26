@@ -32,7 +32,7 @@ class LogClear extends CronRunnable
     {
         // Build where condition
         $maxLogId = $this->getMaxLogId();
-        $fromDate = date('Y-m-d H:i:s', strtotime('-' . $this->getIntervalDays() . ' days'));
+        $fromDate = date('Y-m-d H:i:s', strtotime('-'.$this->getIntervalDays().' days'));
         $where = new Where();
         $where->lessThan('timestamp', $fromDate);
         if (!is_null($maxLogId)) {
@@ -53,9 +53,8 @@ class LogClear extends CronRunnable
             ->log(LogService::LEVEL_INFO,
                 'cron_logclear',
                 $message,
-                array('query' => $sqlString)
+                array('query'=>$sqlString)
             );
-
     }
 
     /**
