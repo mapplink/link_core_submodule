@@ -10,12 +10,10 @@
 
 foreach ($form->getElements() as $field) :
 
-    if ($field instanceof \Zend\Form\Element\Submit) :
-        continue;
-    elseif ($field instanceof \Zend\Form\Element\Hidden) :
+    if ($field instanceof \Zend\Form\Element\Hidden) :
 ?>
                 <?php print $this->formElement($field);
-    else :
+    elseif (! $field instanceof \Zend\Form\Element\Submit) :
         $field->setLabelAttributes(array('class' => 'control-label'));
 ?>
                 <div class="form-group <?php print $field->getMessages() ? 'error' : ''?>">
