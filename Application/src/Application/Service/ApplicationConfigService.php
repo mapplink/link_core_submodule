@@ -251,7 +251,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @return array $cronjobs
+     * @return Cronrunnable[] $cronjobs
      */
     public function getCronjobs()
     {
