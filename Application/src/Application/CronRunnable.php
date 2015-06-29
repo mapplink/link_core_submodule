@@ -120,7 +120,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             foreach ($this->attributes as $code=>$value) {
                 if (is_null($value) || (is_int($value) || is_float($value)) && $value < 0) {
                     $message = get_class($this).' init failed.'
-                        .' No valid '.$code.' value ('.var_export($value, TRUE).')provided.';
+                        .' No valid '.$code.' value ('.var_export($value, TRUE).') provided.';
                     throw new SyncException($message);
                 }
             }
