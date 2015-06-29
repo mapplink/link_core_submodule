@@ -21,6 +21,7 @@ use Application\Service\ApplicationConfigService;
 use Log\Service\LogService;
 use Log\Logger\EmailLogger;
 use Magelink\Exception\MagelinkException;
+use Magelink\Exception\SyncException;
 use Web\Controller\CRUD\LogEntryAdminController;
 use Zend\Console\Request as ConsoleRequest;
 use Zend\Mvc\Controller\AbstractActionController;
@@ -82,23 +83,28 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         }
 
         $ran = FALSE;
-        /** @var Cronrunnable $magelinkCron */
         foreach ($applicationConfigService->getCronjobs() as $name=>$magelinkCron) {
             if ($job === NULL || $job == $name) {
                 $ran = TRUE;
 
-                $runCron = $magelinkCron->cronCheck($minutes);
-                if ($job == $name) {
-                    $runCron = TRUE;
-                }
+                try {
+                    $runCron = $magelinkCron->cronCheck($minutes);
+                    if ($job == $name) {
+                        $runCron = TRUE;
+                    }
 
-                if (!$runCron) {
-                    $logMessage = 'Skipping cron job '.$name;
-                    $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$name);
+                    if (!$runCron) {
+                        $logMessage = 'Skipping cron job '.$name;
+                        $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$name);
+                        $this->getServiceLocator()->get('logService')
+                            ->log(LogService::LEVEL_INFO, 'cron_skip', $logMessage, $logData);
+                    }else {
+                        $magelinkCron->cronRun();
+                    }
+                }catch (SyncException $syncException) {
                     $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_INFO, 'cron_skip', $logMessage, $logData);
-                }else{
-                    $magelinkCron->cronRun();
+                        ->log(LogService::LEVEL_INFO, 'cron_err', $syncException->getMessage(), array('cron'=>$name),
+                            array('cron'=>$magelinkCron, 'exception'=>$syncException), FALSE);
                 }
             }
         }
