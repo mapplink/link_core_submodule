@@ -37,6 +37,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         'interval'=>NULL,
         'offset'=>0,
         'lockTime'=>NULL,
+        'defaultLockTime'=>600,
         'autoLockMultiplier'=>10,
         'overdue'=>FALSE
     );
@@ -107,14 +108,19 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             }
 
             if (is_null($this->attributes['lockTime']) && isset($this->attributes['interval'])) {
-                $this->attributes['lockTime'] = $this->attributes['interval'] * $this->attributes['autoLockMultiplier'];
+                if (is_numeric($this->attributes['interval'])) {
+                    $this->attributes['lockTime'] =
+                        $this->attributes['interval'] * $this->attributes['autoLockMultiplier'];
+                }else{
+                    $this->attributes['lockTime'] = $this->attributes['defaultLockTime'];
+                }
             }
-            unset($this->attributes['autoLockMultiplier']);
+            unset($this->attributes['defaultLockTime'], $this->attributes['autoLockMultiplier']);
 
             foreach ($this->attributes as $code=>$value) {
                 if (is_null($value) || (is_int($value) || is_float($value)) && $value < 0) {
                     $message = get_class($this).' init failed.'
-                        .' No valid '.$code.' value ('.var_export($value, TRUE).')provided.';
+                        .' No valid '.$code.' value ('.var_export($value, TRUE).') provided.';
                     throw new SyncException($message);
                 }
             }
