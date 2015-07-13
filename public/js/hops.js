@@ -251,6 +251,88 @@ var PicklistitemScan = {
     }
 }
 
+var OrderAdminPacking = {
+    init: function() {
+        $('#order').focus();
+
+        $('#order').keypress(function (event) {
+            if (event.which == 13) {
+                $('#user').focus();
+                return false;
+            }
+        });
+
+        $('#order').blur(function() {
+            $.ajax({
+                url: '/packing/adjust-packing-screen/'+$(this).val(),
+                dataType: 'json'
+            })
+
+                .done(function (data) {
+                    if (data.success) {
+                        if (data.code) {
+                            $('#group-code label').html(data.code + ':');
+                        }
+
+                        if (data.weight) {
+                            $('#group-weight').show();
+                        } else {
+                            $('#group-weight').hide();
+                        }
+                    }
+                })
+
+                .fail(function (data) {
+                    alert('Error occurred, please try again later!')
+                })
+
+                .always(function () {
+                    $('#user').focus();
+                });
+
+            return false;
+        });
+
+        $('#user').keypress(function (event) {
+            if (event.which == 13) {
+                $('#code').focus();
+                return false;
+            }
+        });
+
+        $('#code').keypress(function (event) {
+            if ($('#group-weight').is(':hidden')) {
+                $('#packing').submit();
+            }else{
+                $('#weigth').focus();
+            }
+            return false;
+        });
+
+        $('#code').blur(function () {
+            if ($('#group-weight').is(':hidden')) {
+                $('#packing').submit();
+            }else{
+                $('#weigth').focus();
+            }
+            return false;
+        });
+
+        $('#weight').keypress(function (event) {
+            if (event.which == 13) {
+                $('#packing').submit();
+                return false;
+            }
+        });
+
+        $('#weight').blur(function () {
+            $('#packing').submit();
+            return false;
+        });
+    }
+}
+
+
 var PackingOrder = {
     init: function() {
         PackingOrder.initForm();
