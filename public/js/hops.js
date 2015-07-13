@@ -268,27 +268,26 @@ var OrderAdminPacking = {
                 dataType: 'json'
             })
 
-                .done(function (data) {
-                    if (data.success) {
-                        if (data.code) {
-                            $('#group-code label').html(data.code + ':');
-                        }
-
-                        if (data.weight) {
-                            $('#group-weight').show();
-                        } else {
-                            $('#group-weight').hide();
-                        }
+            .done(function (data) {
+                if (data.success) {
+                    if (data.code) {
+                        $('#group-code label').html(data.code + ':');
                     }
-                })
 
-                .fail(function (data) {
-                    alert('Error occurred, please try again later!')
-                })
+                    if (data.weight) {
+                        $('#group-weight').show();
+                    } else {
+                        $('#group-weight').hide();
+                    }
+                }
 
-                .always(function () {
-                    $('#user').focus();
-                });
+                $('#user').focus();
+            })
+
+            .fail(function (data) {
+                alert('Error occurred, please check order increment id!');
+                $('#order').focus();
+            })
 
             return false;
         });
