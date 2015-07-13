@@ -56,11 +56,14 @@ print $this->headLink(array(
     </div> <!-- main -->
     <?php print $this->render('layout/footer'); ?>
     <?php
+if (class_exists('\HOPS\Node')) :
+    $this->headScript()->prependFile($this->basePath().'/js/hops.js');
+endif;
+
 print $this->headScript()
-    ->prependFile($this->basePath(). '/js/magelink.js')
-    ->prependFile($this->basePath(). '/js/hops.js')
-    ->prependFile($this->basePath(). '/js/jquery.datetimepicker.js')
-    ->prependFile($this->basePath(). '/js/base.js')
+    ->prependFile($this->basePath().'/js/magelink.js')
+    ->prependFile($this->basePath().'/js/base.js')
+    ->prependFile($this->basePath().'/js/jquery.datetimepicker.js')
     ->prependFile('//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js');
 ?>
     <?php print $this->inlineScript(); ?>
