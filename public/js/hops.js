@@ -253,81 +253,126 @@ var PicklistitemScan = {
 
 var OrderAdminPacking = {
     init: function() {
-        $('#order').focus();
+        $('#orderId').focus();
 
-        $('#order').keypress(function (event) {
-            if (event.which == 13) {
-                $('#user').focus();
-                return false;
+        $('#orderId').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.ajaxOrderCall(); }});
+        $('#orderId').blur(function() { OrderAdminPacking.ajaxOrderCall(); });
+
+        $('#userId').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.userIdNext(); }});
+
+        $('#code').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.codeNext(); }});
+        $('#code').blur(function() { return OrderAdminPacking.codeNext(); });
+
+        $('#weight').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.weightNext(); }});
+        $('#weight').blur(function() { return OrderAdminPacking.weightNext(); });
+    },
+
+    ajaxOrderCall: function() {
+        $.ajax({
+            url: '/packing/adjust-packing-screen/'+$('#orderId').val(),
+            dataType: 'json'
+        })
+        .done(function(data) {
+            if (data.success) {
+                OrderAdminPacking.hideOrderComment();
+                OrderAdminPacking.setUseApi(data.useApi);
+                OrderAdminPacking.setCodeLabel(data.codeLabel);
+                OrderAdminPacking.setUseWeight(data.useWeight);
+                OrderAdminPacking.orderIdNext();
             }
-        });
-
-        $('#order').blur(function() {
-            $.ajax({
-                url: '/packing/adjust-packing-screen/'+$(this).val(),
-                dataType: 'json'
-            })
-
-            .done(function (data) {
-                if (data.success) {
-                    if (data.code) {
-                        $('#group-code label').html(data.code + ':');
-                    }
-
-                    if (data.weight) {
-                        $('#group-weight').show();
-                    } else {
-                        $('#group-weight').hide();
-                    }
-                }
-
-                $('#user').focus();
-            })
-
-            .fail(function (data) {
-                alert('Error occurred, please check order increment id!');
-                $('#order').focus();
-            })
-
-            return false;
-        });
-
-        $('#user').keypress(function (event) {
-            if (event.which == 13) {
-                $('#code').focus();
-                return false;
-            }
-        });
-
-        $('#code').keypress(function (event) {
-            if ($('#group-weight').is(':hidden')) {
-                $('#packing').submit();
+        })
+        .fail(function(data) {
+            if ($('#orderId').val() == '') {
+                OrderAdminPacking.displayOrderComment('Please choose an order.');
+                OrderAdminPacking.orderIdStay();
             }else{
-                $('#weigth').focus();
+                OrderAdminPacking.displayOrderComment('Error occurred, please check order increment id!');
+                OrderAdminPacking.orderIdNext();
             }
-            return false;
+        })
+        .always(function(data) {
+            $('#packing').attr('action', '/packing/complete/'+$('#orderId').val());
         });
 
-        $('#code').blur(function () {
-            if ($('#group-weight').is(':hidden')) {
-                $('#packing').submit();
+        return false;
+    },
+    displayOrderComment: function(comment) {
+        $('#orderComment').html(comment);
+        $('#orderComment').addClass('alert alert-error');
+        $('#orderComment').show();
+    },
+    hideOrderComment: function() {
+        $('#orderComment').hide();
+        $('#orderComment').removeClass('alert alert-error');
+        $('#orderComment').html('');
+    },
+    isApiMethodChangeableToANonApiMethod: function() {
+        return true;
+    },
+    setUseApi: function(useApi) {
+        if (useApi) {
+            if (OrderAdminPacking.isApiMethodChangeableToANonApiMethod()) {
+                $('#noApi-group').find('input:hidden').each(function () {
+                    $('<input type="checkbox" />').attr({id: this.id, class: this.class}).insertBefore(this);
+                }).remove();
+                $('#noApi-group').css('display', 'inline-block');
             }else{
-                $('#weigth').focus();
+                $('#noApi').attr('value', 0);
             }
-            return false;
-        });
+        }else{
+            $('#noApi-group').hide();
+            $('#noApi-group').find('input:checkbox').each(function () {
+                $('<input type="hidden" />').attr({id: this.id, class: this.class}).insertBefore(this);
+            }).remove();
+            $('#noApi').attr('value', 'On');
+        }
+        $('#noApi').removeAttr('checked');
+    },
+    setCodeLabel: function(codeLabel) {
+        if (codeLabel) {
+            $('#group-code label').html(codeLabel+':');
+        }
+    },
+    setUseWeight: function(useWeight) {
+        if (useWeight) {
+            $('#group-weight').show();
+            $('#useWeight').val('On');
+        }else{
+            $('#group-weight').hide();
+            $('#useWeight').val(0);
+        }
+    },
+    orderIdStay: function() {
+        $('#orderId').focus();
+        return false;
+    },
+    orderIdNext: function() {
+        $('#userId').focus();
+        return false;
+    },
+    userIdNext: function() {
+        $('#code').focus();
+        return false;
+    },
+    codeNext: function() {
+        if ($('#useWeight').val()) {
+            $('#weight').focus();
+        }else{
+            OrderAdminPacking.submitForm();
+        }
 
-        $('#weight').keypress(function (event) {
-            if (event.which == 13) {
-                $('#packing').submit();
-                return false;
-            }
-        });
-
-        $('#weight').blur(function () {
+        return false;
+    },
+    weightNext: function() {
+        OrderAdminPacking.submitForm();
+        return false;
+    },
+    submitForm: function() {
+        if ($('#noApi').val()) {
             $('#packing').submit();
-            return false;
-        });
+        }else{
+            $('#completeField').trigger('click');
+        }
     }
 }
 
@@ -339,12 +384,9 @@ var PackingOrder = {
     },
 
     initForm: function() {
-        document.getElementById('trackingCodeField').focus();
         $('#trackingCodeField').focus();
 
-        $('#trackingCodeField').blur(function(){
-            $('form.jsPackingOrderForm').submit();
-        });
+        $('#trackingCodeField').blur(function(){ $('form.jsPackingOrderForm').submit(); });
 
         $('#completePacking .jsChkAdditionalNote').click(function(){
             $('#completePacking .jsChkAdditionalNoteSection').toggle();
@@ -378,7 +420,7 @@ var PackingOrder = {
     },
 
     initInlineEdit: function() {
-        $('.jsPackingOrderForm .jsTextTrackingCode').click(function(){
+        $('.jsPackingOrderForm .jsTextTrackingCode').click(function() {
             $(this).hide().siblings('.jsInputTrackingCode:first').show().find('input:first').focus();
         })
     }
