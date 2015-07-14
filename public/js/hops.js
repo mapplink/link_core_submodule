@@ -277,7 +277,7 @@ var OrderAdminPacking = {
                 OrderAdminPacking.hideOrderComment();
                 OrderAdminPacking.setUseApi(data.useApi);
                 OrderAdminPacking.setCodeLabel(data.codeLabel);
-                OrderAdminPacking.setUseWeight(data.useWeight);
+                OrderAdminPacking.setEnterWeight(data.enterWeight);
                 OrderAdminPacking.orderIdNext();
             }
         })
@@ -307,7 +307,7 @@ var OrderAdminPacking = {
         $('#orderComment').html('');
     },
     isApiMethodChangeableToANonApiMethod: function() {
-        return true;
+        return false;
     },
     setUseApi: function(useApi) {
         if (useApi) {
@@ -333,13 +333,13 @@ var OrderAdminPacking = {
             $('#group-code label').html(codeLabel+':');
         }
     },
-    setUseWeight: function(useWeight) {
-        if (useWeight) {
+    setEnterWeight: function(enterWeight) {
+        if (enterWeight) {
             $('#group-weight').show();
-            $('#useWeight').val('On');
+            $('#enterWeight').val('On');
         }else{
             $('#group-weight').hide();
-            $('#useWeight').val(0);
+            $('#enterWeight').val(0);
         }
     },
     orderIdStay: function() {
@@ -355,12 +355,11 @@ var OrderAdminPacking = {
         return false;
     },
     codeNext: function() {
-        if ($('#useWeight').val()) {
+        if ($('#enterWeight').val() == 'On') {
             $('#weight').focus();
         }else{
             OrderAdminPacking.submitForm();
         }
-
         return false;
     },
     weightNext: function() {
@@ -368,10 +367,10 @@ var OrderAdminPacking = {
         return false;
     },
     submitForm: function() {
-        if ($('#noApi').val()) {
-            $('#packing').submit();
-        }else{
+        if ($('#noApi').val() == 'On') {
             $('#completeField').trigger('click');
+        }else{
+            $('#packing').submit();
         }
     }
 }
