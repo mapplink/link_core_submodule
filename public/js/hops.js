@@ -255,8 +255,14 @@ var OrderAdminPacking = {
     init: function() {
         $('#orderId').focus();
 
-        $('#orderId').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.ajaxOrderCall(); }});
-        $('#orderId').blur(function() { OrderAdminPacking.ajaxOrderCall(); });
+        $('#orderId').keypress(function(event) { if (event.which == 13) {
+            OrderAdminPacking.orderIdNext();
+            return OrderAdminPacking.ajaxOrderCall();
+        }});
+        $('#orderId').blur(function() {
+            OrderAdminPacking.orderIdNext();
+            return OrderAdminPacking.ajaxOrderCall();
+        });
 
         $('#userId').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.userIdNext(); }});
 
@@ -278,7 +284,6 @@ var OrderAdminPacking = {
                 OrderAdminPacking.setUseApi(data.useApi);
                 OrderAdminPacking.setCodeLabel(data.codeLabel);
                 OrderAdminPacking.setEnterWeight(data.enterWeight);
-                OrderAdminPacking.orderIdNext();
             }
         })
         .fail(function(data) {
@@ -287,7 +292,6 @@ var OrderAdminPacking = {
                 OrderAdminPacking.orderIdStay();
             }else{
                 OrderAdminPacking.displayOrderComment('Error occurred, please check order increment id!');
-                OrderAdminPacking.orderIdNext();
             }
         })
         .always(function(data) {
@@ -343,18 +347,22 @@ var OrderAdminPacking = {
         }
     },
     orderIdStay: function() {
+        $('#orderId').val('');
         $('#orderId').focus();
         return false;
     },
     orderIdNext: function() {
+        $('#userId').val('');
         $('#userId').focus();
         return false;
     },
     userIdNext: function() {
+        $('#code').val('');
         $('#code').focus();
         return false;
     },
     codeNext: function() {
+        $('#weight').val('');
         if ($('#enterWeight').val() == 'On') {
             $('#weight').focus();
         }else{
