@@ -215,14 +215,20 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         do {
             usleep(($try - 1) * 600);
             if ($isCronDataExisting) {
-                $success = $sql->update()->set($set)->where($where);
+                $sql->update()->set($set)->where($where);
+                $success = $sql->updateWith($sql);
             }else{
-                $success = $sql->insert()->set($set);
+                $sql->insert()->set($set);
+                $success = $sql->insertWith($sql);
             }
         }while ($try++ < $maxTries && !$success);
 
         $logCode = 'cron_'.$this->getCode().'_sof';
-        $logData = array('dateTime'=>date('d/m H:i:s'), 'magelinkCron'=>$this->getName());
+        $logData = array(
+            'dateTime'=>date('d/m H:i:s'),
+            'magelinkCron'=>$this->getName(),
+            'update sql'=>$sql->getSqlStringForSqlObject($sql)
+        );
         if ($success) {
             $logMessage = 'Flagged cron '.$this->getName().' successfully as overdue.';
             $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
@@ -247,13 +253,18 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
             $try = 1;
             $maxTries = 7;
+            $update = $sql->update()->set($set)->where($where);
             do {
                 usleep(($try - 1) * 500);
-                $success = $sql->update()->set($set)->where($where);
+                $success = $sql->updateWith($update);
             }while ($try++ < $maxTries && !$success);
 
             $logCode = 'cron_'.$this->getCode().'_rof';
-            $logData = array('dateTime'=>date('d/m H:i:s'), 'magelinkCron'=>$this->getName());
+            $logData = array(
+                'dateTime'=>date('d/m H:i:s'),
+                'magelinkCron'=>$this->getName(),
+                'update sql'=>$sql->getSqlStringForSqlObject($update)
+            );
             if ($success) {
                 if ($this->isOverdue()) {
                     $logMessage = 'Reduced';
