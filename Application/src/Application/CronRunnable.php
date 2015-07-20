@@ -279,7 +279,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     protected function reduceOverdueFlag()
     {
-        if (!$this->scheduledRun || $this->getMaxOverdue()) {
+        if (!$this->scheduledRun || $this->getMaxOverdue() > 1) {
             $success = $this->removeOverdueFlag();
         }else{
             $success = TRUE;
