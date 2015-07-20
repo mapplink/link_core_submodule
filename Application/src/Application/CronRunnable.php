@@ -15,7 +15,7 @@ use Application\Service\ApplicationConfigService;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\SyncException;
-use Zend\Db\Sql\Predicate\Expression;
+use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Where;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\ServiceManager\ServiceLocatorInterface;
@@ -210,24 +210,25 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         }
         $set['updated_at'] = date('Y-m-d H:i:s');
 
+        if ($isCronDataExisting) {
+            $sqlObject = $sql->update()->set($set)->where($where);
+        }else{
+            $sqlObject = $sql->insert()->set($set);
+        }
+        $sqlStatement = $sql->prepareStatementForSqlObject($sqlObject);
+
         $try = 1;
         $maxTries = 5;
         do {
             usleep(($try - 1) * 600);
-            if ($isCronDataExisting) {
-                $sql->update()->set($set)->where($where);
-                $success = $sql->updateWith($sql);
-            }else{
-                $sql->insert()->set($set);
-                $success = $sql->insertWith($sql);
-            }
+            $success = $sqlStatement->execute();;
         }while ($try++ < $maxTries && !$success);
 
         $logCode = 'cron_'.$this->getCode().'_sof';
         $logData = array(
             'dateTime'=>date('d/m H:i:s'),
             'magelinkCron'=>$this->getName(),
-            'update sql'=>$sql->getSqlStringForSqlObject($sql)
+            'update sql'=>$sqlObject->getSqlString()
         );
         if ($success) {
             $logMessage = 'Flagged cron '.$this->getName().' successfully as overdue.';
@@ -254,16 +255,18 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $try = 1;
             $maxTries = 7;
             $update = $sql->update()->set($set)->where($where);
+            $sqlStatement = $sql->prepareStatementForSqlObject($update);
+
             do {
                 usleep(($try - 1) * 500);
-                $success = $sql->updateWith($update);
+                $success = $sqlStatement->execute();
             }while ($try++ < $maxTries && !$success);
 
             $logCode = 'cron_'.$this->getCode().'_rof';
             $logData = array(
                 'dateTime'=>date('d/m H:i:s'),
                 'magelinkCron'=>$this->getName(),
-                'update sql'=>$sql->getSqlStringForSqlObject($update)
+                'update sql'=>$update->getSqlString()
             );
             if ($success) {
                 if ($this->isOverdue()) {
