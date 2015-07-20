@@ -215,9 +215,9 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         do {
             usleep(($try - 1) * 600);
             if ($isCronDataExisting) {
-                $success = $sql->update->set($set)->where($where);
+                $success = $sql->update()->set($set)->where($where);
             }else{
-                $success = $sql->insert->set($set);
+                $success = $sql->insert()->set($set);
             }
         }while ($try++ < $maxTries && !$success);
 
@@ -249,7 +249,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $maxTries = 7;
             do {
                 usleep(($try - 1) * 500);
-                $success = $sql->update->set($set)->where($where);
+                $success = $sql->update()->set($set)->where($where);
             }while ($try++ < $maxTries && !$success);
 
             $logCode = 'cron_'.$this->getCode().'_rof';
