@@ -53,6 +53,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     /**
      * @param array $array
      * @param string $key
+     * @param mixed $default
      * @return array $subArray
      */
     protected function getArrayKeyData(array $array, $key, $default = array())
@@ -60,6 +61,23 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
         if ($key && array_key_exists($key, $array)) {
             $subarray = $array[$key];
         }else{
+            $subarray = $default;
+        }
+
+        return $subarray;
+    }
+
+    /**
+     * @param array $array
+     * @param string $key
+     * @return array $subArray
+     */
+    protected function getArrayKeyArray(array $array, $key)
+    {
+        $default = array();
+        $subarray = $this->getArrayKeyData($array, $key, $default);
+
+        if (!is_array($subarray)) {
             $subarray = $default;
         }
 
