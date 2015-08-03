@@ -211,8 +211,10 @@ var PicklistitemScan = {
                     spinnerJsObj.spin();
                     setTimeout(function() {
                         $('#picklistAutoComplete').modal('show');
-                        $('#picklistAutoComplete input:first').focus();
-                    }, 2500);
+                        setTimeout(function() {
+                            $('#picklistAutoComplete input:first').focus();
+                        }, 700);
+                    }, 1800);
                     spinnerJsObj.stop();
                     $("#jsSubmitBarcode").prop('disabled', false);
                 }
