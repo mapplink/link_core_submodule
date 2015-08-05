@@ -756,12 +756,7 @@ class Order extends AbstractWrapper
      */
     public function getOriginalShippingRefunds()
     {
-        $shippingRefundAmount = 0;
-        foreach ($this->getAllOrders() as $order) {
-            $shippingRefundAmount += $order->getShippingRefunds();
-        }
-
-        return $shippingRefundAmount;
+        return $this->getShippingRefunds();
     }
 
     /**
@@ -797,7 +792,7 @@ class Order extends AbstractWrapper
      */
     public function getAllShippingRefunds()
     {
-        return $this->getOriginalShippingRefunds();
+        return $this->getShippingRefunds();;
     }
 
 }
