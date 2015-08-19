@@ -68,23 +68,6 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @param array $array
-     * @param string $key
-     * @return array $subArray
-     */
-    protected function getArrayKeyArray(array $array, $key)
-    {
-        $default = array();
-        $subarray = $this->getArrayKeyData($array, $key, $default);
-
-        if (!is_array($subarray)) {
-            $subarray = $default;
-        }
-
-        return $subarray;
-    }
-
-    /**
      * @return array $config
      */
     protected function getConfigData($code = NULL)
