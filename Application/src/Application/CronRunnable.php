@@ -17,6 +17,7 @@ use Magelink\Exception\MagelinkException;
 use Magelink\Exception\SyncException;
 use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Where;
+use Zend\Db\Adapter\AdapterInterface;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
@@ -133,6 +134,12 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         }
     }
 
+    /** @return AdapterInterface */
+    protected function getAdapterInterface()
+    {
+        return $this->getServiceLocator()->get('zend_db');
+    }
+
     /**
      * Returns a new TableGateway instance for cron table
      * @return TableGateway $this->_cronTableGateway
@@ -140,7 +147,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     protected function getCronTableGateway()
     {
         if (!$this->_cronTableGateway) {
-            $this->_cronTableGateway = new TableGateway('cron', $this->getServiceLocator()->get('zend_db'));
+            $this->_cronTableGateway = new TableGateway('cron', $this->getAdapterInterface());
         }
 
         return $this->_cronTableGateway;
@@ -228,7 +235,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $logData = array(
             'dateTime'=>date('d/m H:i:s'),
             'magelinkCron'=>$this->getName(),
-            'update sql'=>$sqlObject->getSqlString()
+            'update sql'=>$sqlObject->getSqlString($this->getAdapterInterface()->getPlatform())
         );
         if ($success) {
             $logMessage = 'Flagged cron '.$this->getName().' successfully as overdue.';
@@ -266,7 +273,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $logData = array(
                 'dateTime'=>date('d/m H:i:s'),
                 'magelinkCron'=>$this->getName(),
-                'update sql'=>$update->getSqlString()
+                'update sql'=>$update->getSqlString($this->getAdapterInterface()->getPlatform())
             );
             if ($success) {
                 if ($this->isOverdue()) {
