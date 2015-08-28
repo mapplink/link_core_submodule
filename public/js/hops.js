@@ -322,6 +322,7 @@ var OrderAdminPacking = {
                 $('#noApi-group').css('display', 'inline-block');
             }else{
                 $('#noApi').attr('value', 0);
+                $('#completeField').attr('href', '#completePacking');
             }
         }else{
             $('#noApi-group').hide();
@@ -329,6 +330,7 @@ var OrderAdminPacking = {
                 $('<input type="hidden" />').attr({id: this.id, class: this.class}).insertBefore(this);
             }).remove();
             $('#noApi').attr('value', 'On');
+            $('#completeField').removeAttr('href');
         }
         $('#noApi').removeAttr('checked');
     },
@@ -366,20 +368,13 @@ var OrderAdminPacking = {
         if ($('#enterWeight').val() == 'On') {
             $('#weight').focus();
         }else{
-            OrderAdminPacking.submitForm();
+            $('#completeField').focus();
         }
         return false;
     },
     weightNext: function() {
-        OrderAdminPacking.submitForm();
+        $('#completeField').focus();
         return false;
-    },
-    submitForm: function() {
-        if ($('#noApi').val() == 'On') {
-            $('#completeField').trigger('click');
-        }else{
-            $('#packing').submit();
-        }
     }
 }
 
