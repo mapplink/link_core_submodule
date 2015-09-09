@@ -239,10 +239,10 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                 settype($newValue, gettype($oldValue));
 
                 if ($oldValue !== $newValue || $forcedUpdate) {
-                    if (is_array($oldValue) && $merge === true) {
+                    if (is_array($oldValue) && $merge === TRUE) {
                         $attributesToMerge[] = $code;
                     }elseif (is_array($merge)) {
-                        if (isset($merge[$code]) && $merge[$code] === true) {
+                        if (isset($merge[$code]) && $merge[$code] === TRUE) {
                             $attributesToMerge[] = $code;
                         }else {
                             $attributesToUpdate[] = $code;
@@ -297,7 +297,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
-                    'sav_upd_att',
+                    'sav_upd_atcr',
                     'updateData - '.$entity->getId().' - create '.$code,
                     array('type'=>'create', 'attribute code'=>$code, 'new'=>$updatedData[$code]),
                     array('entity'=>$entity)
