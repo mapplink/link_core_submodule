@@ -173,6 +173,36 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @param int $nodeId
+     * @param int|string $entityType
+     * @param string $storeId
+     * @param string $uniqueId
+     * @return \Entity\Entity|null
+     */
+    public function isEntity($nodeId, $entityType, $storeId, $uniqueId)
+    {
+        $this->verifyNodeId($nodeId);
+        $this->verifyEntityType($entityType);
+        $this->getServiceLocator()->get('logService')
+            ->log(LogService::LEVEL_DEBUG,
+                'is_entity',
+                'isEntity - '.$nodeId.' - '.$entityType.' - '.$storeId.' - '.$uniqueId,
+                array('node_id'=>$nodeId, 'entity_type'=>$entityType, 'store_id'=>$storeId, 'unique_id'=>$uniqueId)
+            );
+
+        $isEntity = $this->getLoader()
+            ->areEntities(
+                $entityType,
+                $storeId,
+                array('UNIQUE_ID'=>$uniqueId),
+                array('UNIQUE_ID'=>'eq'),
+                array('limit'=>1, 'node_id'=>$nodeId)
+            );
+
+        return $isEntity;
+    }
+
+    /**
      * Load segregated orders
      * @param $nodeId
      * @param \Entity\Entity $entity
@@ -229,7 +259,6 @@ class EntityService implements ServiceLocatorAwareInterface
     
     /**
      * Loads the entity with the provided unique key from the database for the given node.
-     * 
      * @param int $nodeId
      * @param int|string $entityType
      * @param string $storeId

@@ -22,64 +22,118 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
 {
 
     /**
-     * Load entities using search and fill in all needed attributes
+     * Load skeleton entities using search and fill in all needed attributes
      * @param int|string $entityTypeId
      * @param int $storeId
      * @param array $searchData
-     * @param array $attribute_codes
+     * @param array $attributeCodes
      * @param array $searchType
      * @param array $options
      * @return \Entity\Entity[]
      * @throws MagelinkException
      */
-    public function loadEntities($entityTypeId, $storeId, $searchData, $attribute_codes, $searchType=array(), $options=array())
+    protected function getEntitiesLocateSelect($entityTypeId, $storeId, array $searchData, array $attributeCodes,
+        array $searchType = array(), array $options = array())
     {
-        if ($entityTypeId === FALSE) {
+        if ($entityTypeId === false) {
             throw new NodeException('No entity type ID passed to loadEntities');
         }
 
-        $entityTypeName = $this->getServiceLocator()->get('entityConfigService')->parseEntityTypeReverse($entityTypeId);
-
-        $attributes = array();
-        foreach ($attribute_codes as $attId) {
-            $d = $this->getAttribute($attId, $entityTypeId);
-            if (!$d || !(is_array($d) || $d instanceof \ArrayObject)) {
-                $this->getServiceLocator()->get('logService')
-                    ->log(LogService::LEVEL_DEBUG, 
-                        'load_noatt', 
-                        'loadEntities - failed to find attribute '.$attId.' for '.$entityTypeId.'', array('res'=>$d, 'debug'=>$this->getAttributeDebuggingData(), 'codes'=>$attribute_codes));
-                throw new NodeException('Could not find attribute '.$attId.' for '.$entityTypeId);
-            }
-            if (isset($d['fetch_data']) && !is_array($d['fetch_data']) && strlen($d['fetch_data'])) {
-                $d['fetch_data'] = unserialize($d['fetch_data']);
-            }
-            $attributes[$d['attribute_id']] = $d;
-        }
-
-        foreach ($searchData as $att=>$value) {
-            if (strtoupper($att) === $att) {
+        foreach ($searchData as $attributeCode=>$value) {
+            if (strtoupper($attributeCode) === $attributeCode) {
                 // Special tokens, i.e. UNIQUE_ID, allowed.
                 continue;
             }
-            if (strpos($att, '.') !== false) {
+            if (strpos($attributeCode, '.') !== FALSE) {
                 // Foreign-key types bypass initial checks (may fail later, but too difficult to sanity-check here)
                 continue;
             }
-            if (!in_array($att, $attribute_codes)) {
-                throw new NodeException('Invalid search attribute '.$att);
+            if (!in_array($attributeCode, $attributeCodes)) {
+                throw new NodeException('Invalid search attribute '.$attributeCode);
             }
         }
-        
+
         $locateSelect = $this->getLocateSelect($entityTypeId, $storeId, $searchData, $searchType, $options);
 
         $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_DEBUGEXTRA, 'load_locate', 'loadEntities - locate query:'.$locateSelect->getSqlString($this->getAdapter()->getPlatform()), array('query'=>$locateSelect->getSqlString($this->getAdapter()->getPlatform())));
+            ->log(
+                LogService::LEVEL_DEBUGEXTRA,
+                'load_locate',
+                'loadEntities - locate query:'.$locateSelect->getSqlString($this->getAdapter()->getPlatform()),
+                array('query' => $locateSelect->getSqlString($this->getAdapter()->getPlatform()))
+            );
+
+        return $locateSelect;
+    }
+
+    /**
+     * @param int|string $entityTypeId
+     * @param int $storeId
+     * @param array $searchData
+     * @param array $searchType
+     * @param array $options
+     * @return \Entity\Entity[]
+     * @throws MagelinkException
+     */
+    public function areEntities($entityTypeId, $storeId, array $searchData, array $searchType = array(),
+        array $options = array())
+    {
+        $locateSelect = $this->getEntitiesLocateSelect(
+            $entityTypeId,
+            $storeId,
+            $searchData,
+            array(),
+            $searchType,
+            $options
+        );
+
 
         try{
-            $result = $this->getAdapter()->query($locateSelect->getSqlString($this->getAdapter()->getPlatform()), \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
-        }catch(\Exception $ex) {
-            throw new MagelinkException('Error in locate query: '.$locateSelect->getSqlString($this->getAdapter()->getPlatform()), 0, $ex);
+            $result = $this->getAdapter()->query(
+                $locateSelect->getSqlString($this->getAdapter()->getPlatform()),
+                \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
+            );
+            $are = (bool) $result->count();
+        }catch (\Exception $exception) {
+            $are = FALSE;
         }
+
+        return $are;
+    }
+        /**
+     * Load entities using search and fill in all needed attributes
+     * @param int|string $entityTypeId
+     * @param int $storeId
+     * @param array $searchData
+     * @param array $attributeCodes
+     * @param array $searchType
+     * @param array $options
+     * @return \Entity\Entity[]
+     * @throws MagelinkException
+     */
+    public function loadEntities($entityTypeId, $storeId, array $searchData, array $attributeCodes,
+        array $searchType = array(), array $options = array())
+    {
+        $locateSelect = $this->getEntitiesLocateSelect(
+            $entityTypeId,
+            $storeId,
+            $searchData,
+            $attributeCodes,
+            $searchType,
+            $options
+        );
+
+        try{
+            $result = $this->getAdapter()->query(
+                $locateSelect->getSqlString($this->getAdapter()->getPlatform()),
+                \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
+            );
+        }catch( \Exception $ex ){
+            throw new MagelinkException(
+                'Error in locate query: '.$locateSelect->getSqlString($this->getAdapter()->getPlatform()), 0, $ex
+            );
+        }
+
         if (!$result) {
             throw new MagelinkException('Unknown error in locate select: '.$locateSelect->getSqlString($this->getAdapter()->getPlatform()));
         }
@@ -125,11 +179,30 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             return $res;
         }
 
-        $entityIds = array();
-        /**
-         * @var \Entity\Entity[] $entities
-         */
+        /** @var \Entity\Entity[] $entities */
         $entities = array();
+        $entityIds = array();
+
+        $entityTypeName = $this->getServiceLocator()->get('entityConfigService')->parseEntityTypeReverse($entityTypeId);
+        $attributes = array();
+        foreach ($attributeCodes as $attId) {
+            $d = $this->getAttribute($attId, $entityTypeId);
+            if (!$d || !(is_array($d) || $d instanceof \ArrayObject)) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(
+                        LogService::LEVEL_DEBUG,
+                        'load_noatt',
+                        'loadEntities - failed to find attribute '.$attId.' for '.$entityTypeId.'',
+                        array('res' => $d, 'debug' => $this->getAttributeDebuggingData(), 'codes' => $attributeCodes)
+                    );
+                throw new NodeException('Could not find attribute '.$attId.' for '.$entityTypeId);
+            }
+            if (isset($d['fetch_data']) && !is_array($d['fetch_data']) && strlen($d['fetch_data'])) {
+                $d['fetch_data'] = unserialize($d['fetch_data']);
+            }
+            $attributes[$d['attribute_id']] = $d;
+        }
+
         foreach ($result as $row) {
             $entityIds[] = $row['entity_id'];
 
@@ -193,16 +266,16 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
     /**
      * Load additional attributes into a given entity
      * @param \Entity\Entity $entity
-     * @param array $attribute_codes
+     * @param array $attributeCodes
      * @return \Entity\Entity
      */
-    public function enhanceEntity(\Entity\Entity &$entity, $attribute_codes)
+    public function enhanceEntity(\Entity\Entity &$entity, $attributeCodes)
     {
-        if (!is_array($attribute_codes) || !count($attribute_codes)) {
+        if (!is_array($attributeCodes) || !count($attributeCodes)) {
             throw new NodeException('Invalid attribute list passed to enhanceEntity');
         }
         $attributes = array();
-        foreach ($attribute_codes as $attId) {
+        foreach ($attributeCodes as $attId) {
             if (!$attId || !strlen($attId)) {
                 continue;
             }
@@ -224,7 +297,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
                 $entity->populateRaw($entityValues[$entity->getId()]);
             }
         }else{
-            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA, 'enhance_empty', 'enhanceEntity - no fill query for '.$entity->getId().' with req '.implode(', ', $attribute_codes), array('atts'=>$attribute_codes));
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA, 'enhance_empty', 'enhanceEntity - no fill query for '.$entity->getId().' with req '.implode(', ', $attributeCodes), array('atts'=>$attributeCodes));
         }
         
         return $entity;
