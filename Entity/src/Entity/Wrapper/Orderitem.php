@@ -190,19 +190,28 @@ class Orderitem extends AbstractWrapper
     }
 
     /**
+     * @return float $weight
+     * @throws MagelinkException
+     */
+    public function getWeight()
+    {
+        $product = $this->getProduct();
+        if ($product instanceof Product) {
+            $weight = $product->getData('weight', 0);
+        }else{
+            $weight = 0;  // ToDo : Log this
+        }
+
+        return $weight;
+    }
+
+    /**
      * @return float $totalWeight
      * @throws MagelinkException
      */
     public function getTotalWeight()
     {
-        $product = $this->getProduct();
-        if ($product instanceof Product) {
-            $totalWeight = $product->getData('weight', 0) * $this->getDeliveryQuantity();
-        }else{
-            // ToDo : Log this
-            $totalWeight = 0;
-        }
-
+        $totalWeight = $this->getWeight() * $this->getDeliveryQuantity();
         return $totalWeight;
     }
 
