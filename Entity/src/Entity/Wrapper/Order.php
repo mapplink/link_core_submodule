@@ -637,6 +637,20 @@ class Order extends AbstractWrapper
     }
 
     /**
+     * @return float $totalWeight
+     * @throws MagelinkException
+     */
+    public function getTotalWeight()
+    {
+        $totalWeight = 0;
+
+        foreach ($this->getOrderitems() as $orderitem) {
+            $totalWeight = $orderitem->getTotalWeight();
+        }
+
+        return $totalWeight;
+    }
+    /**
      * Get Aggregated Items Refunds
      * @return float $itemsRefund
      */
@@ -792,7 +806,7 @@ class Order extends AbstractWrapper
      */
     public function getAllShippingRefunds()
     {
-        return $this->getShippingRefunds();;
+        return $this->getShippingRefunds();
     }
 
 }

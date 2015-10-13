@@ -251,6 +251,134 @@ var PicklistitemScan = {
     }
 }
 
+var OrderAdminPacking = {
+    init: function() {
+        $('#orderId').focus();
+
+        $('#orderId').keypress(function(event) { if (event.which == 13) {
+            OrderAdminPacking.orderIdNext();
+            return OrderAdminPacking.ajaxOrderCall();
+        }});
+        $('#orderId').blur(function() {
+            OrderAdminPacking.orderIdNext();
+            return OrderAdminPacking.ajaxOrderCall();
+        });
+
+        $('#userId').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.userIdNext(); }});
+
+        $('#code').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.codeNext(); }});
+        $('#code').blur(function() { return OrderAdminPacking.codeNext(); });
+
+        $('#weight').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.weightNext(); }});
+        $('#weight').blur(function() { return OrderAdminPacking.weightNext(); });
+    },
+
+    ajaxOrderCall: function() {
+        $.ajax({
+            url: '/packing/adjust-packing-screen/'+$('#orderId').val(),
+            dataType: 'json'
+        })
+        .done(function(data) {
+            if (data.success) {
+                OrderAdminPacking.hideOrderComment();
+                OrderAdminPacking.setUseApi(data.useApi);
+                OrderAdminPacking.setCodeLabel(data.codeLabel);
+                OrderAdminPacking.setEnterWeight(data.enterWeight);
+            }
+        })
+        .fail(function(data) {
+            if ($('#orderId').val() == '') {
+                OrderAdminPacking.displayOrderComment('Please choose an order.');
+                OrderAdminPacking.orderIdStay();
+            }else{
+                OrderAdminPacking.displayOrderComment('Error occurred, please check order increment id!');
+            }
+        })
+        .always(function(data) {
+            $('#packing').attr('action', '/packing/complete/'+$('#orderId').val());
+        });
+
+        return false;
+    },
+    displayOrderComment: function(comment) {
+        $('#orderComment').html(comment);
+        $('#orderComment').addClass('alert alert-error');
+        $('#orderComment').show();
+    },
+    hideOrderComment: function() {
+        $('#orderComment').hide();
+        $('#orderComment').removeClass('alert alert-error');
+        $('#orderComment').html('');
+    },
+    isApiMethodChangeableToANonApiMethod: function() {
+        return false;
+    },
+    setUseApi: function(useApi) {
+        if (useApi) {
+            if (OrderAdminPacking.isApiMethodChangeableToANonApiMethod()) {
+                $('#noApi-group').find('input:hidden').each(function () {
+                    $('<input type="checkbox" />').attr({id: this.id, class: this.class}).insertBefore(this);
+                }).remove();
+                $('#noApi-group').css('display', 'inline-block');
+            }else{
+                $('#noApi').attr('value', 0);
+                $('#completeField').attr('href', '#completePacking');
+            }
+        }else{
+            $('#noApi-group').hide();
+            $('#noApi-group').find('input:checkbox').each(function () {
+                $('<input type="hidden" />').attr({id: this.id, class: this.class}).insertBefore(this);
+            }).remove();
+            $('#noApi').attr('value', 'On');
+            $('#completeField').removeAttr('href');
+        }
+        $('#noApi').removeAttr('checked');
+    },
+    setCodeLabel: function(codeLabel) {
+        if (codeLabel) {
+            $('#group-code label').html(codeLabel+':');
+        }
+    },
+    setEnterWeight: function(enterWeight) {
+        if (enterWeight) {
+            $('#group-weight').show();
+            $('#enterWeight').val('On');
+        }else{
+            $('#group-weight').hide();
+            $('#enterWeight').val(0);
+        }
+    },
+    orderIdStay: function() {
+        $('#orderId').val('');
+        $('#orderId').focus();
+        return false;
+    },
+    orderIdNext: function() {
+        $('#userId').val('');
+        $('#userId').focus();
+        return false;
+    },
+    userIdNext: function() {
+        $('#code').val('');
+        $('#code').focus();
+        return false;
+    },
+    codeNext: function() {
+        $('#weight').val('');
+        if ($('#enterWeight').val() == 'On') {
+            $('#weight').focus();
+        }else{
+            $('#completeField').focus();
+        }
+        return false;
+    },
+    weightNext: function() {
+        $('#completeField').focus();
+        return false;
+    }
+}
+
+
 var PackingOrder = {
     init: function() {
         PackingOrder.initForm();
@@ -258,12 +386,9 @@ var PackingOrder = {
     },
 
     initForm: function() {
-        document.getElementById('trackingCodeField').focus();
         $('#trackingCodeField').focus();
 
-        $('#trackingCodeField').blur(function(){
-            $('form.jsPackingOrderForm').submit();
-        });
+        $('#trackingCodeField').blur(function(){ $('form.jsPackingOrderForm').submit(); });
 
         $('#completePacking .jsChkAdditionalNote').click(function(){
             $('#completePacking .jsChkAdditionalNoteSection').toggle();
@@ -297,7 +422,7 @@ var PackingOrder = {
     },
 
     initInlineEdit: function() {
-        $('.jsPackingOrderForm .jsTextTrackingCode').click(function(){
+        $('.jsPackingOrderForm .jsTextTrackingCode').click(function() {
             $(this).hide().siblings('.jsInputTrackingCode:first').show().find('input:first').focus();
         })
     }

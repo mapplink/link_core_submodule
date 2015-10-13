@@ -53,6 +53,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     /**
      * @param array $array
      * @param string $key
+     * @param mixed $default
      * @return array $subArray
      */
     protected function getArrayKeyData(array $array, $key, $default = array())

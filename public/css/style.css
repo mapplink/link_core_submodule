@@ -1328,10 +1328,13 @@ color: #333;
 .container {
 	width: 100% !important;
 }
-.scanInput {
+.scanInput, .scanInputWide {
 	height: 46px;
 	line-height: 1.33;
 	font-size: 18px;
+}
+.scanInputWide {
+	width: 440px !important;
 }
 .overflowOK {
 	overflow: visible;

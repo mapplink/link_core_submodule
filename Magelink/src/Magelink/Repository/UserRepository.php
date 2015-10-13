@@ -36,7 +36,7 @@ class UserRepository extends EntityRepository
      * Get username index by id
      * @return array
      */
-    public function getAllUserNmaes() 
+    public function getAllUserNames()
     {
         $dql = "SELECT u FROM \Magelink\Entity\User u";
         

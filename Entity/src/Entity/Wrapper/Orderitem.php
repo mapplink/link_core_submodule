@@ -13,6 +13,7 @@ namespace Entity\Wrapper;
 
 use Entity\Entity;
 use Entity\Wrapper\Product;
+use Magelink\Exception\MagelinkException;
 use Magento\Service\MagentoService;
 
 
@@ -186,6 +187,32 @@ class Orderitem extends AbstractWrapper
         $isShippable = $magentoService->isProductTypeShippable($this->getData('product_type'));
 
         return $isShippable;
+    }
+
+    /**
+     * @return float $weight
+     * @throws MagelinkException
+     */
+    public function getWeight()
+    {
+        $product = $this->getProduct();
+        if ($product instanceof Product) {
+            $weight = $product->getData('weight', 0);
+        }else{
+            $weight = 0;  // ToDo : Log this
+        }
+
+        return $weight;
+    }
+
+    /**
+     * @return float $totalWeight
+     * @throws MagelinkException
+     */
+    public function getTotalWeight()
+    {
+        $totalWeight = $this->getWeight() * $this->getDeliveryQuantity();
+        return $totalWeight;
     }
 
 }

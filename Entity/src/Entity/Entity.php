@@ -242,8 +242,8 @@ class Entity implements ServiceLocatorAwareInterface
                 }
             }
 
-            $message = 'Invalid attribute specified for getData ('.$this->getTypeStr().', by '.$this->getLoadedNodeId()
-                .') - ' . $key.'. Check attribute existence and subscription.';
+            $message = "Invalid attribute specified for ".ucfirst($this->getTypeStr())."->getData('".$key."') on node "
+                .$this->getLoadedNodeId().". Check attribute existence and subscription.";
             throw new MagelinkException($message);
         }
 
