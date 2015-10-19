@@ -645,7 +645,7 @@ class Order extends AbstractWrapper
         $totalWeight = 0;
 
         foreach ($this->getOrderitems() as $orderitem) {
-            $totalWeight = $orderitem->getTotalWeight();
+            $totalWeight += $orderitem->getTotalWeight();
         }
 
         return $totalWeight;
