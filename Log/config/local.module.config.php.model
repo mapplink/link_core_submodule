@@ -6,6 +6,10 @@ return array(
             'class'=>'\Log\Cron\LogClear',
             'interval'=>180,
             'offset'=>20,
+            'lockTime'=>10,
+            'autoUnlock'=>FALSE,
+            'unlockTime'=>200,
+            'overdue'=>FALSE
         )
     )
 );

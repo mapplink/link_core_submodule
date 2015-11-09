@@ -49,6 +49,8 @@ return array (
             'interval'=>30,
             'offset'=>0,
             'lockTime'=>180,
+            'autoUnlock'=>FALSE,
+            'unlockTime'=>360,
             'overdue'=>TRUE
         )
     ),
