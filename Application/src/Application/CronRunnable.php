@@ -348,7 +348,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             if ($this->notifyClient()) {
                 $logMessage .= ' Please check the synchronisation process `'.$this->getName().'` in the admin area.';
                 $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities, TRUE);
-            }else{
+            }elseif ($this->notifyAdmin()) {
                 $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
                 $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities);
             }
@@ -529,6 +529,21 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     public function canAdminUnlock()
     {
         return !($this->getAdminLockedSeconds() > 0);
+    }
+
+    /**
+     * @return bool $notifyAdmin
+     */
+    public function notifyAdmin()
+    {
+        if ($numberOfIntervalsBeforeNotifying = $this->_applicationConfigService->getConfigFirstAdminNotification()) {
+            $notifyAfter = $this->lockedSince() + $this->getIntervalSeconds() * $numberOfIntervalsBeforeNotifying;
+            $notify = (time() >= $notifyAfter);
+        }else{
+            $notify = FALSE;
+        }
+
+        return $notify;
     }
 
     /**

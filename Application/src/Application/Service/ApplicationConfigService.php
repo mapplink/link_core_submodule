@@ -128,7 +128,9 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     public function getConfigFirstAdminNotification()
     {
         $firstNotifications = $this->getConfigFirstNotifications();
-        return max($firstNotifications['admin'], 1)  - $this->getConfigFirstNotificationTolerance();
+        $firstNotification = max($firstNotifications['admin'], 1)  - $this->getConfigFirstNotificationTolerance();
+
+        return $firstNotification;
     }
 
     /**
