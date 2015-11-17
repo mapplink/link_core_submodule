@@ -120,6 +120,11 @@ class EmailLogger extends AbstractLogger
         $content = 'MageLink error thrown! Details:'.PHP_EOL.PHP_EOL
             .implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
 
+        $maxLength = 100000;
+        if ($content > $maxLength) {
+            $content = mb_substr($content, 0, $maxLength * 0.9)."\r\n...\r\n".mb_substr($content, -$maxLength * 0.1);
+        }
+
         mail(ErrorHandler::ERROR_TO, $subject, $content, 'Content-Type: text/plain');
 
         $daytime = (date('H') > $this->clientEmailStarthour) && (date('H') < $this->clientEmailEndhour);
