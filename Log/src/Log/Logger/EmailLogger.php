@@ -121,7 +121,7 @@ class EmailLogger extends AbstractLogger
             .implode(PHP_EOL.PHP_EOL.'----------'.PHP_EOL.PHP_EOL, $this->lastCache);
 
         $maxLength = 100000;
-        if ($content > $maxLength) {
+        if (mb_strlen($content) > $maxLength) {
             $content = mb_substr($content, 0, $maxLength * 0.9)."\r\n...\r\n".mb_substr($content, -$maxLength * 0.1);
         }
 
