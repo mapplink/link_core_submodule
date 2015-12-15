@@ -817,13 +817,13 @@ class EntityService implements ServiceLocatorAwareInterface
         $result = $this->getTableGateway('entity_identifier')
             ->select(array('entity_id'=>$entity, 'node_id'=>$nodeId));
 
-        $return = NULL;
+        $localId = NULL;
         foreach ($result as $row) {
-            $return = $row['local_id'];
+            $localId = $row['local_id'];
             break;
         }
 
-        return $return;
+        return $localId;
     }
 
     /**
