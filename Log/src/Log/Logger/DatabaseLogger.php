@@ -103,37 +103,39 @@ class DatabaseLogger extends AbstractLogger {
 
         try{
             $success = $this->_tableGateway->insert($newRow);
-        }catch(\Exception $e){
+        }catch(\Exception $exception) {
             $success = FALSE;
         }
 
         if (!$success) {
             if (php_sapi_name() == 'cli') {
-                echo 'ERROR saving Log Data' . PHP_EOL;
+                $newRow['exception'] = (isset($exception) ? $exception->getMessage() : '<no exception>');
+                echo 'ERROR saving log data on the database', PHP_EOL;
                 print_r($newRow);
                 echo PHP_EOL;
             }
+
             unset($newRow['user_id']);
             unset($newRow['node_id']);
             unset($newRow['entity_id']);
             unset($newRow['router_filter_id']);
+            unset($newRow['exception']);
 
             try{
                 $success = $this->_tableGateway->insert($newRow);
-            }catch(\Exception $e){
+            }catch(\Exception $repetitiveException) {
                 $success = FALSE;
             }
 
-            if (!$success) {
-                if (php_sapi_name() == 'cli') {
-                    echo 'DOUBLE ERROR saving Log Data' . PHP_EOL;
-                    print_r($newRow);
-                    echo PHP_EOL;
-                    throw new MagelinkException('DOUBLE ERROR saving Log Data');
-                }
+            if (!$success && php_sapi_name() == 'cli') {
+                $newRow['exception'] = (isset($exception) ? $exception->getMessage() : '<no exception>');
+                $errorMessage = '[log_db_nosave] REPETITIVE ERROR saving log data';
+                echo $errorMessage, PHP_EOL;
+                print_r($newRow);
+                echo PHP_EOL;
+                throw new MagelinkException($errorMessage);
             }
         }
-
     }
 
     /**
