@@ -1,16 +1,15 @@
 <?php
-
-return array(
+$navigation = array(
     'navigation'=>array(
         'default'=>array(
-            array(
+            'dashboard'=>array(
                 'label'=>'Dashboard',
                 'route'=>'home',
                 'iconClass'=>'glyphicon glyphicon-dashboard',
                 'pages'=>array(
                 ),
             ),
-            array(
+            'entities'=>array(
                 'label'=>'Entities',
                 'uri'=>'/entities',
                 'iconClass'=>'glyphicon glyphicon-th',
@@ -49,74 +48,11 @@ return array(
                     ),
                 )
             ),
-            array(
-                'label'=>'Orders',
-                'uri'=>'/hops_order',
-                'iconClass'=>'glyphicon glyphicon-shopping-cart',
-                'pages'=>array(
-                    array(
-                        'label'=>'Pending',
-                        'uri'=>'/hops_order/showpending',
-                    ),
-                    array(
-                        'label'=>'Pending On Account',
-                        'uri'=>'/hops_order/showonaccountpending',
-                    ),
-                    array(
-                        'label'=>'New',
-                        'uri'=>'/hops_order/shownew',
-                    ),
-                    array(
-                        'label'=>'Held',
-                        'uri'=>'/hops_order/showheld',
-                    ),
-/* <<<HopsSpecific */ 
-                    array(
-                        'label'=>'Queued',
-                        'uri'=>'/hops_order/showqueued',
-                    ),
-                    array(
-                        'label'=>'To Pick',
-                        'uri'=>'/hops_order/showpicking',
-                    ),
-                    array(
-                        'label'=>'To Print',
-                        'uri'=>'/hops_order/showpackingnew',
-                    ),
-                    array(
-                        'label'=>'To Pack',
-                        'uri'=>'/hops_order/showpackingprinted',
-                    ),
-                    array(
-                        'label'=>'Awaiting Stock',
-                        'uri'=>'/hops_order/showawaitingstock',
-                    ),
-/* HopsSpecific; */
-                    array(
-                        'label'=>'Flagged',
-                        'uri'=>'/hops_order/showflagged',
-                    )
-                )
-            ),
-/* <<<HopsSpecific */ 
-            array(
-                'label'=>'Picklist',
-                'route'=>'hops_picklist',
-                'iconClass'=>'glyphicon glyphicon-list',
-            ),
-            array(
-                'label'=>'Pick',
-                'route'=>'picklist-scanning/start',
-                'iconClass'=>'glyphicon glyphicon-edit',
-            ),
-            array(
-                'label'=>'Pack',
-                'route'=>'packing/start',
-                'iconClass'=>'glyphicon glyphicon-gift',
-            ),
-/* HopsSpecific; */
-
-            array(
+            'orders'=>array(),
+            'picklist'=>array(),
+            'pick'=>array(),
+            'pack'=>array(),
+            'admin'=>array(
                 'label'=>'Admin',
                 'route'=>'user-admin/list',
                 'iconClass'=>'glyphicon glyphicon-user',
@@ -132,20 +68,10 @@ return array(
                     array(
                         'label'=>'Email Params',
                         'route'=>'email-template-param-admin/list',
-                    ),
-/* <<<HopsSpecific */
-                    array(
-                        'label'=>'Scanner Location',
-                        'route'=>'hops_scannerlocation',
-                    ),
-                    array(
-                        'label'=>'Pigeon Hole',
-                        'route'=>'hops_pigeonhole',
                     )
-/* HopsSpecific; */
                 )
             ),
-            array(
+            'system'=>array(
                 'label'=>'System',
                 'route'=>'config-admin/list',
                 'iconClass'=>'glyphicon glyphicon-cog',
@@ -175,3 +101,20 @@ return array(
         )
     )
 );
+
+$hopsNavigation = str_replace('magelink/Web', 'module/HOPS', __FILE__);
+if (file_exists($hopsNavigation)) {
+    $navigation = array_replace_recursive(
+        $navigation,
+        include $hopsNavigation
+    );
+}
+
+foreach ($navigation['navigation']['default'] as $label=>$data) {
+    $isPlaceholder = !is_array($data) || count($data) == 0;
+    if ($isPlaceholder) {
+        unset($navigation['navigation']['default'][$label]);
+    }
+}
+
+return $navigation;
