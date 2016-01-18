@@ -86,9 +86,11 @@ class CronjobAdminController extends AbstractCRUDController
 
                     if ($cron->canAdminUnlock()) {
                         $unlockAction = '<form method="POST" action="#" class="form-inline">'
-                            .'<a href="/cronjob-admin/edit/'.$name.'" class="btn btn-danger">Unlock now</a>'
-                            .'</form>'
-                            .' If possible, please check with the system administrator first.';
+                            .'<a href="/cronjob-admin/edit/'.$name.'" class="btn btn-danger">Unlock now</a>';
+                        if ($name == 'synchronizer') {
+                            $unlockAction .= ' &nbsp; If possible, please check with the system administrator first.';
+                        }
+                        $unlockAction .= '</form>';
                     }else{
                         $lockedMinutes = ceil($cron->getAdminLockedSeconds() / 60);
                         $unlockAction = 'Cannot be manually unlocked for the next '.$lockedMinutes.' minute'
