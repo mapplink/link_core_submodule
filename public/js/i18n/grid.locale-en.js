@@ -10,7 +10,7 @@
 $.jgrid = $.jgrid || {};
 $.extend($.jgrid,{
 	defaults : {
-		recordtext: "View {0} - {1} of {2}",
+		recordtext: "View {0} - {1}", // of {2}",
 		emptyrecords: "No records to view",
 		loadtext: "Loading...",
 		pgtext : "Page {0} of {1}"
