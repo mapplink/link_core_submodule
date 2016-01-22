@@ -52,7 +52,7 @@ class Creditmemo extends AbstractWrapper
      */
     public function getNonCashRefund()
     {
-        $nonCashRefund = $this->getData('customer_balance');
+        $nonCashRefund = $this->getData('customer_balance_ref');
         return (float) $nonCashRefund;
     }
 
