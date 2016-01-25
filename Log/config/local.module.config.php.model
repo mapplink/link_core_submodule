@@ -1,12 +1,14 @@
 <?php
 
-return array (
+return array(
     'magelink_cron'=>array(
         'logclear'=>array(
             'class'=>'\Log\Cron\LogClear',
             'interval'=>180,
             'offset'=>20,
+            'lockTime'=>10,
             'autoUnlock'=>FALSE,
+            'unlockTime'=>200,
             'overdue'=>FALSE
         )
     ),
@@ -18,8 +20,8 @@ return array (
                     'type'=>'Text',
                     'default'=>'10',
                     'required'=>FALSE
-                ),
-            ),
+                )
+            )
         )
     )
 );
