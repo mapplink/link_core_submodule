@@ -287,6 +287,8 @@ var OrderAdminPacking = {
                 OrderAdminPacking.setUseApi(data.useApi);
                 OrderAdminPacking.setEnterWeight(data.enterWeight);
                 OrderAdminPacking.setEnterTracking(data.enterTracking);
+            }else{
+                OrderAdminPacking.displayOrderComment(data.message);
             }
         })
         .fail(function(data) {
