@@ -296,7 +296,13 @@ var OrderAdminPacking = {
                 OrderAdminPacking.displayOrderComment('Please choose an order.');
                 OrderAdminPacking.orderIdStay();
             }else{
-                OrderAdminPacking.displayOrderComment('Error occurred, please check order increment id!');
+                var message = 'Error occurred';
+                if (data.message) {
+                    message += ': '.data.message;
+                }else{
+                    message += ', please check order increment id!';
+                }
+                OrderAdminPacking.displayOrderComment(message);
             }
         })
         .always(function(data) {
