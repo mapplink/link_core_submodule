@@ -264,13 +264,16 @@ var OrderAdminPacking = {
             return OrderAdminPacking.ajaxOrderCall();
         });
 
-        $('#userId').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.userIdNext(); }});
-
         $('#code').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.codeNext(); }});
         $('#code').blur(function() { return OrderAdminPacking.codeNext(); });
 
+        $('#userId').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.userIdNext(); }});
+
         $('#weight').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.weightNext(); }});
         $('#weight').blur(function() { return OrderAdminPacking.weightNext(); });
+
+        $('#tracking_code').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.trackingNext(); }});
+        $('#tracking_code').blur(function() { return OrderAdminPacking.trackingNext(); });
     },
 
     ajaxOrderCall: function() {
@@ -282,8 +285,10 @@ var OrderAdminPacking = {
             if (data.success) {
                 OrderAdminPacking.hideOrderComment();
                 OrderAdminPacking.setUseApi(data.useApi);
-                OrderAdminPacking.setCodeLabel(data.codeLabel);
                 OrderAdminPacking.setEnterWeight(data.enterWeight);
+                OrderAdminPacking.setEnterTracking(data.enterTracking);
+            }else{
+                OrderAdminPacking.displayOrderComment(data.message);
             }
         })
         .fail(function(data) {
@@ -291,7 +296,13 @@ var OrderAdminPacking = {
                 OrderAdminPacking.displayOrderComment('Please choose an order.');
                 OrderAdminPacking.orderIdStay();
             }else{
-                OrderAdminPacking.displayOrderComment('Error occurred, please check order increment id!');
+                var message = 'Error occurred';
+                if (data.message) {
+                    message += ': '.data.message;
+                }else{
+                    message += ', please check order increment id!';
+                }
+                OrderAdminPacking.displayOrderComment(message);
             }
         })
         .always(function(data) {
@@ -348,31 +359,49 @@ var OrderAdminPacking = {
             $('#enterWeight').val(0);
         }
     },
+    setEnterTracking: function(enterTracking) {
+        if (enterTracking) {
+            $('#group-tracking').show();
+            $('#enterTracking').val('On');
+        }else{
+            $('#group-tracking').hide();
+            $('#enterTracking').val(0);
+        }
+    },
     orderIdStay: function() {
         $('#orderId').val('');
         $('#orderId').focus();
         return false;
     },
     orderIdNext: function() {
-        $('#userId').val('');
-        $('#userId').focus();
-        return false;
-    },
-    userIdNext: function() {
         $('#code').val('');
         $('#code').focus();
         return false;
     },
     codeNext: function() {
+        $('#userId').val('');
+        $('#userId').focus();
+        return false;
+    },
+    userIdNext: function() {
         $('#weight').val('');
         if ($('#enterWeight').val() == 'On') {
             $('#weight').focus();
         }else{
-            $('#completeField').focus();
+            OrderAdminPacking.weightNext();
         }
         return false;
     },
     weightNext: function() {
+        $('#tracking_code').val('');
+        if ($('#enterTracking').val() == 'On') {
+            $('#tracking_code').focus();
+        }else{
+            OrderAdminPacking.trackingNext();
+        }
+        return false;
+    },
+    trackingNext: function() {
         $('#completeField').focus();
         return false;
     }
