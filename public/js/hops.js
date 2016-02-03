@@ -268,6 +268,7 @@ var OrderAdminPacking = {
         $('#code').blur(function() { return OrderAdminPacking.codeNext(); });
 
         $('#userId').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.userIdNext(); }});
+        $('#userId').blur(function() { return OrderAdminPacking.userIdNext(); });
 
         $('#weight').keypress(function(event) { if (event.which == 13) { return OrderAdminPacking.weightNext(); }});
         $('#weight').blur(function() { return OrderAdminPacking.weightNext(); });
