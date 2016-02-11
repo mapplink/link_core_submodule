@@ -37,7 +37,7 @@ return array (
         'creditmemo'=>'\Entity\Wrapper\Creditmemo',
         'creditmemoitem'=>'\Entity\Wrapper\Creditmemoitem'
     ),
-
+/*
     'magelink_cron'=>array(
         'entity_tester'=>array(
             'class'=>'\Entity\Cron\Tester',
@@ -45,7 +45,7 @@ return array (
             'offset'=>0
         )
     ),
-
+*/
     'console'=>array(
         'router'=>array(
             'routes'=>array(
