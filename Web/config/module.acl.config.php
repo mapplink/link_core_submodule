@@ -8,6 +8,7 @@ return array(
         array('controller'=>'Web\Controller\Default', 'roles'=>array('manager')),
         array('controller'=>'Web\Controller\CRUD\UserAdmin', 'roles'=>array('manager')),
         array('controller'=>'Web\Controller\CRUD\LocationAdmin', 'roles'=>array('manager')),
+        array('controller'=>'Web\Controller\CRUD\EmailSenderAdmin', 'roles'=>array('manager')),
         array('controller'=>'Web\Controller\CRUD\EmailTemplateAdmin', 'roles'=>array('manager')),
         array('controller'=>'Web\Controller\CRUD\EmailTemplateParamAdmin', 'roles'=>array('manager')),
         array('controller'=>'Web\Controller\CRUD\EmailLogAdmin', 'roles'=>array('manager')),

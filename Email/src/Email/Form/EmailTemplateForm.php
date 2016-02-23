@@ -1,12 +1,10 @@
 <?php
 /**
- * Email\Form
- *
  * @category Email
- * @package Email\Form
+ * @package Form
  * @author Seo Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
- * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @copyright Copyright (c) 2014- LERO9 Ltd.
  * @license Commercial - All Rights Reserved
  */
 
@@ -18,7 +16,7 @@ use Email\Entity\EmailTemplate;
 
 
 class EmailTemplateForm extends DoctrineZFBaseForm
-{  
+{
 
     /**
      * Constructor
@@ -26,7 +24,7 @@ class EmailTemplateForm extends DoctrineZFBaseForm
      * @param string $name
      */
     public function __construct(\Doctrine\ORM\EntityManager $entityManager, $name = null)
-    {   
+    {
         parent::__construct($entityManager, $name);
 
         $this->initFields();
@@ -35,93 +33,85 @@ class EmailTemplateForm extends DoctrineZFBaseForm
 
     /**
      * Set up fields
-     * @param  array $excludeRoleIds 
-     * @return 
+     * @param  array $excludeRoleIds
+     * @return
      */
     protected function initFields()
     {
         $this->add(array(
-            'name' => 'templateId',
-            'type' => 'Hidden',
+            'name'=>'templateId',
+            'type'=>'Hidden'
         ));
 
         $this->add(array(
-            'name' => 'humanName',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Name',
-            ),
+            'name'=>'storeId',
+            'type'=>'Number',
+            'options'=>array('label'=>'Store id (use 0 for all stores)')
         ));
 
         $this->add(array(
-            'name' => 'code',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Code (either \'default\' or the shipping method code)',
-            ),
+            'name'=>'humanName',
+            'type'=>'Text',
+            'options'=>array('label'=>'Name')
         ));
 
         $this->add(array(
-            'type' => 'Select',
-            'name' => 'mimeType',
-            'options' => array(
-                'label' => 'Content Type',
-                'value_options' => array_combine(EmailTemplate::getAllMimeTypes(), EmailTemplate::getAllMimeTypes())
-            ),
+            'name'=>'code',
+            'type'=>'Text',
+            'options'=>array('label'=>'Code (either \'default\' or the shipping method code)')
+        ));
+
+        $this->add(array(
+            'type'=>'Select',
+            'name'=>'mimeType',
+            'options'=>array(
+                'label'=>'Content Type',
+                'value_options'=>array_combine(EmailTemplate::getAllMimeTypes(), EmailTemplate::getAllMimeTypes())
+            )
         ));
 
         //Retrieve roles from a many-to-many relationship
         $this->add(array(
-            'type' => 'DoctrineModule\Form\Element\ObjectSelect',
-            'name' => 'emailTemplateSection',
-            'options' => array(
-                'object_manager' => $this->getEntityManager(),
-                'target_class'   => 'Email\Entity\EmailTemplateSection',
-                'label_generator' => function($targetEntity) {
+            'type'=>'DoctrineModule\Form\Element\ObjectSelect',
+            'name'=>'emailTemplateSection',
+            'options'=>array(
+                'object_manager'=>$this->getEntityManager(),
+                'target_class'=>'Email\Entity\EmailTemplateSection',
+                'label_generator'=>function($targetEntity) {
                     return ' ' . ((string) $targetEntity);
                 },
-                'label' => 'Section',
-            ),
+                'label'=>'Section'
+            )
         ));
 
         $this->add(array(
-            'name' => 'title',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Subject',
-            ),
+            'name'=>'title',
+            'type'=>'Text',
+            'options'=>array('label'=>'Subject')
         ));
 
         $this->add(array(
-            'name' => 'senderName',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Sender Name',
-            ),
+            'name'=>'senderName',
+            'type'=>'Text',
+            'options'=>array('label'=>'Sender Name (overwrites the default sender names)')
         ));
 
         $this->add(array(
-            'name' => 'senderEmail',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Sender Email',
-            ),
+            'name'=>'senderEmail',
+            'type'=>'Text',
+            'options'=>array('label'=>'Sender Email (overwrites the default sender emails)')
         ));
 
         $this->add(array(
-            'name' => 'body',
-            'type' => 'Textarea',
-            'options' => array(
-                'label' => 'Template',
-            ),
+            'name'=>'body',
+            'type'=>'Textarea',
+            'options'=>array('label'=>'Template')
         ));
 
         $this->add(array(
-            'name' => 'submit',
-            'type' => 'Submit',
-            'attributes' => array(
-                'value' => 'Save',
-            ),
+            'name'=>'submit',
+            'type'=>'Submit',
+            'attributes'=>array('value'=>'Save')
         ));
     }
 
@@ -132,15 +122,12 @@ class EmailTemplateForm extends DoctrineZFBaseForm
     {
         $inputFilter = new InputFilter();
         $inputFilter->add(array(
-            'name'     => 'senderEmail',
-            'required' => true,
-            'validators' => array(
-                array(
-                    'name' => 'EmailAddress',
-                ),
-            ),
+            'name'=>'senderEmail',
+            'required'=>FALSE,
+            'validators'=>array(
+                array('name'=>'EmailAddress')
+            )
         ));
-
         $this->setInputFilter($inputFilter);
     }
 

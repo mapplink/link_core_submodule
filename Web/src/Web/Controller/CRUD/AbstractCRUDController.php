@@ -11,20 +11,40 @@
 
 namespace Web\Controller\CRUD;
 
-use Zend\View\Model\ViewModel;
-use Zend\Filter\Word\CamelCaseToSeparator;
+use Magelink\Exception\MagelinkException;
 use Web\Controller\BaseController;
 use Web\Helper\Paginator;
 use Web\Form\DoctrineZFBaseForm;
 use Web\Helper\ListViewSorter;
 use Web\Helper\CRUDRouteGenerator;
 use Web\Helper\CRUDSearchFilter;
+use Zend\View\Model\ViewModel;
+use Zend\Filter\Word\CamelCaseToSeparator;
 
 /**
  * AbstractCRUDController for generating admin interface
  */
 abstract class AbstractCRUDController extends BaseController
 {
+
+    /** @var \Web\Helper\CRUDRouteGenerator $this->routeGenerator */
+    protected $routeGenerator;
+    /** @var  \Doctrine\ORM\QueryBuilder $this->queryBuilder */
+    protected $queryBuilder;
+
+    protected $name;
+    protected $formClassName;
+    protected $searchFilter;
+    protected $columnSorter;
+    protected $isFilterOn = FALSE;
+
+
+    public function __construct()
+    {
+        $this->setDefaultName();
+        $this->setDefaultFormClassName();
+    }
+
     /**
      * Child classes should override to return the Entity class name that this CRUD controller works on.
      * @return string
@@ -35,7 +55,8 @@ abstract class AbstractCRUDController extends BaseController
      * Child classes can override to return the number of items per page
      * @return int
      */
-    protected function getResultsPerPage(){
+    protected function getResultsPerPage()
+    {
         return 20;
     }
 
@@ -76,7 +97,7 @@ abstract class AbstractCRUDController extends BaseController
      * @return object
      */
     protected function getPaginator()
-    { 
+    {
         if (!($queryBuilder = $this->getQueryBuilder())) {
             $queryBuilder = $this->getEntityManager()
                 ->createQueryBuilder()
@@ -93,12 +114,11 @@ abstract class AbstractCRUDController extends BaseController
 
         $paginator->setPage($this->params('page', 1))
             ->setRouteName($this->getRouteGenerator()->getRouteName('list'))
-            ->setRouteQueries($this->params()->fromQuery())
-        ;
+            ->setRouteQueries($this->params()->fromQuery());
 
         return $paginator;
     }
-    
+
     /**
      * List view
      */
@@ -106,9 +126,9 @@ abstract class AbstractCRUDController extends BaseController
     {
         if (!$this->getEnableRead()) {
             $this->getResponse()->setStatusCode(404);
-            return; 
+            return;
         }
-        
+
         $viewModel = new ViewModel(array(
             'paginator' => $this->getPaginator(),
             'routeControl' => $this->getRouteGenerator(),
@@ -124,20 +144,18 @@ abstract class AbstractCRUDController extends BaseController
         $viewModel->addChild($this->getSearchFilter()->buildView($this->getSearchFilter()->isFilterOn()), 'searchFilterBox');
 
         $viewModel->setTemplate('web/admin/list');
-        
+
         return $viewModel;
     }
 
-    
-    
     /**
      * Update an object
      */
     public function editAction()
-    {   
+    {
         if (!$this->getEnableEdit()) {
             $this->getResponse()->setStatusCode(404);
-            return; 
+            return;
         }
 
         //$this->formClassName
@@ -147,7 +165,7 @@ abstract class AbstractCRUDController extends BaseController
 
         if (!$object) {
             $this->getResponse()->setStatusCode(404);
-            return; 
+            return;
         }
 
         $form = $this->createOrUpdate($object, 'The ' . $this->name . ' has been updated.');
@@ -170,7 +188,7 @@ abstract class AbstractCRUDController extends BaseController
 
     /**
      * Get form
-     * @param  object $object 
+     * @param  object $object
      * @return \Zend\Form\Form
      */
     protected function getForm($object)
@@ -189,7 +207,7 @@ abstract class AbstractCRUDController extends BaseController
     {
         if (!$this->getEnableCreate()) {
             $this->getResponse()->setStatusCode(404);
-            return; 
+            return;
         }
 
         $classRelection = new \ReflectionClass($this->getEntityClass());
@@ -220,27 +238,35 @@ abstract class AbstractCRUDController extends BaseController
      * @param  string $message
      * @return mixed
      */
-    protected function createOrUpdate($object, $message) 
+    protected function createOrUpdate($object, $message)
     {
 
         $form = $this->getForm($object);
-        
         $request = $this->getRequest();
 
         if ($request->isPost()) {
-
             $form->setData($request->getPost());
 
-            if ($form->isValid() && $form->save()) {
-                $this->flashMessenger()->setNamespace('success')->addMessage($message);
+            try {
+                if ($form->isValid() && $form->save()) {
+                    $this->flashMessenger()->setNamespace('success')->addMessage($message);
 
-                return $this->redirect()->toRoute($this->getRouteGenerator()->getRouteName('edit'), array('id' => $object->getId()));
+                    $this->redirect()->toRoute(
+                        $this->getRouteGenerator()->getRouteName('edit'),
+                        array('id' => $object->getId())
+                    );
+                }else{
+                    throw new MagelinkException('A problem occurred on save. Please check data entered.');
+                }
+            }catch(\Exception $exception) {
+                $this->flashMessenger()->setNamespace('error')
+                    ->addMessage('Save failed with error: '.$exception->getMessage());
             }
         }
 
         return $form;
     }
-    
+
     /**
      * Delete a object
      */
@@ -248,7 +274,7 @@ abstract class AbstractCRUDController extends BaseController
     {
         if (!$this->getEnableDelete()) {
             $this->getResponse()->setStatusCode(404);
-            return; 
+            return;
         }
 
         $objectRepo = $this->getObjectRepo();
@@ -256,7 +282,7 @@ abstract class AbstractCRUDController extends BaseController
 
         if (!$object) {
             $this->getResponse()->setStatusCode(404);
-            return; 
+            return;
         }
 
         $this->removeEntity($object);
@@ -264,27 +290,6 @@ abstract class AbstractCRUDController extends BaseController
         $this->flashMessenger()->setNamespace('success')->addMessage('The ' . $this->name . ' has been deleted.');
 
         return $this->redirect()->toRoute($this->getRouteGenerator()->getRouteName('list'));
-    }
-
-    /** @var \Web\Helper\CRUDRouteGenerator */
-    protected $routeGenerator;
-
-    protected
-        $queryBuilder,
-        $name,             // Title
-        $formClassName,
-        $searchFilter,
-        $columnSorter,
-        $isFilterOn = false
-    ;
-
-    /**
-     * Constructor
-     */
-    public function __construct()
-    {
-        $this->setDefaultName();
-        $this->setDefaultFormClassName();
     }
 
     /**

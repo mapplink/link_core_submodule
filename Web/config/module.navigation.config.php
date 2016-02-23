@@ -1,4 +1,5 @@
 <?php
+
 $navigation = array(
     'navigation'=>array(
         'default'=>array(
@@ -60,6 +61,10 @@ $navigation = array(
                     array(
                         'label'=>'Product Location',
                         'route'=>'location-admin/list',
+                    ),
+                    array(
+                        'label'=>'Default Email Sender',
+                        'route'=>'email-sender-admin/list',
                     ),
                     array(
                         'label'=>'Email Template',
