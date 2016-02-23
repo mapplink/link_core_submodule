@@ -84,14 +84,22 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     {
         if ($this->template && $this->entity instanceof Order) {
             if (!$this->template->getSenderEmail()) {
+                $defaultSender = NULL;
                 /** @var EmailSender $defaultSender */
-                $defaultSender = $this->getRepo('\Email\Entity\EmailSender')
+                $defaultSenders = $this->getRepo('\Email\Entity\EmailSender')
                     ->findBy(array('storeId'=>$this->entity->getStoreId()));
-                if (is_array($defaultSender)) {
-                    $defaultSender = current($defaultSender);
+                foreach ($defaultSenders as $sender) {
+                    if ($sender instanceof EmailSender) {
+                        if ($sender->getCode() == $this->template->getCode()) {
+                            $defaultSender = $sender;
+                            break;
+                        }elseif ($sender->getCode() === '' && is_null($defaultSender)) {
+                            $defaultSender = $sender;
+                        }
+                    }
                 }
 
-                if ($defaultSender instanceof EmailSender) {
+                if (!is_null($defaultSender)) {
                     $this->template->setSenderEmail($defaultSender->getSenderEmail());
                     $this->template->setSenderName($defaultSender->getSenderName());
                 }else {

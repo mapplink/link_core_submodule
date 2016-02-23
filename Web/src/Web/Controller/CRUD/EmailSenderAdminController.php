@@ -3,7 +3,7 @@
  * @category Web
  * @package Controller
  * @author Andreas Gerhards <andreas@lero9.co.nz>
- * @copyright Copyright (c) 2016- LERO9 Ltd.
+ * @copyright Copyright (c) 2016 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
  */
 
@@ -30,9 +30,9 @@ class EmailSenderAdminController extends AbstractCRUDController
     protected function getListViewConfig()
     {
         return array(
-            'StoreId'=>array('sortable'=>true),
-            'SenderName'=>array('linked'=>true, 'sortable'=>true),
-            'SenderEmail'=>array('linked'=>true, 'sortable'=>true),
+            'StoreId'=>array('sortable'=>TRUE),
+            'SenderName'=>array('linked'=>TRUE, 'sortable'=>TRUE),
+            'SenderEmail'=>array('linked'=>TRUE, 'sortable'=>TRUE),
         );
     }
 

@@ -3,7 +3,7 @@
  * @category Email
  * @package Form
  * @author Andreas Gerhards <andreas@lero9.co.nz>
- * @copyright Copyright (c) 2016- LERO9 Ltd.
+ * @copyright Copyright (c) 2016 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
  */
 
@@ -11,18 +11,16 @@ namespace Email\Form;
 
 use Web\Form\DoctrineZFBaseForm;
 use Zend\InputFilter\InputFilter;
-use Email\Entity\EmailTemplate;
 
 
 class EmailSenderForm extends DoctrineZFBaseForm
 {
 
     /**
-     * Constructor
      * @param \Doctrine\ORM\EntityManager $entityManager
      * @param string $name
      */
-    public function __construct(\Doctrine\ORM\EntityManager $entityManager, $name = null)
+    public function __construct(\Doctrine\ORM\EntityManager $entityManager, $name = NULL)
     {
         parent::__construct($entityManager, $name);
 
@@ -31,7 +29,7 @@ class EmailSenderForm extends DoctrineZFBaseForm
     }
 
     /**
-     * Set up fields
+     * Set up form fields
      * @param  array $excludeRoleIds
      * @return
      */
@@ -41,25 +39,26 @@ class EmailSenderForm extends DoctrineZFBaseForm
             'name'=>'senderId',
             'type'=>'Hidden'
         ));
-
         $this->add(array(
             'name'=>'storeId',
-            'type'=>'Number',
-            'options'=>array('label'=>'Unique store id (use 0 for all stores)')
+            'type'=>'Text',
+            'options'=>array('label'=>'Store id (use 0 for all stores, 1 for NZ and 2 for AU)')
         ));
-
+        $this->add(array(
+            'name'=>'code',
+            'type'=>'Text',
+            'options'=>array('label'=>'Shipping Method Code (leave empty for all methods)')
+        ));
         $this->add(array(
             'name'=>'senderName',
             'type'=>'Text',
-            'options'=>array('label'=>'Default sender name for this store')
+            'options'=>array('label'=>'Default sender name for store & shipping method')
         ));
-
         $this->add(array(
             'name'=>'senderEmail',
             'type'=>'Text',
-            'options'=>array('label'=>'Default sender email for this store')
+            'options'=>array('label'=>'Default sender email for store & shipping method')
         ));
-
         $this->add(array(
             'name'=>'submit',
             'type'=>'Submit',
@@ -75,15 +74,18 @@ class EmailSenderForm extends DoctrineZFBaseForm
         $inputFilter = new InputFilter();
         $inputFilter->add(array(
             'name'=>'storeId',
-            'required'=>true
+            'required'=>TRUE,
+            'validators'=>array(
+                array('name'=>'Int')
+            )
         ));
         $inputFilter->add(array(
             'name'=>'senderName',
-            'required'=>true
+            'required'=>TRUE
         ));
         $inputFilter->add(array(
             'name'=>'senderEmail',
-            'required'=>true,
+            'required'=>TRUE,
             'validators'=>array(
                 array('name'=>'EmailAddress')
             )

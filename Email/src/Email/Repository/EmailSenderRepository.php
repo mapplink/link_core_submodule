@@ -3,7 +3,7 @@
  * @category Email
  * @package Repository
  * @author Andreas Gerhards <andreas@lero9.co.nz>
- * @copyright Copyright (c) 2016- LERO9 Ltd.
+ * @copyright Copyright (c) 2016 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
  */
 
@@ -22,8 +22,8 @@ class EmailSenderRepository extends EntityRepository
     {
         $queryBuilder = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('et')
-            ->from('\Email\Entity\EmailSender', 'et');
+            ->select('es')
+            ->from('\Email\Entity\EmailSender', 'es');
 
         $query = $queryBuilder->getQuery();
 

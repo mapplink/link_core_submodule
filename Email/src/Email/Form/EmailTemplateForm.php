@@ -45,8 +45,8 @@ class EmailTemplateForm extends DoctrineZFBaseForm
 
         $this->add(array(
             'name'=>'storeId',
-            'type'=>'Number',
-            'options'=>array('label'=>'Store id (use 0 for all stores)')
+            'type'=>'Text',
+            'options'=>array('label'=>'Store id (use 0 for all stores, 1 for NZ and 2 for AU)')
         ));
 
         $this->add(array(
@@ -58,7 +58,7 @@ class EmailTemplateForm extends DoctrineZFBaseForm
         $this->add(array(
             'name'=>'code',
             'type'=>'Text',
-            'options'=>array('label'=>'Code (either \'default\' or the shipping method code)')
+            'options'=>array('label'=>'Shipping Method Code (use either \'default\' or the actual code)')
         ));
 
         $this->add(array(
@@ -93,13 +93,13 @@ class EmailTemplateForm extends DoctrineZFBaseForm
         $this->add(array(
             'name'=>'senderName',
             'type'=>'Text',
-            'options'=>array('label'=>'Sender Name (overwrites the default sender names)')
+            'options'=>array('label'=>'Sender Name (leave empty for the email sender defaults)')
         ));
 
         $this->add(array(
             'name'=>'senderEmail',
             'type'=>'Text',
-            'options'=>array('label'=>'Sender Email (overwrites the default sender emails)')
+            'options'=>array('label'=>'Sender Email (leave empty for the email sender defaults)')
         ));
 
         $this->add(array(
@@ -121,6 +121,13 @@ class EmailTemplateForm extends DoctrineZFBaseForm
     protected function initFilters()
     {
         $inputFilter = new InputFilter();
+        $inputFilter->add(array(
+            'name'=>'storeId',
+            'required'=>TRUE,
+            'validators'=>array(
+                array('name'=>'Int')
+            )
+        ));
         $inputFilter->add(array(
             'name'=>'senderEmail',
             'required'=>FALSE,

@@ -3,7 +3,7 @@
  * @category Email
  * @package Entity
  * @author Andreas Gerhards <andreas@lero9.co.nz>
- * @copyright Copyright (c) 2014- LERO9 Ltd.
+ * @copyright Copyright (c) 2016 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
  */
 
@@ -25,15 +25,15 @@ class EmailSender extends \Magelink\Entity\DoctrineBaseEntity
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY") */
     private $senderId;
-
     /** @var string
      * @ORM\Column(name="store_id", type="smallint", nullable=false) */
     private $storeId;
-
+    /** @var string
+     * @ORM\Column(name="code", type="string", length=254, nullable=false) */
+    private $code;
     /** @var string
      * @ORM\Column(name="sender_name", type="string", length=254, nullable=false) */
     private $senderName;
-
     /** @var string
      * @ORM\Column(name="sender_email", type="string", length=254, nullable=false) */
     private $senderEmail;
@@ -56,7 +56,6 @@ class EmailSender extends \Magelink\Entity\DoctrineBaseEntity
     }
 
     /**
-     * Set store id
      * @param string $storeId
      * @return EmailSender
      */
@@ -67,7 +66,6 @@ class EmailSender extends \Magelink\Entity\DoctrineBaseEntity
     }
 
     /**
-     * Get store id
      * @return string
      */
     public function getStoreId()
@@ -76,7 +74,24 @@ class EmailSender extends \Magelink\Entity\DoctrineBaseEntity
     }
 
     /**
-     * Set senderName
+     * @param string $code
+     * @return EmailTemplate
+     */
+    public function setCode($code)
+    {
+        $this->code = $code;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCode()
+    {
+        return $this->code;
+    }
+
+    /**
      * @param string $senderName
      * @return EmailTemplate
      */
@@ -87,7 +102,6 @@ class EmailSender extends \Magelink\Entity\DoctrineBaseEntity
     }
 
     /**
-     * Get senderName
      * @return string
      */
     public function getSenderName()
@@ -96,7 +110,6 @@ class EmailSender extends \Magelink\Entity\DoctrineBaseEntity
     }
 
     /**
-     * Set senderEmail
      * @param string $senderEmail
      * @return EmailTemplate
      */
@@ -107,7 +120,6 @@ class EmailSender extends \Magelink\Entity\DoctrineBaseEntity
     }
 
     /**
-     * Get senderEmail
      * @return string
      */
     public function getSenderEmail()
