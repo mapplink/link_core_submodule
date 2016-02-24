@@ -76,7 +76,7 @@ class EmailSenderForm extends DoctrineZFBaseForm
             'name'=>'storeId',
             'required'=>TRUE,
             'validators'=>array(
-                array('name'=>'Int')
+//                array('name'=>'Int')
             )
         ));
         $inputFilter->add(array(

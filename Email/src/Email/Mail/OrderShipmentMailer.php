@@ -6,7 +6,7 @@
  * @package Email\Mail
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>
- * @copyright Copyright (c) 2014- LERO9 Ltd.
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
  */
 
