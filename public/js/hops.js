@@ -202,8 +202,8 @@ var PicklistitemScan = {
                 }
 
                 if (data.pigeonHole) {
-                    var domPigeonHoleInfo = $('.jsPigeonHoleAllocation:first');
-                    domPigeonHoleInfo.html(data.pigeonHole);
+                    var domPigeonholeInfo = $('.jsPigeonholeAllocation:first');
+                    domPigeonholeInfo.html(data.pigeonHole);
                 }
 
                 if (isAllItemComplete && isAllOrderComplete) {
