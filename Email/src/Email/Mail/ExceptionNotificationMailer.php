@@ -28,6 +28,14 @@ class ExceptionNotificationMailer extends AbstractOrderMailer
     }
 
     /**
+     * @return null
+     */
+    protected function _setupTemplate()
+    {
+        return NULL;
+    }
+
+    /**
      * Set up all parameters
      */
     public function setParameters(array $sharedParameters = array())
