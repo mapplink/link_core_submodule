@@ -6,7 +6,7 @@
     <div class="widget-content">
         <form class="form-inline" action="#" method="POST">
             <fieldset>
-<?php 
+<?php
 
 foreach ($form->getElements() as $field) :
 
@@ -20,8 +20,8 @@ foreach ($form->getElements() as $field) :
                     <?php print $this->formLabel($field); ?>
                     <div class="controls">
                         <?php print $this->formElement($field); ?>
-                    </div> <!-- /controls -->   
-                    <?php print $this->formElementErrors($field, array('class' => 'help-inline')) ?>               
+                    </div> <!-- /controls -->
+                    <?php print $this->formElementErrors($field, array('class' => 'help-inline')) ?>
                 </div> <!-- /form-group -->
 <?php
     endif;

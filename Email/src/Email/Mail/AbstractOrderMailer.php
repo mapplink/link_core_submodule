@@ -12,6 +12,9 @@
 
 namespace Email\Mail;
 
+use Email\Entity\EmailSender;
+use Entity\Wrapper\Order;
+use Magelink\Exception\MagelinkException;
 use Doctrine\Tests\Common\Annotations\Ticket\Doctrine\ORM\Entity;
 
 
@@ -19,7 +22,6 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
 {
     /**
      * @var array $accessibleEntityTypes
-     *
      * <entity type> => NULL|FALSE|array(<entity type> => NULL|FALSE|array)
      *    NULL : no linking necessary
      *    array : array('<alias>.' => <path: @entityType.attributeCode[@entityType.attributeCode ...]>)
@@ -42,17 +44,71 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
 
     /**
      * Set Order
-     * @param \Entity\Wrapper\Order $order
+     * @param Order $order
      * @return $this
      */
-    public function setOrder(\Entity\Wrapper\Order $order)
+    public function setOrder(Order $order)
     {
         $this->entity = $order;
 
         $this->setAllRecipients(array($order->getData('customer_email') => $order->getData('customer_name')));
         $this->setParameters();
 
+        if ($this->template && $this->entity instanceof Order) {
+            $this->setSenderDetails();
+        }
+
         return $this;
+    }
+
+    /**
+     * Set up template
+     * @throws MagelinkException
+     */
+    public function setupTemplate()
+    {
+        $this->_setupTemplate();
+
+        if ($this->template && $this->entity instanceof Order) {
+            $this->setSenderDetails();
+        }
+    }
+
+    abstract protected function _setupTemplate();
+
+    /**
+     * Set sender details
+     * @throws MagelinkException
+     */
+    protected function setSenderDetails()
+    {
+        if ($this->template && $this->entity instanceof Order) {
+            if (!$this->template->getSenderEmail()) {
+                $defaultSender = NULL;
+                /** @var EmailSender $defaultSender */
+                $defaultSenders = $this->getRepo('\Email\Entity\EmailSender')
+                    ->findBy(array('storeId'=>$this->entity->getStoreId()));
+                foreach ($defaultSenders as $sender) {
+                    if ($sender instanceof EmailSender) {
+                        if ($sender->getCode() == $this->template->getCode()) {
+                            $defaultSender = $sender;
+                            break;
+                        }elseif ($sender->getCode() === '' && is_null($defaultSender)) {
+                            $defaultSender = $sender;
+                        }
+                    }
+                }
+
+                if (!is_null($defaultSender)) {
+                    $this->template->setSenderEmail($defaultSender->getSenderEmail());
+                    $this->template->setSenderName($defaultSender->getSenderName());
+                }else {
+                    $message = 'No sender email defined, neither on the template '.$this->template->getHumanName()
+                        .' nor as a default sender on store '.$this->entity->getStoreId().'.';
+                    throw new MagelinkException($message);
+                }
+            }
+        }
     }
 
     /**
@@ -108,7 +164,7 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     public function send()
     {
         parent::send();
-         
+
         $fromAddress = array();
         foreach ($this->getMessage()->getFrom() as $from) {
             $fromAddress[$from->getEmail()] = $from->getName();

@@ -36,7 +36,7 @@ class OrderShipmentMailer extends AbstractOrderMailer
     /**
      * Set up template
      */
-    public function setupTemplate()
+    protected function _setupTemplate()
     {
         $this->template = $this->getTemplate(
             EmailTemplateSection::SECTION_SHIPPING_NOTIFICATION,

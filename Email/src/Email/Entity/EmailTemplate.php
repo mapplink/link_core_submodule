@@ -1,8 +1,17 @@
 <?php
+/**
+ * @category Email
+ * @package Entity
+ * @author Seo Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Email\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Magelink\Exception\MagelinkException;
 
 /**
  * EmailTemplate
@@ -13,87 +22,47 @@ use Doctrine\ORM\Mapping as ORM;
 class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 {
 
-    // Mime Types
-    const 
-        MIME_TYPE_TEXT = 'text',
-        MIME_TYPE_HTML = 'html'
-    ;
+    const MIME_TYPE_TEXT = 'text';
+    const MIME_TYPE_HTML = 'html';
 
-    /**
-     * @var integer
-     *
+    /** @var integer
      * @ORM\Column(name="template_id", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     */
+     * @ORM\GeneratedValue(strategy="IDENTITY") */
     private $templateId;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="code", type="string", length=45, nullable=false)
-     */
+    /** @var string
+     * @ORM\Column(name="store_id", type="smallint", length=254, nullable=true) */
+    private $storeId;
+    /** @var string
+     * @ORM\Column(name="code", type="string", length=254, nullable=false) */
     private $code;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="human_name", type="string", length=254, nullable=false)
-     */
+    /** @var string
+     * @ORM\Column(name="human_name", type="string", length=254, nullable=false) */
     private $humanName;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="title", type="string", length=254, nullable=false)
-     */
+    /** @var string
+     * @ORM\Column(name="title", type="string", length=254, nullable=false) */
     private $title;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="body", type="text", nullable=false)
-     */
+    /** @var string
+     * @ORM\Column(name="body", type="text", nullable=false) */
     private $body;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="sender_name", type="string", length=254, nullable=false)
-     */
+    /** @var string
+     * @ORM\Column(name="sender_name", type="string", length=254, nullable=false) */
     private $senderName;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="sender_email", type="string", length=254, nullable=false)
-     */
+    /** @var string
+     * @ORM\Column(name="sender_email", type="string", length=254, nullable=false) */
     private $senderEmail;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="mime_type", type="string", length=25, nullable=false)
-     */
+    /** @var string
+     * @ORM\Column(name="mime_type", type="string", length=254, nullable=false) */
     private $mimeType;
-
-    /**
-     * @var \Email\Entity\EmailTemplateSection
-     *
+    /** @var \Email\Entity\EmailTemplateSection
      * @ORM\ManyToOne(targetEntity="Email\Entity\EmailTemplateSection")
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="email_template_section_id", referencedColumnName="id")
-     * })
-     */
+     * }) */
     private $emailTemplateSection;
-
-    /**
-     * @var ArrayCollection
-     *
-     * @ORM\OneToMany(targetEntity="Email\Entity\EmailTemplateParam", mappedBy="emailTemplate")
-     */
+    /** @var ArrayCollection
+     * @ORM\OneToMany(targetEntity="Email\Entity\EmailTemplateParam", mappedBy="emailTemplate") */
     private $params;
-
 
 
     /**
@@ -107,9 +76,9 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
     /**
      * @return \Email\Entity\EmailTemplateParam[]
      */
-    public function getParams() { 
-        
-        return $this->params; 
+    public function getParams() {
+
+        return $this->params;
     }
 
     /**
@@ -126,8 +95,7 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 
     /**
      * @see $this->getTemplateId()
-     *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -136,8 +104,7 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 
     /**
      * Get templateId
-     *
-     * @return integer 
+     * @return integer
      */
     public function getTemplateId()
     {
@@ -145,22 +112,39 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
     }
 
     /**
+     * Set store id
+     * @param string $storeId
+     * @return EmailTemplate
+     */
+    public function setStoreId($storeId)
+    {
+        $this->storeId = $storeId;
+        return $this;
+    }
+
+    /**
+     * Get store id
+     * @return string
+     */
+    public function getStoreId()
+    {
+        return $this->storeId;
+    }
+
+    /**
      * Set code
-     *
      * @param string $code
      * @return EmailTemplate
      */
     public function setCode($code)
     {
         $this->code = $code;
-
         return $this;
     }
 
     /**
      * Get code
-     *
-     * @return string 
+     * @return string
      */
     public function getCode()
     {
@@ -169,21 +153,18 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 
     /**
      * Set humanName
-     *
      * @param string $humanName
      * @return EmailTemplate
      */
     public function setHumanName($humanName)
     {
         $this->humanName = $humanName;
-
         return $this;
     }
 
     /**
      * Get humanName
-     *
-     * @return string 
+     * @return string
      */
     public function getHumanName()
     {
@@ -192,21 +173,18 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 
     /**
      * Set title
-     *
      * @param string $title
      * @return EmailTemplate
      */
     public function setTitle($title)
     {
         $this->title = $title;
-
         return $this;
     }
 
     /**
      * Get title
-     *
-     * @return string 
+     * @return string
      */
     public function getTitle()
     {
@@ -215,21 +193,18 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 
     /**
      * Set body
-     *
      * @param string $body
      * @return EmailTemplate
      */
     public function setBody($body)
     {
         $this->body = $body;
-
         return $this;
     }
 
     /**
      * Get body
-     *
-     * @return string 
+     * @return string
      */
     public function getBody()
     {
@@ -238,21 +213,18 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 
     /**
      * Set senderName
-     *
      * @param string $senderName
      * @return EmailTemplate
      */
     public function setSenderName($senderName)
     {
         $this->senderName = $senderName;
-
         return $this;
     }
 
     /**
      * Get senderName
-     *
-     * @return string 
+     * @return string $senderName
      */
     public function getSenderName()
     {
@@ -261,21 +233,18 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 
     /**
      * Set senderEmail
-     *
      * @param string $senderEmail
      * @return EmailTemplate
      */
     public function setSenderEmail($senderEmail)
     {
         $this->senderEmail = $senderEmail;
-
         return $this;
     }
 
     /**
      * Get senderEmail
-     *
-     * @return string 
+     * @return string $senderEmail
      */
     public function getSenderEmail()
     {
@@ -284,20 +253,17 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 
      /**
      * Set emailTemplateSection
-     *
      * @param string $emailTemplateSection
      * @return EmailTemplate
      */
     public function setEmailTemplateSection($emailTemplateSection)
     {
         $this->emailTemplateSection = $emailTemplateSection;
-
         return $this;
     }
 
     /**
      * Get emailTemplateSection
-     *
      * @return EmailTemplateSection
      */
     public function getEmailTemplateSection()
@@ -307,20 +273,17 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
 
      /**
      * Set mimeType
-     *
      * @param string $mimeType
      * @return EmailTemplate
      */
     public function setMimeType($mimeType)
     {
         $this->mimeType = $mimeType;
-
         return $this;
     }
 
     /**
      * Get mimeType
-     *
      * @return string
      */
     public function getMimeType()
@@ -350,4 +313,5 @@ class EmailTemplate extends \Magelink\Entity\DoctrineBaseEntity
     {
         return $this->mimeType == self::MIME_TYPE_HTML;
     }
+
 }

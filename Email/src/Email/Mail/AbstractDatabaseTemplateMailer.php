@@ -45,7 +45,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 
     /**
      * Get Doctrine repository
-     * @param  string $EntityNmae 
+     * @param  string $EntityNmae
      * @return mixed
      */
     protected function getRepo($entityName)
@@ -62,12 +62,12 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
     {
         return $this->getServiceLocator()
             ->get('Doctrine\ORM\EntityManager');
-    } 
+    }
 
     /**
      * Get template entity by sectionid and code
      * @param  integer $sectionId
-     * @param  string  $code     
+     * @param  string  $code
      * @return \Email\Entity\EmailTemplate
      */
     protected function getTemplate($sectionId, $code = null)
@@ -77,7 +77,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
 
     /**
      * Get templatess by sectionid
-     * @param  integer $sectionId  
+     * @param  integer $sectionId
      * @return array
      */
     protected function getTemplatesBySection($sectionId)
@@ -98,7 +98,15 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
         $this->setupTemplate();
 
         if ($this->template) {
-            $this->getMessage()->setFrom($this->template->getSenderEmail(), $this->template->getSenderName());
+            $senderEmail = $this->template->getSenderEmail();
+            $senderName = $this->template->getSenderName();
+
+            if ($senderEmail) {
+                $this->getMessage()->setFrom($senderEmail, $senderName);
+            }else{
+                throw new MagelinkException('No email defined for template '.$this->template->getHumanName().'.');
+            }
+
             $this->loadSubject();
             $this->loadBody();
         }else{
@@ -162,7 +170,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
      * @return string
      */
     protected function loadSubject()
-    {   
+    {
         $subject = $this->template->getTitle();
         $subject = self::applyParameters($subject, $this->subjectParameters);
         $this->setTitle($subject);
@@ -175,7 +183,7 @@ abstract class AbstractDatabaseTemplateMailer extends BaseMailer
      * @return string
      */
     protected function loadBody()
-    {   
+    {
         $body = $this->template->getBody();
         $body = self::applyParameters($body, $this->bodyParameters);
         $this->setBody($body, $this->template->getMimeTypeForEmail());

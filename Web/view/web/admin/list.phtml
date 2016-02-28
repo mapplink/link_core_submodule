@@ -34,7 +34,7 @@ endif;
     <div class="widget-content">
         <table class="table table-striped table-bordered">
             <thead>
-            <tr>
+                <tr>
 <?php
 
 foreach ($listConfig as $name=>$config) :
@@ -60,29 +60,27 @@ foreach ($listConfig as $name=>$config) :
             array('query'=>array('sorting[field]'=>$name,'sorting[direction]'=>$sortingDirection))
         );
 ?>
-                            <a class="column-sort" href="<?php print $url; ?>">
-                                <i class="<?php print $sortingIcon ?>"></i>
-                            </a>
+                        <a class="column-sort" href="<?php print $url; ?>">
+                            <i class="<?php print $sortingIcon ?>"></i>
+                        </a>
 <?php
     endif;
 ?>
                     </th>
 <?php
-
 endforeach;
 ?>
-            </tr>
+                </tr>
             </thead>
             <tbody>
 <?php
 
 foreach ($paginator as $objectKey=>$object) :
-    $display = NULL;
-?>
+    $display = ($object instanceof \Node\Entity\Node ? NULL : TRUE);
+    ?>
                 <tr>
 <?php
     foreach ($listConfig as $name=>$config) :
-
         if (isset($config['getValue'])) :
             $value = $config['getValue'];
             $fieldValue = $object->$value;
