@@ -22,7 +22,6 @@ return array(
             )
         )
     ),
-    
     'service_manager'=>array(
         'invokables'=>array(
             'applicationConfigService'=>'Application\Service\ApplicationConfigService'
@@ -35,7 +34,6 @@ return array(
             'translator'=>'MvcTranslator',
         ),
     ),
-
     'translator'=>array(
         'locale'=>'en_US',
         'translation_file_patterns'=>array(
@@ -46,14 +44,11 @@ return array(
            ),
         )
     ),
-    
-
     'controllers'=>array(
         'invokables'=>array(
             'Application\Controller\Cron'=>'Application\Controller\Cron',
         ),
     ),
-    
     'console'=>array(
         'router'=>array(
             'routes'=>array(
