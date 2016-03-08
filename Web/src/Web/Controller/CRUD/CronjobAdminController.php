@@ -77,7 +77,7 @@ class CronjobAdminController extends AbstractCRUDController
                     $interval = 'undefined';
                 }
 
-                if ($cron->checkIfUnlocked()) {
+                if ($cron->isUnlocked()) {
                     $since = $unlockAction = '-';
                     $status = 'unlocked';
                 }else{

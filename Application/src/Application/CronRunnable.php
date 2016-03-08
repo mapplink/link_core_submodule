@@ -317,7 +317,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     public function cronCheck($minutes)
     {
         $this->scheduledRun = ($minutes % $this->getInterval() == $this->getOffset());
-        $run = $this->scheduledRun || $this->isOverdueEnabled() && $this->isOverdue() && $this->checkIfUnlocked();
+        $run = $this->scheduledRun || $this->isOverdueEnabled() && $this->isOverdue() && $this->isUnlocked();
 
         return $run;
     }
@@ -330,7 +330,12 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     {
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m', $start);
-        $unlocked = $this->checkIfUnlocked();
+
+        if (!$this->isRunning()) {
+            $this->releaseLock();
+        }
+        $unlocked = $this->isUnlocked();
+
 
         if (!$unlocked) {
             if ($this->scheduledRun) {
@@ -392,10 +397,62 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     abstract protected function _cronRun();
 
     /**
+     * @return bool $isRunning
+     */
+    public function isRunning()
+    {
+        $isRunning = !$this->isUnlocked();
+
+        if ($isRunning) {
+            $magelinkRoot = strstr(__DIR__, '/magelink/Application');
+
+            $handle = fopen($this->filename, 'r');
+            list($name, $timeDate) = explode(';', fread($handle));
+            list($time, $date) = explode(' ', $timeDate);
+            $time = substr(trim($time), 0, 5);
+
+            $fi = new \FilesystemIterator(__DIR__, \FilesystemIterator::SKIP_DOTS);
+            $lockFileNo = iterator_count($fi);
+            exec("ps -eo start,cmd | grep '".$magelinkRoot."/zf.php cron run' | grep -v grep", $processes);
+
+            if ($lockFileNo != count($processes)) {
+                $processesMatching = array();
+                foreach ($processes as $processNo=>$process) {
+                    list($processTime, $processCommand) = explode(' ', $process);
+                    if (strpos($processCommand, $magelinkRoot) === 0) {
+                        $processTime = substr(trim($processTime), 0, 5);
+                        if ($processTime == $time) {
+                            $processesMatching[] = $processNo;
+                        }
+                    }
+                }
+
+                if (count($processes) == 1) {
+                    $isRunning = TRUE;
+                }elseif (count($processes) == 0) {
+                    $this->_logService->log(LogService::LEVEL_ERROR,
+                        'cron_match_no',
+                        $lockFileNo.' cron jobs are locked but the time in '.$name.' lock file does not match any.',
+                        array('cron job'=>$name, 'time'=>$time, 'directory'=>realpath($this->lockDirectory))
+                    );
+                }else{
+                    $this->_logService->log(LogService::LEVEL_ERROR,
+                        'cron_match_err',
+                        count($processes).' crons jobs found that match the time in '.$name.' lock file.',
+                        array('cron job'=>$name, 'time'=>$time, 'directory'=>realpath($this->lockDirectory))
+                    );
+                }
+            }
+        }
+
+        return $isRunning;
+    }
+
+    /**
      * Check if cronjob is unlocked
      * @return bool $unlocked
      */
-    public function checkIfUnlocked()
+    public function isUnlocked()
     {
         $unlocked = !file_exists($this->filename);
         return $unlocked;
@@ -416,7 +473,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             throw new SyncException('Lock directory not writable!');
         }
 
-        $unlocked = $this->checkIfUnlocked();
+        $unlocked = $this->isUnlocked();
         if ($unlocked) {
             $handle = fopen($this->filename, 'x');
             if (!$handle) {
@@ -424,7 +481,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             }else{
                 $unlocked = flock($handle, LOCK_EX | LOCK_NB);
                 if ($unlocked) {
-                    fwrite($handle, $this->getName().'; '.time().'; Date: '.date('Y-m-d H:i:s'));
+                    fwrite($handle, $this->getName().';'.date('H:i d/m/Y'));
+                    fwrite($handle, '');
                     fflush($handle);
                     flock($handle, LOCK_UN);
                     fclose($handle);
@@ -447,7 +505,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         do {
             usleep(($try - 1) * 700);
             unlink($this->filename);
-            $unlocked = $this->checkIfUnlocked();
+            $unlocked = $this->isUnlocked();
         }while ($try++ < $maxTries && !$unlocked);
 
         return $unlocked;
@@ -502,7 +560,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     public function lockedSince()
     {
-        if ($this->checkIfUnlocked()) {
+        if ($this->isUnlocked()) {
             $sinceTimestamp = FALSE;
         }else {
             $lockInformation = file_get_contents($this->filename);
