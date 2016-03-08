@@ -32,7 +32,7 @@ class EmailSenderAdminController extends AbstractCRUDController
         return array(
             'StoreId'=>array('sortable'=>TRUE),
             'SenderName'=>array('linked'=>TRUE, 'sortable'=>TRUE),
-            'SenderEmail'=>array('linked'=>TRUE, 'sortable'=>TRUE),
+            'SenderEmail'=>array('linked'=>TRUE, 'sortable'=>TRUE)
         );
     }
 
@@ -45,17 +45,17 @@ class EmailSenderAdminController extends AbstractCRUDController
             'storeId'=>array(
                 'operators'=>array('contains', 'equals'),
                 'label'=>'Store Id',
-                'field'=>'storeId',
+                'field'=>'storeId'
             ),
             'sendername'=>array(
                 'operators'=>array('contains', 'equals'),
                 'label'=>'Sender Name',
-                'field'=>'senderName',
+                'field'=>'senderName'
             ),
             'senderemail'=>array(
                 'operators'=>array('contains', 'equals'),
                 'label'=>'Sender Email',
-                'field'=>'senderEmail',
+                'field'=>'senderEmail'
             )
         );
     }
