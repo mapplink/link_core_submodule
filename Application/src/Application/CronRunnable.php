@@ -324,9 +324,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
     /**
      * Wrapper which does the logging and error handling on the scheduled actions.
+     * @param int|NULL $processId
      * @throws SyncException
      */
-    public function cronRun()
+    public function cronRun($processId = NULL)
     {
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m', $start);
@@ -358,7 +359,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities);
             }
         }elseif ($unlocked) {
-            $lock = $this->acquireLock();
+            $lock = $this->acquireLock($processId);
             $this->reduceOverdueFlag();
 
             $logMessage = 'Cron '.$this->getName().' started at '.$startDate;
@@ -404,44 +405,36 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $isRunning = !$this->isUnlocked();
 
         if ($isRunning) {
-            $magelinkRoot = strstr(__DIR__, '/magelink/Application');
+            $magelinkRoot = strstr(__DIR__, '/magelink/Application', TRUE);
 
             $handle = fopen($this->filename, 'r');
             list($name, $timeDate) = explode(';', fread($handle));
-            list($time, $date) = explode(' ', $timeDate);
-            $time = substr(trim($time), 0, 5);
+            list($time, $date, $processId) = explode(' ', $timeDate);
 
-            $fi = new \FilesystemIterator(__DIR__, \FilesystemIterator::SKIP_DOTS);
-            $lockFileNo = iterator_count($fi);
-            exec("ps -eo start,cmd | grep '".$magelinkRoot."/zf.php cron run' | grep -v grep", $processes);
-
-            if ($lockFileNo != count($processes)) {
-                $processesMatching = array();
+            if ($processId) {
+                exec("ps -eo pid,start,cmd | grep '".$magelinkRoot."/zf.php cron run' | grep -v grep", $processes);
                 foreach ($processes as $processNo=>$process) {
-                    list($processTime, $processCommand) = explode(' ', $process);
-                    if (strpos($processCommand, $magelinkRoot) === 0) {
-                        $processTime = substr(trim($processTime), 0, 5);
-                        if ($processTime == $time) {
-                            $processesMatching[] = $processNo;
-                        }
+                    list($pid, $processTime, $processCommand) = explode(' ', $process);
+                    if ($processId == $pid) {
+                        $processesMatching[$processNo] = $process;
                     }
                 }
 
-                if (count($processes) == 1) {
-                    $isRunning = TRUE;
-                }elseif (count($processes) == 0) {
+                if (count($processesMatching) == 0) {
+                    $isRunning = FALSE;
+                }elseif (count($processesMatching) > 1) {
                     $this->_logService->log(LogService::LEVEL_ERROR,
-                        'cron_match_no',
-                        $lockFileNo.' cron jobs are locked but the time in '.$name.' lock file does not match any.',
-                        array('cron job'=>$name, 'time'=>$time, 'directory'=>realpath($this->lockDirectory))
-                    );
-                }else{
-                    $this->_logService->log(LogService::LEVEL_ERROR,
-                        'cron_match_err',
-                        count($processes).' crons jobs found that match the time in '.$name.' lock file.',
-                        array('cron job'=>$name, 'time'=>$time, 'directory'=>realpath($this->lockDirectory))
+                        'cron_pcs_mulmtch',
+                        $processId.' is matching several processes.',
+                        array('processes'=>$processesMatching)
                     );
                 }
+            }else{
+                $this->_logService->log(LogService::LEVEL_ERROR,
+                    'cron_pcs_mtcherr',
+                    $name.' lock file did not contain process id.',
+                    array('cron job'=>$name, 'time'=>$time, 'directory'=>realpath($this->lockDirectory))
+                );
             }
         }
 
@@ -460,11 +453,11 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
     /**
      * Acquire an exclusive lock for the provided lock codename
-     * @param $code
+     * @param int|NULL $processId
      * @return bool
      * @throws MagelinkException
      */
-    protected function acquireLock()
+    protected function acquireLock($processId)
     {
         if (!is_dir($this->lockDirectory)) {
             mkdir($this->lockDirectory);
@@ -481,8 +474,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             }else{
                 $unlocked = flock($handle, LOCK_EX | LOCK_NB);
                 if ($unlocked) {
-                    fwrite($handle, $this->getName().';'.date('H:i d/m/Y'));
-                    fwrite($handle, '');
+                    $content = $this->getName().';'.date('H:i d/m/Y').';'.$processId.PHP_EOL;
+                    fwrite($handle, $content);
                     fflush($handle);
                     flock($handle, LOCK_UN);
                     fclose($handle);
