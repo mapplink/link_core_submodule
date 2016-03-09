@@ -330,9 +330,20 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     {
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m', $start);
+        $logCode = 'crn_'.$this->getCode().'_';
+        $logUlckData = array('name'=>$this->getName(), 'file'=>$this->filename);
 
         if (!$this->isRunning() && !$this->isUnlocked()) {
-            $this->releaseLock();
+            $logFrcCode = $logCode.'fulck';
+            $logMessage = 'orced remove of lock file of cron job '.$this->getName().' ('.$this->filename.') ';
+            if ($this->releaseLock()) {
+                $logMessage = 'Successful f'.$logCode.'.';
+            }else{
+                $logFrcCode .= '_err';
+                $logMessage = 'F'.$logCode.'failed.';
+            }
+            $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logUlckData);
+
         }
         $unlocked = $this->isUnlocked();
 
@@ -344,7 +355,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $logLevel = LogService::LEVEL_DEBUGINTERNAL;
             }
 
-            $logCode = 'cron_lock_'.$this->getCode();
+            $logCode .= 'lck';
             $logMessage = 'Cron job '.$this->getName().' locked.';
             $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$this->getName(), 'class'=>get_class($this));
             $logEntities = array('magelinkCron'=>$this);
@@ -360,11 +371,11 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $lock = $this->acquireLock();
             $this->reduceOverdueFlag();
 
+            $logRunCode = $logCode.'run';
             $logMessage = 'Cron '.$this->getName().' started at '.$startDate;
             $logData = array('name'=>$this->getName(), 'class'=>get_class($this), 'start'=>$startDate);
             $logEntities = array('magelinkCron'=>$this);
-            $this->_logService->log(LogService::LEVEL_INFO,
-                'cron_run_'.$this->getCode(), $logMessage, $logData);
+            $this->_logService->log(LogService::LEVEL_INFO, $logRunCode, $logMessage, $logData);
 
             $this->_cronRun();
 
@@ -378,14 +389,12 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $logMessage = 'Cron '.$this->getName().' finished at '.$endDate
                 .'. Runtime was '.($runMinutes ? $runMinutes.'min, ' : '').$runSeconds.'s.';
             $logData = array_merge($logData, array('end'=>$endDate, 'runtime'=>$runtime));
-            $this->_logService->log(LogService::LEVEL_INFO,
-                'cron_run_'.$this->getCode(), $logMessage, $logData, $logEntities);
+            $this->_logService->log(LogService::LEVEL_INFO, $logRunCode, $logMessage, $logData, $logEntities);
 
             if (!$this->releaseLock()) {
+                $logCode .= 'ulck_err';
                 $logMessage = 'Unlocking of cron job '.$this->getName().' ('.$this->filename.') failed';
-                $logData = array('name'=>$this->getName(), 'file'=>$this->filename);
-                $this->_logService->log(LogService::LEVEL_ERROR,
-                    'cron_unl_fail_'.$this->getCode(), $logMessage, $logData);
+                $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logUlckData);
             }
         }
     }
