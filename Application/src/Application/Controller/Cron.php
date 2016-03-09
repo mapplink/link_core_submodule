@@ -66,14 +66,15 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         $time = time();
         $minutes = floor($time / 60);
         $time = date('H:i:s d/m/y', $time);
-        $minutesTime = date('H:i', $minutes);
+        $minutesTime = substr($time, 0, 5);
 
         $processId = NULL;
+        $processesMatching = array();
         $magelinkRoot = strstr(__DIR__, '/magelink/Application', true);
         exec("ps -eo pid,start,cmd | grep '".$magelinkRoot."/zf.php cron run' | grep -v grep", $processes);
 
-        foreach ($processes as $processNo => $process) {
-            list($processId, $processTime, $processCommand) = explode(' ', $process);
+        foreach ($processes as $processNo=>$process) {
+            list($processId, $processTime, $processCommand) = explode(' ', trim($process));
             $processTime = substr(trim($processTime), 0, 5);
             if ($processTime == $minutesTime) {
                 $processesMatching[$processNo] = $processId;
@@ -105,7 +106,6 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         foreach ($applicationConfigService->getCronjobs() as $name=>$magelinkCron) {
             if ($job === NULL || $job == $name) {
                 $ran = TRUE;
-
 
                 try {
                     $runCron = $magelinkCron->cronCheck($minutes);

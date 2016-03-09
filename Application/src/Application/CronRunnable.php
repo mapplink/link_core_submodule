@@ -332,11 +332,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m', $start);
 
-        if (!$this->isRunning()) {
+        if (!$this->isRunning() && !$this->isUnlocked()) {
             $this->releaseLock();
         }
         $unlocked = $this->isUnlocked();
-
 
         if (!$unlocked) {
             if ($this->scheduledRun) {
@@ -408,14 +407,18 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $magelinkRoot = strstr(__DIR__, '/magelink/Application', TRUE);
 
             $handle = fopen($this->filename, 'r');
-            list($name, $timeDate) = explode(';', fread($handle));
-            list($time, $date, $processId) = explode(' ', $timeDate);
+            $firstLine = fgets($handle);
+            list($name, $timeDate, $processId) = explode(';', $firstLine);
 
             if ($processId) {
+                $processesMatching = array();
                 exec("ps -eo pid,start,cmd | grep '".$magelinkRoot."/zf.php cron run' | grep -v grep", $processes);
+
                 foreach ($processes as $processNo=>$process) {
-                    list($pid, $processTime, $processCommand) = explode(' ', $process);
-                    if ($processId == $pid) {
+                    list($pid, $startCmd) = explode(' ', trim($process), 2);
+                    $processTime = trim(strstr($startCmd, 'php ', TRUE));
+                    $processCommand = trim(strstr($startCmd, 'php '));
+                    if ((int) $processId == (int) $pid) {
                         $processesMatching[$processNo] = $process;
                     }
                 }
@@ -433,7 +436,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $this->_logService->log(LogService::LEVEL_ERROR,
                     'cron_pcs_mtcherr',
                     $name.' lock file did not contain process id.',
-                    array('cron job'=>$name, 'time'=>$time, 'directory'=>realpath($this->lockDirectory))
+                    array('lock file'=>$firstLine, 'directory'=>realpath($this->lockDirectory))
                 );
             }
         }
