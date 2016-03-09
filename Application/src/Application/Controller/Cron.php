@@ -66,26 +66,6 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
         $time = time();
         $minutes = floor($time / 60);
         $time = date('H:i:s d/m/y', $time);
-        $minutesTime = substr($time, 0, 5);
-
-        $processId = NULL;
-        $processesMatching = array();
-        $magelinkRoot = strstr(__DIR__, '/magelink/Application', true);
-        exec("ps -eo pid,start,cmd | grep '".$magelinkRoot."/zf.php cron run' | grep -v grep", $processes);
-
-        foreach ($processes as $processNo=>$process) {
-            list($processId, $processTime, $processCommand) = explode(' ', trim($process));
-            $processTime = substr(trim($processTime), 0, 5);
-            if ($processTime == $minutesTime) {
-                $processesMatching[$processNo] = $processId;
-            }
-        }
-
-        if (count($processesMatching) > 1) {
-            $processId = NULL;
-            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR, 'cron_pcs_err',
-                'To many match processes found.', array('processes'=>implode(', ', $processesMatching)));
-        }
 
         $job = $request->getParam('job');
         if ($job == 'all') {
@@ -119,7 +99,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                         $this->getServiceLocator()->get('logService')
                             ->log(LogService::LEVEL_INFO, 'cron_skip', $logMessage, $logData);
                     }else {
-                        $magelinkCron->cronRun($processId);
+                        $magelinkCron->cronRun();
                     }
                 }catch (SyncException $syncException) {
                     $this->getServiceLocator()->get('logService')

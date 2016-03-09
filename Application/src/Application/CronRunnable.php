@@ -324,10 +324,9 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
     /**
      * Wrapper which does the logging and error handling on the scheduled actions.
-     * @param int|NULL $processId
      * @throws SyncException
      */
-    public function cronRun($processId = NULL)
+    public function cronRun()
     {
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m', $start);
@@ -358,7 +357,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities);
             }
         }elseif ($unlocked) {
-            $lock = $this->acquireLock($processId);
+            $lock = $this->acquireLock();
             $this->reduceOverdueFlag();
 
             $logMessage = 'Cron '.$this->getName().' started at '.$startDate;
@@ -456,11 +455,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
     /**
      * Acquire an exclusive lock for the provided lock codename
-     * @param int|NULL $processId
      * @return bool
      * @throws MagelinkException
      */
-    protected function acquireLock($processId)
+    protected function acquireLock()
     {
         if (!is_dir($this->lockDirectory)) {
             mkdir($this->lockDirectory);
@@ -477,7 +475,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             }else{
                 $unlocked = flock($handle, LOCK_EX | LOCK_NB);
                 if ($unlocked) {
-                    $content = $this->getName().';'.date('H:i d/m/Y').';'.$processId.PHP_EOL;
+                    $content = $this->getName().';'.date('H:i:s d/m/Y').';'.posix_getpid().PHP_EOL;
                     fwrite($handle, $content);
                     fflush($handle);
                     flock($handle, LOCK_UN);
