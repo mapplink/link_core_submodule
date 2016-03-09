@@ -408,6 +408,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $handle = fopen($this->filename, 'r');
             $firstLine = fgets($handle);
             list($name, $timeDate, $processId) = explode(';', $firstLine);
+            $processId = (int) $processId;
 
             if ($processId) {
                 $processesMatching = array();
@@ -417,7 +418,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                     list($pid, $startCmd) = explode(' ', trim($process), 2);
                     $processTime = trim(strstr($startCmd, 'php ', TRUE));
                     $processCommand = trim(strstr($startCmd, 'php '));
-                    if ((int) $processId == (int) $pid) {
+                    if ($processId == (int) $pid) {
                         $processesMatching[$processNo] = $process;
                     }
                 }
@@ -426,15 +427,15 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                     $isRunning = FALSE;
                 }elseif (count($processesMatching) > 1) {
                     $this->_logService->log(LogService::LEVEL_ERROR,
-                        'cron_pcs_mulmtch',
+                        'cron_pcs_mch_mny',
                         $processId.' is matching several processes.',
                         array('processes'=>$processesMatching)
                     );
                 }
             }else{
                 $this->_logService->log(LogService::LEVEL_ERROR,
-                    'cron_pcs_mtcherr',
-                    $name.' lock file did not contain process id.',
+                    'cron_pcs_mch_err',
+                    ucfirst($name).' lock file did not contain process id.',
                     array('lock file'=>$firstLine, 'directory'=>realpath($this->lockDirectory))
                 );
             }
