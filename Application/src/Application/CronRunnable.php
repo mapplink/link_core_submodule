@@ -465,7 +465,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             fclose($handle);
 
             $fileData = array();
-            foreach (explode(';', $firstLine) as $key => $value) {
+            foreach (explode(';', $firstLine) as $key=>$value) {
                 $fileData[$this->fileHeaders[$key]] = $value;
             }
 
