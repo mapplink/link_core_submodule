@@ -37,6 +37,15 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     protected $lockDirectory = NULL;
     /** @var string|NULL $filename */
     protected $filename = NULL;
+    /** @var array $this->fileHeaders */
+    protected $fileHeaders = array(
+        'name',
+        'timestamp',
+        'timeDate',
+        'processId'
+    );
+    /** @var array $this->fileData */
+    protected $fileData = NULL;
     /** @var array $attributes  default values */
     protected $attributes = array(
         'interval'=>NULL,
@@ -405,6 +414,85 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     abstract protected function _cronRun();
 
     /**
+     * @return bool $unlocked
+     * @throws MagelinkException
+     */
+    protected function writeDataToLockFile()
+    {
+        $handle = fopen($this->filename, 'x');
+        if (!$handle) {
+            $unlocked = FALSE;
+        }else {
+            $unlocked = flock($handle, LOCK_EX | LOCK_NB);
+            if ($unlocked) {
+                $data = array(
+                    'name'=>$this->getName(),
+                    'timestamp'=>time(),
+                    'timeDate'=>date('H:i:s d/m/Y'),
+                    'processId'=>posix_getpid()
+                );
+                $contentArray = array();
+                foreach ($this->fileHeaders as $key) {
+                    if (isset($data[$key])) {
+                        $contentArray[] = $data[$key];
+                    }else{
+                        $message = 'Data for lock file '.$this->filename.' ('.$this->getName().') does not match'
+                            .' with the provided headers.';
+                        throw new MagelinkException($message);
+                        $unlocked = FALSE;
+                    }
+                }
+                $content = implode(';', $contentArray).PHP_EOL;
+
+                fwrite($handle, $content);
+                fflush($handle);
+                flock($handle, LOCK_UN);
+                fclose($handle);
+            }
+        }
+
+        return $unlocked;
+    }
+    /**
+     * @param string|null $code
+     * @return string|array $lockFileData
+     */
+    protected function getLockFileData($code = NULL)
+    {
+        if (is_null($this->fileData) || !is_array($this->fileData)) {
+            $handle = fopen($this->filename, 'r');
+            $firstLine = fgets($handle);
+            fclose($handle);
+
+            $fileData = array();
+            foreach (explode(';', $firstLine) as $key => $value) {
+                $fileData[$this->fileHeaders[$key]] = $value;
+            }
+
+            if (count($fileData) === count($this->fileHeaders)) {
+                $this->fileData = $fileData;
+            }else{
+                $message = 'Data from lock file '.$this->filename.' ('.$this->getName().') does not match'
+                    .' with the provided headers: '.var_export($fileData, TRUE).'.';
+                throw new MagelinkException($message);
+            }
+
+        }
+
+        if (is_null($code)) {
+            $returnValue = $this->fileData;
+        }else{
+            if (in_array($code, $this->fileHeaders)) {
+                $returnValue = $this->fileData[$code];
+            }else{
+                $returnValue = FALSE;
+            }
+        }
+
+        return $returnValue;
+    }
+
+    /**
      * @return bool $isRunning
      */
     public function isRunning()
@@ -414,13 +502,11 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         if ($isRunning) {
             $magelinkRoot = strstr(__DIR__, '/magelink/Application', TRUE);
 
-            $handle = fopen($this->filename, 'r');
-            $firstLine = fgets($handle);
-            list($name, $timeDate, $processId) = explode(';', $firstLine);
-            $processId = (int) $processId;
+            $processId = $this->getLockFileData('processId');
 
             if ($processId) {
                 $processesMatching = array();
+                $processId = (int) $processId;
                 exec("ps -eo pid,start,cmd | grep '".$magelinkRoot."/zf.php cron run' | grep -v grep", $processes);
 
                 foreach ($processes as $processNo=>$process) {
@@ -444,8 +530,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             }else{
                 $this->_logService->log(LogService::LEVEL_ERROR,
                     'cron_pcs_mch_err',
-                    ucfirst($name).' lock file did not contain process id.',
-                    array('lock file'=>$firstLine, 'directory'=>realpath($this->lockDirectory))
+                    ucfirst($this->getLockFileData('name')).' lock file did not contain process id.',
+                    array('lock file'=>$this->getLockFileData(), 'directory'=>realpath($this->lockDirectory))
                 );
             }
         }
@@ -479,19 +565,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
         $unlocked = $this->isUnlocked();
         if ($unlocked) {
-            $handle = fopen($this->filename, 'x');
-            if (!$handle) {
-                $unlocked = FALSE;
-            }else{
-                $unlocked = flock($handle, LOCK_EX | LOCK_NB);
-                if ($unlocked) {
-                    $content = $this->getName().';'.date('H:i:s d/m/Y').';'.posix_getpid().PHP_EOL;
-                    fwrite($handle, $content);
-                    fflush($handle);
-                    flock($handle, LOCK_UN);
-                    fclose($handle);
-                }
-            }
+            $unlocked = $this->writeDataToLockFile();
         }
 
         return $unlocked;
@@ -566,10 +640,8 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     {
         if ($this->isUnlocked()) {
             $sinceTimestamp = FALSE;
-        }else {
-            $lockInformation = file_get_contents($this->filename);
-            $cronName = strtok($lockInformation, ';');
-            $sinceTimestamp = strtok(';');
+        }else{
+            $sinceTimestamp = $this->getLockFileData('timestamp');
         }
 
         return $sinceTimestamp;
