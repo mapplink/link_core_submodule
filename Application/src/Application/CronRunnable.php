@@ -500,15 +500,13 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $isRunning = !$this->isUnlocked();
 
         if ($isRunning) {
-            $magelinkRoot = strstr(__DIR__, '/magelink/Application', TRUE);
-
             $processId = $this->getLockFileData('processId');
             $logCode = $this->getLogCode().'_mch';
 
             if ($processId) {
                 $processesMatching = array();
                 $processId = (int) $processId;
-                exec("ps -eo pid,start,cmd | grep '".$magelinkRoot."/zf.php cron run' | grep -v grep", $processes);
+                exec("ps -eo pid,start,cmd | grep 'zf.php cron run' | grep -v grep", $processes);
 
                 foreach ($processes as $processNo=>$process) {
                     list($pid, $startCmd) = explode(' ', trim($process), 2);
