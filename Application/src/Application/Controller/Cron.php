@@ -74,11 +74,7 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
 
         if (!$applicationConfigService->isCronjob()) {
             $this->getServiceLocator()->get('logService')
-                ->log(LogService::LEVEL_ERROR,
-                    'cron_err',
-                    'ERROR: No cron jobs configured',
-                    array()
-                );
+                ->log(LogService::LEVEL_ERROR, 'crn_none_err', 'No cron jobs configured', array());
             die();
         }
 
@@ -97,13 +93,13 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
                         $logMessage = 'Skipping cron job '.$name;
                         $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$name);
                         $this->getServiceLocator()->get('logService')
-                            ->log(LogService::LEVEL_INFO, 'cron_skip', $logMessage, $logData);
+                            ->log(LogService::LEVEL_INFO, 'crn_skip', $logMessage, $logData);
                     }else {
                         $magelinkCron->cronRun();
                     }
                 }catch (SyncException $syncException) {
                     $this->getServiceLocator()->get('logService')
-                        ->log(LogService::LEVEL_INFO, 'cron_err', $syncException->getMessage(), array('cron'=>$name),
+                        ->log(LogService::LEVEL_INFO, 'crn_err', $syncException->getMessage(), array('cron'=>$name),
                             array('cron'=>$magelinkCron, 'exception'=>$syncException), FALSE);
                 }
             }
@@ -111,15 +107,12 @@ class Cron extends AbstractActionController implements ServiceLocatorAwareInterf
 
         if (!$ran && $job !== NULL) {
             $this->getServiceLocator()->get('logService')
-                ->log(LogService::LEVEL_ERROR,
-                    'cron_notfound',
-                    'Could not find requested cron job '.$job,
-                    array('job'=>$job)
-                );
+                ->log(LogService::LEVEL_ERROR, 'crn_noex_err',
+                    'Could not find requested cron job '.$job, array('job'=>$job));
         }
 
-        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUG,
-            'cron_done', 'Cron completed', array('start time'=>$time, 'end time'=>date('H:i:s d/m/y')));
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUG, 'crn_all_done',
+            'Cron processing completed', array('start time'=>$time, 'end time'=>date('H:i:s d/m/y')));
         die();
     }
 }

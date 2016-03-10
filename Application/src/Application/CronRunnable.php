@@ -240,7 +240,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $success = $sqlStatement->execute();;
         }while ($try++ < $maxTries && !$success);
 
-        $logCode = 'cron_'.$this->getCode().'_sof';
+        $logCode = $this->getLogCode().'_sof';
         $logData = array(
             'dateTime'=>date('d/m H:i:s'),
             'magelinkCron'=>$this->getName(),
@@ -278,7 +278,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $success = $sqlStatement->execute();
             }while ($try++ < $maxTries && !$success);
 
-            $logCode = 'cron_'.$this->getCode().'_rof';
+            $logCode = $this->getLogCode().'_rof';
             $logData = array(
                 'dateTime'=>date('d/m H:i:s'),
                 'magelinkCron'=>$this->getName(),
@@ -339,16 +339,16 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     {
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m', $start);
-        $logCode = 'crn_'.$this->getCode().'_';
+
         $logUlckData = array('name'=>$this->getName(), 'file'=>$this->filename);
 
         if (!$this->isRunning() && !$this->isUnlocked()) {
-            $logFrcCode = $logCode.'fulck';
+            $logCode = $this->getLogCode().'_fulck';
             $logMessage = 'orced remove of lock file of cron job '.$this->getName().' ('.$this->filename.') ';
             if ($this->releaseLock()) {
-                $logMessage = 'Successful f'.$logCode.'.';
+                $logMessage = 'Successful f'.$logMessage.'.';
             }else{
-                $logFrcCode .= '_err';
+                $logCode .= '_err';
                 $logMessage = 'F'.$logCode.'failed.';
             }
             $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logUlckData);
@@ -364,7 +364,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $logLevel = LogService::LEVEL_DEBUGINTERNAL;
             }
 
-            $logCode .= 'lck';
+            $logCode = $this->getLogCode().'_lck';
             $logMessage = 'Cron job '.$this->getName().' locked.';
             $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$this->getName(), 'class'=>get_class($this));
             $logEntities = array('magelinkCron'=>$this);
@@ -380,11 +380,11 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $lock = $this->acquireLock();
             $this->reduceOverdueFlag();
 
-            $logRunCode = $logCode.'run';
+            $logCode = $this->getLogCode().'_run';
             $logMessage = 'Cron '.$this->getName().' started at '.$startDate;
             $logData = array('name'=>$this->getName(), 'class'=>get_class($this), 'start'=>$startDate);
             $logEntities = array('magelinkCron'=>$this);
-            $this->_logService->log(LogService::LEVEL_INFO, $logRunCode, $logMessage, $logData);
+            $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
 
             $this->_cronRun();
 
@@ -398,10 +398,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $logMessage = 'Cron '.$this->getName().' finished at '.$endDate
                 .'. Runtime was '.($runMinutes ? $runMinutes.'min, ' : '').$runSeconds.'s.';
             $logData = array_merge($logData, array('end'=>$endDate, 'runtime'=>$runtime));
-            $this->_logService->log(LogService::LEVEL_INFO, $logRunCode, $logMessage, $logData, $logEntities);
+            $this->_logService->log(LogService::LEVEL_INFO, $logCode.'done', $logMessage, $logData, $logEntities);
 
             if (!$this->releaseLock()) {
-                $logCode .= 'ulck_err';
+                $logCode = $this->getLogCode().'_ulck_err';
                 $logMessage = 'Unlocking of cron job '.$this->getName().' ('.$this->filename.') failed';
                 $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logUlckData);
             }
@@ -503,6 +503,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $magelinkRoot = strstr(__DIR__, '/magelink/Application', TRUE);
 
             $processId = $this->getLockFileData('processId');
+            $logCode = $this->getLogCode().'_mch';
 
             if ($processId) {
                 $processesMatching = array();
@@ -521,15 +522,11 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 if (count($processesMatching) == 0) {
                     $isRunning = FALSE;
                 }elseif (count($processesMatching) > 1) {
-                    $this->_logService->log(LogService::LEVEL_ERROR,
-                        'cron_pcs_mch_mny',
-                        $processId.' is matching several processes.',
-                        array('processes'=>$processesMatching)
-                    );
+                    $this->_logService->log(LogService::LEVEL_ERROR, $logCode.'_mny',
+                        $processId.' is matching several processes.', array('processes'=>$processesMatching));
                 }
             }else{
-                $this->_logService->log(LogService::LEVEL_ERROR,
-                    'cron_pcs_mch_err',
+                $this->_logService->log(LogService::LEVEL_ERROR, $logCode.'_err',
                     ucfirst($this->getLockFileData('name')).' lock file did not contain process id.',
                     array('lock file'=>$this->getLockFileData(), 'directory'=>realpath($this->lockDirectory))
                 );
@@ -595,19 +592,19 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
      */
     public function adminReleaseLock()
     {
+        $logCode = $this->getLogCode().'_ulck';
+
         $name = $this->getName();
         $user = $this->getServiceLocator()->get('zfcuser_auth_service')->getIdentity();
 
         if (!is_writable($this->lockDirectory)) {
-            $this->_logService->log(LogService::LEVEL_ERROR,
-                    'cron_unlock_dir_fail_'.$name,
+            $this->_logService->log(LogService::LEVEL_ERROR, $logCode().'dir',
                     'Unlock failed on cron job '.$name.'. Directory not writable.',
                     array('cron job'=>$name, 'directory'=>realpath($this->lockDirectory), 'user id'=>$user->getId())
                 );
             $success = FALSE;
         }elseif (!$this->canAdminUnlock()) {
-            $this->_logService->log(LogService::LEVEL_ERROR,
-                    'cron_unlock_lock_'.$name,
+            $this->_logService->log(LogService::LEVEL_ERROR, $logCode.'err',
                     'Unlock failed on cron job '.$name.'. Admin cannot unlock yet.',
                     array('name'=>$name, 'locked seconds'=>$this->getAdminLockedSeconds(), 'user id'=>$user->getId())
                 );
@@ -617,10 +614,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $success = $this->releaseLock();
 
             if ($success) {
-                $subject = 'cron_unlock_'.$name;
+                $subject = $logCode;
                 $message = 'Successfully unlocked cronjob '.$name.' ('.$filename.'); User '.$user->getId().'.';
             }else{
-                $subject = 'cron_unlock_rls_fail_'.$name;
+                $subject = $logCode.'_fl';
                 $message = 'User '.$user->getId().' tried to unlock cronjob '.$name.' ('.$filename.') unsuccessfully.';
             }
 
@@ -706,9 +703,9 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     /**
      * @return NULL|string $this->name
      */
-    public function getCode()
+    public function getLogCode()
     {
-        return substr($this->getName(), 0, 4);
+        return 'crn_'.substr($this->getName(), 0, 4);
     }
 
     /**
