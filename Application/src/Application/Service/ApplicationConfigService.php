@@ -272,7 +272,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
                     }catch( SyncException $syncException ){
                         $this->getServiceLocator()->get('logService')->log(
                             LogService::LEVEL_ERROR,
-                            'cron_construct',
+                            'crn_constrct_err',
                             $syncException->getMessage(),
                             array('name'=>$name),
                             array('name'=>$name, 'data'=>$cronjobData)
@@ -285,16 +285,16 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
                         $this->cronjobs[$name] = $cronjob;
 
                         $logLevel = LogService::LEVEL_DEBUGEXTRA;
-                        $logCode = 'cron_add';
+                        $logCode = 'crn_add';
                         $logMessage = 'Cron '.$name.' added the cronjobs array';
                     }else {
                         $logLevel = LogService::LEVEL_ERROR;
-                        $logCode = 'cron_add_fail';
+                        $logCode = 'crn_add_fail';
                         $logMessage = 'Cron '.$name.' does not extend CronRunnable: '.$class;
                     }
 
                     $this->getServiceLocator()->get('logService')
-                        ->log($logLevel, $logCode, $logMessage, array('data'=>$cronjobData), array('cronjob'=>$cronjob));
+                        ->log($logLevel, $logCode, $logMessage, array('data'=>$cronjobData), array('cron job'=>$cronjob));
                 }
             }
         }
@@ -312,11 +312,11 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
         if (isset($cronjobs[$name])) {
             $cronjob = $cronjobs[$name];
             $this->getServiceLocator()->get('logService')
-                ->log(LogService::LEVEL_DEBUGINTERNAL, 'cron_found', 'Found cron '.$name, array('name'=>$name));
+                ->log(LogService::LEVEL_DEBUGINTERNAL, 'crn_get', 'Found cron '.$name, array('name'=>$name));
         }else{
             $cronjob = NULL;
             $this->getServiceLocator()->get('logService')
-                ->log(LogService::LEVEL_ERROR, 'cron_notfound', 'Could not find cron '.$name, array('name'=>$name));
+                ->log(LogService::LEVEL_ERROR, 'crn_get_fail', 'Could not find cron '.$name, array('name'=>$name));
         }
 
         return $cronjob;

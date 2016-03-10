@@ -51,7 +51,7 @@ class LogClear extends CronRunnable
             $fromDate . ' with log_id less than ' . $maxLogId;
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_INFO,
-                'cron_logclear',
+                'crn_logclear',
                 $message,
                 array('query'=>$sqlString)
             );
