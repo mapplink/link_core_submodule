@@ -81,7 +81,7 @@ class CronjobAdminController extends AbstractCRUDController
                     $since = $unlockAction = '-';
                     $status = 'unlocked';
                 }else{
-                    $since = date('d/m, H:i:s', $cron->lockedSince());
+                    $since = date('d/m, H:i', $cron->lockedSince());
                     $status = 'LOCKED';
 
                     if ($cron->canAdminUnlock()) {
