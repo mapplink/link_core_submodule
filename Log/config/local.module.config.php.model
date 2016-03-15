@@ -6,9 +6,7 @@ return array(
             'class'=>'\Log\Cron\LogClear',
             'interval'=>180,
             'offset'=>20,
-            'lockTime'=>10,
-            'autoUnlock'=>FALSE,
-            'unlockTime'=>200,
+            'lockTime'=>20,
             'overdue'=>FALSE
         )
     ),
@@ -18,7 +16,7 @@ return array(
                 'logclear_time'=>array(
                     'label'=>'Number of days to keep log data for (minimum is 10)',
                     'type'=>'Text',
-                    'default'=>'10',
+                    'default'=>'21',
                     'required'=>FALSE
                 )
             )

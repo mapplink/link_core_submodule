@@ -7,8 +7,6 @@ return array(
             'interval'=>30,
             'offset'=>0,
             'lockTime'=>160,
-            'autoUnlock'=>TRUE,
-            'unlockTime'=>240,
             'overdue'=>TRUE
         )
     )

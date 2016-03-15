@@ -326,7 +326,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     public function cronCheck($minutes)
     {
         $this->scheduledRun = ($minutes % $this->getInterval() == $this->getOffset());
-        $run = $this->scheduledRun || $this->isOverdueEnabled() && $this->isOverdue() && $this->isUnlocked();
+        $run = $this->scheduledRun || $this->isOverdueEnabled() && $this->isOverdue() && !$this->isRunning();
 
         return $run;
     }
@@ -352,7 +352,6 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $logMessage = 'F'.$logCode.'failed.';
             }
             $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logDataUnlocked);
-
         }
         $unlocked = $this->isUnlocked();
 
@@ -376,7 +375,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                 $logMessage .= ' This is a pre-warning. The Client is not notified yet.';
                 $this->_logService->log($logLevel, $logCode, $logMessage, $logData, $logEntities);
             }
-        }elseif ($unlocked) {
+        }else{
             $lock = $this->acquireLock();
             $this->reduceOverdueFlag();
 

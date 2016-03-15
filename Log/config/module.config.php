@@ -25,7 +25,6 @@ return array (
             'class'=>'\Log\Cron\LogClear',
             'interval'=>180,
             'offset'=>20,
-            'autoUnlock'=>FALSE,
             'overdue'=>FALSE
         )
     ),
