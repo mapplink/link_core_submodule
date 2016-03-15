@@ -282,8 +282,10 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         }
         $endUpdatesLoop = $start = microtime(TRUE);
 
+        $triggerSliFeed = FALSE;
         $markedAsCompleted = array();
         $createUpdateData = $writeUpdates = 0;
+
         foreach ($updatesByType as $entityType=>$entityTypeUpdates) {
 
             if (!isset($this->_gateway[$entityType])) {
@@ -317,6 +319,10 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                         $updates[$entityId]['type'] = max($updates[$entityId]['type'], $update->getType());
                         $updates[$entityId]['combined'][] = $update->getLogId();
                     }
+                }
+
+                if ($entityType == 'product' || $entityType == 'stockitem') {
+                    $triggerSliFeed = TRUE;
                 }
             }
 
@@ -380,6 +386,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             .' '.count($markedAsCompleted).' updates marked as completed.';
         $logData = array('marked as completed'=>implode(', ', $markedAsCompleted));
         $this->_logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, $logData);
+
+        return $triggerSliFeed;
     }
 
     /**
