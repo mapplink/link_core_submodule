@@ -258,13 +258,18 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @param bool|FALSE $remove
      * @return bool|int $removedOverdueFlag
      */
-    protected function removeOverdueFlag()
+    protected function removeOverdueFlag($remove = FALSE)
     {
         if ($overdue = $this->isOverdue()) {
             $sql = $this->getCronTableGateway()->getSql();
-            $set = array('overdue'=>new Expression('overdue - 1'), 'updated_at'=>date('Y-m-d H:i:s'));
+            if ($remove) {
+                $set = array('overdue'=>0, 'updated_at' => date('Y-m-d H:i:s'));
+            }else{
+                $set = array('overdue'=>new Expression('overdue - 1'), 'updated_at' => date('Y-m-d H:i:s'));
+            }
             $where = new Where();
             $where->equalTo('cron_name', $this->getName());
 
@@ -305,12 +310,13 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @param bool|FALSE $remove
      * @return bool|int $reducedOverdueFlag
      */
-    protected function reduceOverdueFlag()
+    protected function reduceOverdueFlag($remove = FALSE)
     {
         if (!$this->scheduledRun || $this->getMaxOverdue() > 1) {
-            $success = $this->removeOverdueFlag();
+            $success = $this->removeOverdueFlag($remove);
         }else{
             $success = TRUE;
         }
@@ -413,7 +419,21 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     abstract protected function _cronRun();
 
     /**
-     * @return bool $unlocked
+     * @return array $lockData
+     */
+    protected function getLockData()
+    {
+        $data = array(
+            'name'=>$this->getName(),
+            'timestamp'=>time(),
+            'timeDate'=>date('H:i:s d/m/Y'),
+            'processId'=>posix_getpid()
+        );
+
+        return $data;
+    }
+
+    /**
      * @throws MagelinkException
      */
     protected function writeDataToLockFile()
@@ -424,12 +444,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         }else {
             $unlocked = flock($handle, LOCK_EX | LOCK_NB);
             if ($unlocked) {
-                $data = array(
-                    'name'=>$this->getName(),
-                    'timestamp'=>time(),
-                    'timeDate'=>date('H:i:s d/m/Y'),
-                    'processId'=>posix_getpid()
-                );
+                $data = $this->getLockData();
                 $contentArray = array();
                 foreach ($this->fileHeaders as $key) {
                     if (isset($data[$key])) {
@@ -545,7 +560,6 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
     /**
      * Acquire an exclusive lock for the provided lock codename
-     * @return bool
      * @throws MagelinkException
      */
     protected function acquireLock()
