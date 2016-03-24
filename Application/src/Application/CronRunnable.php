@@ -346,21 +346,24 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         $start = microtime(TRUE);
         $startDate = date('H:i:s d/m', $start);
 
-        $logDataUnlocked = array('name'=>$this->getName(), 'file'=>$this->filename);
+        $logData = array('name'=>$this->getName());
 
         if (!$this->isRunning() && !$this->isUnlocked()) {
             $logCode = $this->getLogCode().'_fulk';
             $logMessage = 'orced remove of lock file of cron job '.$this->getName().' ('.$this->filename.') ';
+            $logDataUnlock = array_merge($logData, array( 'file'=>$this->filename, 'data'=>$this->getLockFileData()));
             if ($this->releaseLock()) {
                 $logMessage = 'Successful f'.$logMessage.'.';
             }else{
                 $logCode .= 'err';
                 $logMessage = 'F'.$logMessage.'failed.';
             }
-            $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logDataUnlocked);
+            $this->_logService->log(LogService::LEVEL_ERROR, $logCode, $logMessage, $logDataUnlock);
+            unset($logDataUnlock);
         }
         $unlocked = $this->isUnlocked();
 
+        $logData['class'] = get_class($this);
         if (!$unlocked) {
             if ($this->scheduledRun) {
                 $logLevel = LogService::LEVEL_ERROR;
@@ -371,7 +374,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
             $logCode = $this->getLogCode().'_lck';
             $logMessage = 'Cron job '.$this->getName().' locked.';
-            $logData = array('time'=>date('H:i:s d/m/y', time()), 'name'=>$this->getName(), 'class'=>get_class($this));
+            $logData['time'] = date('H:i:s d/m/y', time());
             $logEntities = array('magelinkCron'=>$this);
 
             if ($this->notifyClient()) {
@@ -387,7 +390,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
             $logCode = $this->getLogCode().'_run';
             $logMessage = 'Cron '.$this->getName().' started at '.$startDate;
-            $logData = array('name'=>$this->getName(), 'class'=>get_class($this), 'start'=>$startDate);
+            $logData['start'] = $startDate;
             $logEntities = array('magelinkCron'=>$this);
             $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
 
