@@ -439,10 +439,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
     {
         $handle = fopen($this->filename, 'x');
         if (!$handle) {
-            $unlocked = FALSE;
+            $locked = FALSE;
         }else {
-            $unlocked = flock($handle, LOCK_EX | LOCK_NB);
-            if ($unlocked) {
+            $locked = flock($handle, LOCK_EX | LOCK_NB);
+            if ($locked) {
                 $data = $this->getLockData();
                 $contentArray = array();
                 foreach ($this->fileHeaders as $key) {
@@ -452,7 +452,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
                         $message = 'Data for lock file '.$this->filename.' ('.$this->getName().') does not match'
                             .' with the provided headers.';
                         throw new MagelinkException($message);
-                        $unlocked = FALSE;
+                        $locked = FALSE;
                     }
                 }
                 $content = implode(';', $contentArray).PHP_EOL;
@@ -464,7 +464,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             }
         }
 
-        return $unlocked;
+        return $locked;
     }
     /**
      * @param string|null $code
@@ -570,12 +570,12 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             throw new SyncException('Lock directory not writable!');
         }
 
-        $unlocked = $this->isUnlocked();
-        if ($unlocked) {
-            $unlocked = $this->writeDataToLockFile();
+        $locked = !$this->isUnlocked();
+        if (!$locked) {
+            $locked = $this->writeDataToLockFile();
         }
 
-        return $unlocked;
+        return $locked;
     }
 
     /**
