@@ -143,13 +143,21 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @return string $nodeLogPrefix
+     */
+    abstract protected function getNodeLogPrefix();
+
+    /**
      * Retrieves all data from the node’s source - calls the appropriate retrieve functions on the gateways
      *   as determined by the optional parameter, or if not specified, the router edges and config.
      * @param string[] $gateways
      */
     public function retrieve($gateways = NULL)
     {
-        if ($gateways == NULL){
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
+            $this->getNodeLogPrefix().'retrieve', 'Node retrieve starts', array(), array('node'=>$this));
+
+        if ($gateways == NULL) {
             $gateways = $this->_typeConfig['entity_type_support'];
         }
 
@@ -429,6 +437,9 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
      */
     public function update()
     {
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO,
+            $this->getNodeLogPrefix().'update', 'Node update starts', array(), array('node'=>$this));
+
         $nodeClass = get_called_class();
         $logCode = $this->logTimes($nodeClass);
 
