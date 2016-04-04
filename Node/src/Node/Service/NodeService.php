@@ -115,7 +115,7 @@ class NodeService implements ServiceLocatorAwareInterface
     {
         $response = $this->getTableGateway('node')->select(array('type'=>$type));
         $nodeIds = array();
-        foreach($response as $row){
+        foreach ($response as $row) {
             $nodeIds[] = $row['node_id'];
         }
 
@@ -211,12 +211,12 @@ class NodeService implements ServiceLocatorAwareInterface
         $loadTime = $createTime = 0;
         $startTimestamp = $start = microtime(TRUE);
 
-        foreach ($response as $row){
+        foreach ($response as $row) {
             /** @var \Entity\Entity\EntityAction $entityAction */
             $entityAction = $entityManager->find('Entity\Entity\EntityAction', $row['action_id']);
 
-            if ($entityAction === FALSE|| !($entityAction instanceof \Entity\Entity\EntityAction)){
-                throw new MagelinkException('Could not find action entry for action ' . $row['action_id']);
+            if ($entityAction === FALSE|| !($entityAction instanceof \Entity\Entity\EntityAction)) {
+                throw new MagelinkException('Could not find action entry for action '.$row['action_id']);
             }
 
             $entityAction->loadSimpleData();
@@ -256,7 +256,7 @@ class NodeService implements ServiceLocatorAwareInterface
     public function setActionStatus(Node $node, Action $action, $status)
     {
         $sql = "UPDATE entity_action_status SET status = ".intval($status)
-            ." WHERE action_id = ".$action->getId().' AND node_id = ' . $node->getId().";";
+            ." WHERE action_id = ".$action->getId().' AND node_id = '.$node->getId().";";
         $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
     }
 
@@ -283,7 +283,7 @@ class NodeService implements ServiceLocatorAwareInterface
      */
     public function getTimestamp($nodeId, $entityType, $action)
     {
-        if(is_int($entityType)){
+        if (is_int($entityType)) {
             $entity_type_id = $entityType;
         }else{
             $entity_type_id = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
@@ -294,10 +294,10 @@ class NodeService implements ServiceLocatorAwareInterface
             ->getRepository('Node\Entity\NodeStatus')
             ->getStatusForNode($nodeId, $entity_type_id, $action);
 
-        if($ts == null){
+        if ($ts == null) {
             return 0;
         }
-        if($ts->getTimestamp() instanceof \DateTime){
+        if ($ts->getTimestamp() instanceof \DateTime) {
             return $ts->getTimestamp()->getTimestamp();
         }
         return $ts->getTimestamp();
@@ -313,10 +313,10 @@ class NodeService implements ServiceLocatorAwareInterface
      */
     public function setTimestamp($nodeId, $entityType, $action, $timestamp=null)
     {
-        if($timestamp == null){
+        if ($timestamp == null) {
             $timestamp = time();
         }
-        if(is_int($entityType)){
+        if (is_int($entityType)) {
             $entity_type_id = $entityType;
         }else{
             $entity_type_id = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
@@ -328,17 +328,17 @@ class NodeService implements ServiceLocatorAwareInterface
             ->getRepository('Node\Entity\NodeStatus')
             ->getStatusForNode($nodeId, $entity_type_id, $action);
 
-        if(!$ts){
+        if (!$ts) {
             // We need to manually generate the ID as Doctrine doesn't like composite primary keys with auto increment (although MySQL does it fine)
             $idRes = $this->getAdapter()->query('SELECT MAX(id) AS max_id FROM node_status;', Adapter::QUERY_MODE_EXECUTE);
             $id = false;
-            foreach($idRes as $arr){
-                if($arr['max_id'] === null){
+            foreach ($idRes as $arr) {
+                if ($arr['max_id'] === null) {
                     $arr['max_id'] = 0;
                 }
                 $id = $arr['max_id']+1;
             }
-            if(!$id){
+            if (!$id) {
                 throw new MagelinkException('Unable to locate node_status ID!');
             }
             $ts = new \Node\Entity\NodeStatus();
@@ -379,7 +379,7 @@ class NodeService implements ServiceLocatorAwareInterface
      * @param string $attribute_code
      * @param string $entityType
      */
-    public function unsubscribeAttribute($nodeId, $attribute_code, $entityType){
+    public function unsubscribeAttribute($nodeId, $attribute_code, $entityType) {
         unset($this->_subscribedAttributeCodeCache[$nodeId]);
 
         $entityType = $this->verifyEntityType($entityType);
@@ -405,7 +405,7 @@ class NodeService implements ServiceLocatorAwareInterface
         // TODO optimize
 
         $entityType = $this->verifyEntityType($entityType);
-        foreach($attribute_codes as $code){
+        foreach ($attribute_codes as $code) {
             $this->subscribeAttribute($nodeId, $code, $entityType, $can_update);
         }
     }
@@ -423,7 +423,7 @@ class NodeService implements ServiceLocatorAwareInterface
         // TODO optimize
 
         $entityType = $this->verifyEntityType($entityType);
-        foreach($attribute_codes as $code){
+        foreach ($attribute_codes as $code) {
             $this->unsubscribeAttribute($nodeId, $code, $entityType);
         }
     }
@@ -438,28 +438,28 @@ class NodeService implements ServiceLocatorAwareInterface
      */
     public function getSubscribedAttributeCodes($nodeId, $entityType = FALSE, $updateOnly = FALSE)
     {
-        if($entityType === false){
+        if ($entityType === false) {
             $entityType = 0;
         }else{
             $entityType = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
         }
 
-        if($nodeId === 0 && $entityType !== false){
+        if ($nodeId === 0 && $entityType !== false) {
             $entityConfigService = $this->getServiceLocator()->get('entityConfigService');
             return array_values($entityConfigService->getAttributesCode($entityType));
         }
 
         if ($updateOnly) {
-            if(isset($this->_subscribedUpdateAttributeCodeCache[$nodeId])){
-                if(isset($this->_subscribedUpdateAttributeCodeCache[$nodeId][$entityType])){
+            if (isset($this->_subscribedUpdateAttributeCodeCache[$nodeId])) {
+                if (isset($this->_subscribedUpdateAttributeCodeCache[$nodeId][$entityType])) {
                     return $this->_subscribedUpdateAttributeCodeCache[$nodeId][$entityType];
                 }
             }else{
                 $this->_subscribedUpdateAttributeCodeCache[$nodeId] = array();
             }
         }else{
-            if(isset($this->_subscribedAttributeCodeCache[$nodeId])){
-                if(isset($this->_subscribedAttributeCodeCache[$nodeId][$entityType])){
+            if (isset($this->_subscribedAttributeCodeCache[$nodeId])) {
+                if (isset($this->_subscribedAttributeCodeCache[$nodeId][$entityType])) {
                     return $this->_subscribedAttributeCodeCache[$nodeId][$entityType];
                 }
             }else{
@@ -473,21 +473,22 @@ class NodeService implements ServiceLocatorAwareInterface
         /* @var $select \Zend\Db\Sql\Select */
         $select->from(array('na'=>'node_attribute'));
         $select->columns(array('attribute_id'=>'attribute_id'));
-        if($nodeId > 0){
+        if ($nodeId > 0) {
             $select->where(array('na.node_id'=>$nodeId));
         }
-        if($entityType){
+        if ($entityType) {
             $select->where(array('att.entity_type_id'=>$entityType));
         }
-        if($updateOnly){
+        if ($updateOnly) {
             $select->where(array('na.can_update'=>1));
         }
         $select->join(
             array('att'=>'entity_attribute'),
-            new \Zend\Db\Sql\Expression('att.attribute_id = na.attribute_id'.($entityType != 0 ? ' AND att.entity_type_id = ' . $entityType : '')),
+            new \Zend\Db\Sql\Expression('att.attribute_id = na.attribute_id'.($entityType != 0 ? ' AND att.entity_type_id = '.$entityType : '')),
             array('attribute_code'=>'code'), $select::JOIN_INNER
         );
-        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA,
+        $this->getServiceLocator()->get('logService')->log(
+            LogService::LEVEL_DEBUGEXTRA,
             'getsubattr',
             'getSubscribedAttributeCodes - '.$nodeId.'_'.$entityType.': '.$select->getSqlString($this->getAdapter()->getPlatform()),
             array('node_id'=>$nodeId, 'sql'=>$select->getSqlString($this->getAdapter()->getPlatform())),
@@ -498,14 +499,14 @@ class NodeService implements ServiceLocatorAwareInterface
             ->query($select->getSqlString($this->getAdapter()->getPlatform()), Adapter::QUERY_MODE_EXECUTE);
 
         $retArr = array();
-        foreach($response as $row){
-            if(in_array($row['attribute_code'], $retArr)){
+        foreach ($response as $row) {
+            if (in_array($row['attribute_code'], $retArr)) {
                 continue;
             }
             $retArr[] = $row['attribute_code'];
         }
 
-        if($updateOnly){
+        if ($updateOnly) {
             $this->_subscribedUpdateAttributeCodeCache[$nodeId][$entityType] = $retArr;
         }else{
             $this->_subscribedAttributeCodeCache[$nodeId][$entityType] = $retArr;
@@ -524,14 +525,14 @@ class NodeService implements ServiceLocatorAwareInterface
     protected function verifyEntityType(&$entityType)
     {
         $entity_type_in = $entityType;
-        //if($entityType instanceof Entity\Model\Type){
+        //if ($entityType instanceof Entity\Model\Type) {
         //    $entityType = $entityType->getId();
         //}
-        if(is_string($entityType)){
+        if (is_string($entityType)) {
             $entityType = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
         }
-        if($entityType <= 0 || !is_int($entityType)){
-            throw new \Magelink\Exception\MagelinkException('Invalid entity type passed to EntityService - ' . $entity_type_in . ' - ' . $entityType);
+        if ($entityType <= 0 || !is_int($entityType)) {
+            throw new MagelinkException('Invalid entity type passed to EntityService - '.$entity_type_in.' - '.$entityType);
         }
 
         return $entityType;
@@ -545,16 +546,17 @@ class NodeService implements ServiceLocatorAwareInterface
      * @throws MagelinkException If the passed attribute is invalid
      * @return int Processed entity type
      */
-    protected function verifyAttribute($attribute_code, $entityType){
+    protected function verifyAttribute($attribute_code, $entityType) {
         $entityType = $this->verifyEntityType($entityType);
-        if(is_string($attribute_code)){
-            $attribute_code = $this->getServiceLocator()->get('entityConfigService')->parseAttribute($attribute_code, $entityType);
+        if (is_string($attribute_code)) {
+            $attribute_code = $this->getServiceLocator()->get('entityConfigService')
+                ->parseAttribute($attribute_code, $entityType);
         }
-        if(is_numeric($attribute_code)){
+        if (is_numeric($attribute_code)) {
             return intval($attribute_code);
         }
-        if($attribute_code <= 0 || !is_int($attribute_code)){
-            throw new \Magelink\Exception\MagelinkException('Invalid attribute passed to NodeService - ' . $entityType . ' - ' . $attribute_code);
+        if ($attribute_code <= 0 || !is_int($attribute_code)) {
+            throw new MagelinkException('Invalid attribute passed to NodeService - '.$entityType.' - '.$attribute_code);
         }
 
         return $attribute_code;
