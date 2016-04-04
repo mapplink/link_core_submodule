@@ -22,24 +22,21 @@ class Update
     const TYPE_DELETE = 2;
     const TYPE_ACTION = 9;
 
+    /** @var int $this->update_id */
+    protected $update_id;
     /** @var int $log_id */
     protected $log_id;
-
     /** @var Entity $entity */
     protected $entity;
-
     /** @var string $type */
     protected $type;
-
     /** @var int $timestamp */
     protected $timestamp;
 
     /** @var int $source_node */
     protected $source_node;
-
     /** @var array $affected_nodes */
     protected $affected_nodes;
-
     /** @var array $affected_attributes */
     protected $affected_attributes;
 
@@ -51,8 +48,15 @@ class Update
     public function init(Entity $entity, array $data)
     {
         $this->entity = $entity;
-
-        $dataKeys = array('log_id', 'type', 'timestamp', 'source_node', 'affected_nodes', 'affected_attributes');
+        $dataKeys = array(
+            'update_id',
+            'log_id',
+            'type',
+            'timestamp',
+            'source_node',
+            'affected_nodes',
+            'affected_attributes'
+        );
         foreach ($dataKeys as $key) {
             if (!array_key_exists($key, $data)) {
                 throw new MagelinkException('Could not find value of '.$key.' for update '.$data['update_id']);
@@ -65,6 +69,14 @@ class Update
                 $this->$key = $data[$key];
             }
         }
+    }
+
+    /**
+     * @return int $this->update_id
+     */
+    public function getUpdateId()
+    {
+        return $this->update_id;
     }
 
     /**
@@ -130,5 +142,5 @@ class Update
     {
         return $this->affected_attributes;
     }
-    
+
 }

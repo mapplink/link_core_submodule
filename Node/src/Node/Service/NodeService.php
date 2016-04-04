@@ -29,6 +29,8 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 class NodeService implements ServiceLocatorAwareInterface
 {
 
+    const MAX_UPDATE_ROWS_BEING_PROCESSED = 25000;
+
     protected $_subscribedAttributeCodeCache = array();
     protected $_subscribedUpdateAttributeCodeCache = array();
 
@@ -142,7 +144,9 @@ class NodeService implements ServiceLocatorAwareInterface
             ->columns(array('update_id', 'entity_id', 'log_id'))
             ->join('entity_update_log', 'entity_update_log.log_id = entity_update.log_id',
                 array('type', 'timestamp', 'source_node', 'affected_nodes', 'affected_attributes'), 'left')
-            ->where(array('node_id'=>$nodeEntity->getId(), 'complete'=>0));
+            ->where(array('node_id'=>$nodeEntity->getId(), 'complete'=>0))
+            ->order('update_id ASC')
+            ->limit(self::MAX_UPDATE_ROWS_BEING_PROCESSED);
         $updateRowSet = $this->getTableGateway('entity_update')->selectWith($sqlSelect);
 
         $updates = $entities = array();
