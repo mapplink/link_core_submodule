@@ -59,7 +59,9 @@ class Update
         );
         foreach ($dataKeys as $key) {
             if (!array_key_exists($key, $data)) {
-                throw new MagelinkException('Could not find value of '.$key.' for update '.$data['update_id']);
+                $message = 'Could not find value of '.$key.' for update '.$data['update_id'].'.'
+                    .' Data contains: '.implode(',', array_keys($data)).' vs expected: '.implode(',', $dataKeys).'.';
+                throw new MagelinkException($message);
                 break;
             }else{
                 if (strpos($key, 'affected_') === 0 && !is_array($data[$key])) {
