@@ -29,7 +29,7 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 class NodeService implements ServiceLocatorAwareInterface
 {
 
-    const MAX_UPDATE_ROWS_BEING_PROCESSED = 25000;
+    const MAX_UPDATE_ROWS_BEING_PROCESSED = 20000;
 
     protected $_subscribedAttributeCodeCache = array();
     protected $_subscribedUpdateAttributeCodeCache = array();
