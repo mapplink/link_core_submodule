@@ -33,6 +33,9 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     /** @var EntityService $_entityService */
     protected $_entityService;
 
+    /** @var int $retrieveTimestamp */
+    protected $retrieveTimestamp = NULL;
+
 
     /**
      * @param ServiceLocatorInterface $serviceLocator
@@ -87,6 +90,18 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
      * @return bool $success
      */
     abstract protected function _init($entityType);
+
+    /**
+     * @return int $this->newRetrieveTimestamp
+     */
+    protected function getRetrieveTimestamp()
+    {
+        if ($this->retrieveTimestamp === NULL) {
+            $this->retrieveTimestamp = time();
+        }
+
+        return $this->retrieveTimestamp;
+    }
 
     /**
      * Retrieve and action all updated records (either from polling, pushed data, or other sources).

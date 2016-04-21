@@ -39,6 +39,15 @@ class EntityService implements ServiceLocatorAwareInterface
     /** @var ServiceLocatorInterface */
     protected $_serviceLocator;
 
+    /** @var $this->updateEntityTime */
+    protected $updateEntityTime;
+    /** @var $this->transformEntityTime */
+    protected $transformEntityTime;
+    /** @var $this->saveEntityTime */
+    protected $saveEntityTime;
+    /** @var $this->distributeEntityTime */
+    protected $distributeEntityTime;
+
 
     /**
      * Get service locator
@@ -256,7 +265,7 @@ class EntityService implements ServiceLocatorAwareInterface
         }
         return $entity;
     }
-    
+
     /**
      * Loads the entity with the provided unique key from the database for the given node.
      * @param int $nodeId
@@ -383,7 +392,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
     /**
      * Loads the parent entity of the provided Entity, for the given node. Null if not specified.
-     * 
+     *
      * @param int $nodeId
      * @param \Entity\Entity $child
      * @return \Entity\Entity|null
@@ -406,10 +415,10 @@ class EntityService implements ServiceLocatorAwareInterface
             return null;
         }
     }
-    
+
     /**
      * Searches for entities that match the given parameters.
-     * 
+     *
      * $searchData is an associative array where the keys are attribute codes, and the values are the contents to match.
      * There is also a $searchType array, which defines how the values in the first array are treated. The search types are as follows:
      * * eq - Default for all scalar values, does an exact equals search, or in the case of an attribute that has multiple values in the DB, an exact equals search on any of the values in the DB.
@@ -441,7 +450,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * * no_select - Rarely used internal option, stops all static / searched fields being selected in the locate query (used for nested searches, deprecated)
      * * static_field - A static field name, which will cause locateEntity to return an array with the keys being entity IDs and the values being the values of this static field. Used to get an array of matching unique IDs, for instance.
      * * node_id - Generally populated automatically, used to set the loadedNodeId for any loaded entities (for loading of resolved entities and other data later on). Should not be overridden without good cause.
-     * 
+     *
      * @param int $nodeId
      * @param int|string $entityType
      * @param string|array|false $store_id
@@ -938,10 +947,74 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @return $this->updateEntityTime
+     */
+    public function getUpdateEntityTime()
+    {
+        if (is_null($this->updateEntityTime)) {
+            $time = 0;
+        }else {
+            $time = $this->updateEntityTime;
+            unset($this->updateEntityTime);
+        }
+
+        return $time;
+    }
+
+    /**
+     * @return $this->transformEntityTime
+     */
+    public function getTransformEntityTime()
+    {
+        if (is_null($this->transformEntityTime)) {
+            $time = 0;
+        }else {
+            $time = $this->transformEntityTime;
+            unset($this->transformEntityTime);
+        }
+
+        return $time;
+    }
+
+    /**
+     * @return $this->saveEntityTime
+     */
+    public function getSaveEntityTime()
+    {
+        if (is_null($this->saveEntityTime)) {
+            $time = 0;
+        }else {
+            $time = $this->saveEntityTime;
+            unset($this->saveEntityTime);
+        }
+
+        return $time;
+    }
+
+    /**
+     * @return $this->distributeEntityTime
+     */
+    public function getDistributeEntityTime()
+    {
+        if (is_null($this->distributeEntityTime)) {
+            $time = 0;
+        }else {
+            $time = $this->distributeEntityTime;
+            unset($this->distributeEntityTime);
+        }
+
+        return $time;
+    }
+
+    /**
      * Updates the given entity with the provided data.
-     * The $merge parameter represents whether the provided data should replace the existing data or be merged into it. If this is set to true all values that are already arrays will have the new data provided appended to the end, and any multi-type attributes will be run through array_merge with the new data taking precedence where keys are the same.
-     * Alternatively, $merge can be provided as an associative array with the key being the attribute code, and the value being a boolean representing whether to merge or replace data. When specified individually this allows turning single values into array values. All non-specified keys default to false (i.e. replace only).
-     *
+     * The $merge parameter represents whether the provided data should replace the existing data or be merged into it.
+     *   If this is set to true all values that are already arrays will have the new data provided appended to the end
+     *   and any multi-type attributes will be run through array_merge with the new data taking precedence where keys
+     *   are the same.
+     *   Alternatively, $merge can be provided as an associative array with the key being the attribute code, and the
+     *   value being a boolean representing whether to merge or replace data. When specified individually this allows
+     *   turning single values into array values. All non-specified keys default to false (i.e. replace only).
      * @param int $nodeId
      * @param \Entity\Entity $entity
      * @param array $data
@@ -950,6 +1023,10 @@ class EntityService implements ServiceLocatorAwareInterface
      */
     public function updateEntity($nodeId, \Entity\Entity $entity, $data, $merge = FALSE, $forcedUpdate = FALSE)
     {
+        $startUpdate = microtime(TRUE);
+        $this->updateEntityTime = NULL;
+        $this->transformEntityTime = $this->saveEntityTime = $this->distributeEntityTime = NULL;
+
         $this->verifyNodeId($nodeId);
         $allowedAttributes = $this->getServiceLocator()->get('nodeService')
             ->getSubscribedAttributeCodes($nodeId, $entity->getType(), TRUE);
@@ -963,6 +1040,8 @@ class EntityService implements ServiceLocatorAwareInterface
                 throw new NodeException('Invalid attribute ('.$key.') specified for update.');
             }
         }
+
+        $startTransform = microtime(TRUE);
 
         $preData = $data;
         $transformedData = $this->getServiceLocator()->get('routerService')
@@ -985,6 +1064,7 @@ class EntityService implements ServiceLocatorAwareInterface
                 );
         }
 
+        $startSave = microtime(TRUE);
         $attributes = $this->getSaver()->saveEntity($entity, $data, $merge, $forcedUpdate);
 
         if (!count($attributes)) {
@@ -995,6 +1075,8 @@ class EntityService implements ServiceLocatorAwareInterface
                 array('data'=>$data),
                 array('entity'=>$entity, 'node'=>$nodeId)
             );
+
+            $this->distributeEntityTime = 0;
             $success = FALSE;
         }else{
             $changedData = array();
@@ -1009,11 +1091,19 @@ class EntityService implements ServiceLocatorAwareInterface
                     array('updated'=>$attributes, 'data'=>$data, 'transformed data'=>$transformedData),
                     array('entity'=>$entity, 'node'=>$nodeId)
                 );
+
+            $startDistribute = microtime(TRUE);
+
             $this->getServiceLocator()->get('routerService')
                 ->distributeUpdate($entity, $changedData, $nodeId, \Entity\Update::TYPE_UPDATE);
 
+            $this->distributeEntityTime = microtime(TRUE) - $startDistribute;
             $success = TRUE;
         }
+
+        $this->saveEntityTime = microtime(TRUE) - $startSave - $this->distributeEntityTime;
+        $this->transformEntityTime = $startSave - $startTransform;
+        $this->updateEntityTime = microtime(TRUE) - $startUpdate;
 
         return $success;
     }
@@ -1055,7 +1145,7 @@ class EntityService implements ServiceLocatorAwareInterface
     /**
      * Deletes the given Entity from the system.
      * Only works if this node is the only one linked to the Entity, or if no nodes are linked to the Entity. If there are remaining links an Exception will be thrown.
-     * 
+     *
      * @param int $nodeId
      * @param \Entity\Entity $entity
      * @throws MagelinkException If other nodes are linked to this entity, or if invalid data is passed.
@@ -1547,7 +1637,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
     /**
      * Verify that given node ID is valid (and transform as needed)
-     * 
+     *
      * @param int $nodeId The node ID to process (by-reference)
      * @throws MagelinkException If the passed node ID is invalid
      * @return int The processed node ID
@@ -1572,10 +1662,10 @@ class EntityService implements ServiceLocatorAwareInterface
 
         return $nodeId;
     }
-    
+
     /**
      * Verify that given entity type is valid (and transform as needed)
-     * 
+     *
      * @param int|string $entityType The entity type to process (by-reference)
      * @throws MagelinkException If the passed entity type is invalid
      * @return int Processed entity type
