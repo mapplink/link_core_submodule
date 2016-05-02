@@ -33,6 +33,12 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
     /** @var  \Node\Service\NodeService */
     protected $_nodeService;
 
+    /** @var TableGateway[] $this->_tgCache */
+    protected $_tgCache = array();
+
+    /** @var array|null $this->transformationPartTimes */
+    protected $transformationPartTimes = NULL;
+
     /** @var  \Entity\Entity */
     protected $_entity;
     /** @var  \Router\Entity\RouterTransform */
@@ -53,6 +59,8 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
      */
     public function init(Entity $entity, $sourceNodeId, RouterTransform $transform, array $updateData)
     {
+        $transformStart = microtime(TRUE);
+
         $this->_entityService = $this->getServiceLocator()->get('entityService');
         $this->_entityConfigService = $this->getServiceLocator()->get('entityConfigService');
         $this->_logService = $this->getServiceLocator()->get('logService');
@@ -73,9 +81,20 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
         $attributes = $this->_entityConfigService->getAttributesCode($this->_entity->getType());
         $this->_entityService->enhanceEntity($sourceNodeId, $this->_entity, $attributes);
 
-        return $this->_init();
+        $init = $this->_init();
+        $this->transformationPartTimes = array('init'=>microtime(TRUE) - $transformStart);
+
+        return $init;
     }
 
+    public function apply()
+    {
+        $transformStart = microtime(TRUE);
+        $apply = $this->_apply();
+        $this->transformationPartTimes['apply'] = microtime(TRUE) - $transformStart;
+
+        return $apply;
+    }
     /**
      * Set service locator
      * @param ServiceLocatorInterface $serviceLocator
@@ -92,6 +111,26 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
     public function getServiceLocator()
     {
         return $this->_serviceLocator;
+    }
+
+    /**
+     * @return double[] $transformationPartTimes
+     */
+    public function getTransformationPartTimes()
+    {
+        $defaultTimes = array('notice'=>'nothing logged');
+
+        if (is_null($this->transformationPartTimes)) {
+            $times = $defaultTimes;
+        }elseif (!is_array($this->transformationPartTimes) || count($this->transformationPartTimes) == 0) {
+            $times = $defaultTimes;
+            unset($this->transformationPartTimes);
+        }else{
+            $times = $this->transformationPartTimes;
+            unset($this->transformationPartTimes);
+        }
+
+        return $times;
     }
 
     /**
@@ -169,13 +208,13 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
      * Perform any initialization/setup actions, and check any prerequisites.
      * @return boolean Whether this transform is eligible to run
      */
-    protected abstract function _init();
+    abstract protected function _init();
 
     /**
      * Apply the transform on any necessary data
      * @return array New data changes to be merged into the update.
      */
-    public abstract function apply();
+    abstract public function _apply();
 
     /**
      * Return the database adapter to be used to communicate with Entity storage.
@@ -185,12 +224,6 @@ abstract class AbstractTransform implements ServiceLocatorAwareInterface
     {
         return $this->getServiceLocator()->get('zend_db');
     }
-
-    /**
-     * Cache of preloaded table gateways
-     * @var TableGateway[]
-     */
-    protected $_tgCache = array();
 
     /**
      * Returns a new TableGateway instance for the requested table

@@ -1,11 +1,20 @@
 <?php
+/**
+ * @category Router
+ * @package Router\Transform
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
+
 
 namespace Router\Transform;
 
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
-class TransformFactory implements ServiceLocatorAwareInterface {
+class TransformFactory implements ServiceLocatorAwareInterface
+{
 
     /**
      * Return a new Transform instance
@@ -31,7 +40,6 @@ class TransformFactory implements ServiceLocatorAwareInterface {
 
     /**
      * Set service locator
-     *
      * @param ServiceLocatorInterface $serviceLocator
      */
     public function setServiceLocator(ServiceLocatorInterface $serviceLocator)

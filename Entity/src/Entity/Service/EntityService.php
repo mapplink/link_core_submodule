@@ -17,6 +17,7 @@ use Entity\Wrapper\Address;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
+use Router\Service\RouterService;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
@@ -39,13 +40,15 @@ class EntityService implements ServiceLocatorAwareInterface
     /** @var ServiceLocatorInterface */
     protected $_serviceLocator;
 
-    /** @var $this->updateEntityTime */
+    /** @var double $this->updateEntityTime */
     protected $updateEntityTime;
-    /** @var $this->transformEntityTime */
+    /** @var double $this->transformEntityTime */
     protected $transformEntityTime;
-    /** @var $this->saveEntityTime */
+    /** @var double[][] $this->transformEntityDetails */
+    protected $transformEntityDetails = array();
+    /** @var double $this->saveEntityTime */
     protected $saveEntityTime;
-    /** @var $this->distributeEntityTime */
+    /** @var double $this->distributeEntityTime */
     protected $distributeEntityTime;
 
 
@@ -977,6 +980,21 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @return $this->transformEntityDetails
+     */
+    public function getTransformEntityDetails()
+    {
+        if (count($this->transformEntityDetails) == 0) {
+            $times = array(array());
+        }else {
+            $times = $this->transformEntityDetails;
+            $this->transformEntityDetails = array();
+        }
+
+        return $times;
+    }
+
+    /**
      * @return $this->saveEntityTime
      */
     public function getSaveEntityTime()
@@ -1044,8 +1062,9 @@ class EntityService implements ServiceLocatorAwareInterface
         $startTransform = microtime(TRUE);
 
         $preData = $data;
-        $transformedData = $this->getServiceLocator()->get('routerService')
-            ->processTransforms($entity, $data, $nodeId, \Entity\Update::TYPE_UPDATE);
+        /** @var RouterService $routerService */
+        $routerService = $this->getServiceLocator()->get('routerService');
+        $transformedData = $routerService->processTransforms($entity, $data, $nodeId, \Entity\Update::TYPE_UPDATE);
 
         if (count($transformedData)) {
             foreach ($transformedData as $key=>$value) {
@@ -1062,6 +1081,21 @@ class EntityService implements ServiceLocatorAwareInterface
                     array('tfdata'=>$transformedData, 'predata'=>$preData),
                     array('entity'=>$entity, 'node'=>$nodeId)
                 );
+        }
+
+        $transformsDetails = $routerService->getTransformsDetails();
+        foreach ($transformsDetails as $transformType=>$transformTypeDetails) {
+            if (!array_key_exists($transformType, $this->transformEntityDetails)) {
+                $this->transformEntityDetails[$transformTypeDetails] = array();
+            }
+
+            foreach ($transformTypeDetails as $part=>$time) {
+                if (!array_key_exists($part, $this->transformEntityDetails[$transformType])) {
+                    $this->transformEntityDetails[$transformType][$part] = $time;
+                }else{
+                    $this->transformEntityDetails[$transformType][$part] += $time;
+                }
+            }
         }
 
         $startSave = microtime(TRUE);

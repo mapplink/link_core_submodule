@@ -1,4 +1,12 @@
 <?php
+/**
+ * @category Router
+ * @package Router\Entity
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
+ */
 
 namespace Router\Entity;
 
@@ -6,7 +14,6 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * RouterTransform
- *
  * @ORM\Table(name="router_transform", indexes={@ORM\Index(name="entity_type_id_idx", columns={"entity_type_id"}), @ORM\Index(name="src_attribute_idx", columns={"src_attribute"}), @ORM\Index(name="dest_attribute_idx", columns={"dest_attribute"})})
  * @ORM\Entity(repositoryClass="Router\Repository\RouterTransformRepository")
  */
@@ -15,7 +22,6 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
     protected $_simpleDataKey = 'getTransformId';
     /**
      * @var integer
-     *
      * @ORM\Column(name="transform_id", type="integer", nullable=false)
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -24,57 +30,50 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
 
     /**
      * @var integer
-     *
      * @ORM\Column(name="transform_type", type="string", length=45, nullable=false)
      */
     private $transformType;
 
     /**
      * @var boolean
-     *
      * @ORM\Column(name="enable_create", type="boolean", nullable=false)
      */
     private $enableCreate = '0';
 
     /**
      * @var boolean
-     *
      * @ORM\Column(name="enable_update", type="boolean", nullable=false)
      */
     private $enableUpdate = '0';
 
     /**
      * @var boolean
-     *
      * @ORM\Column(name="enable_delete", type="boolean", nullable=false)
      */
     private $enableDelete = '0';
 
     /**
      * @var integer
-     *
      * @ORM\Column(name="dest_attribute", type="integer", nullable=false)
      */
     private $destAttribute;
 
     /**
      * @var integer
-     *
      * @ORM\Column(name="entity_type_id", type="integer", nullable=false)
      */
     private $entityTypeId;
 
     /**
      * @var integer
-     *
      * @ORM\Column(name="src_attribute", type="integer", nullable=false)
      */
     private $srcAttribute;
 
+
     /**
      * Get transformId
-     *
-     * @return integer 
+     * @return integer
      */
     public function getTransformId()
     {
@@ -83,7 +82,6 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
 
     /**
      * Set transformType
-     *
      * @param string $transformType
      * @return RouterTransform
      */
@@ -96,7 +94,6 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
 
     /**
      * Get transformType
-     *
      * @return string
      */
     public function getTransformType()
@@ -120,7 +117,7 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
     /**
      * Get enableCreate
      *
-     * @return boolean 
+     * @return boolean
      */
     public function getEnableCreate()
     {
@@ -143,7 +140,7 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
     /**
      * Get enableUpdate
      *
-     * @return boolean 
+     * @return boolean
      */
     public function getEnableUpdate()
     {
@@ -166,7 +163,7 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
     /**
      * Get enableDelete
      *
-     * @return boolean 
+     * @return boolean
      */
     public function getEnableDelete()
     {
@@ -189,7 +186,7 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
     /**
      * Get destAttribute
      *
-     * @return integer 
+     * @return integer
      */
     public function getDestAttribute()
     {
@@ -212,7 +209,7 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
     /**
      * Get entityTypeId
      *
-     * @return integer 
+     * @return integer
      */
     public function getEntityTypeId()
     {
@@ -235,7 +232,7 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
     /**
      * Get srcAttribute
      *
-     * @return integer 
+     * @return integer
      */
     public function getSrcAttribute()
     {

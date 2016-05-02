@@ -4,6 +4,7 @@
  *   as well as providing notifications to nodes when new data is available.
  * @category Router
  * @package Router\Service
+ * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
@@ -17,7 +18,6 @@ use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Router\Entity\RouterEdge;
 use Router\Entity\RouterTransform;
-use Router\Transform\AbstractTransform;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\Db\TableGateway\TableGateway;
@@ -27,11 +27,12 @@ use Zend\Db\Adapter\Adapter;
 class RouterService implements ServiceLocatorAwareInterface
 {
 
-    /** @var TableGateway[]  Cache of preloaded table gateways */
-    protected $_tgCache = array();
-
-    /** @var ServiceLocatorInterface The service locator */
-    protected $_serviceLocator;
+    /** @var TableGateway[] $this->cachedTableGateways */
+    protected $cachedTableGateways = array();
+    /** @var ServiceLocatorInterface $this->serviceLocator */
+    protected $serviceLocator;
+    /** @var double[][]|NULL $this->timePerTransformationPart */
+    protected $timePerTransformationPart = NULL;
 
 
     /**
@@ -40,7 +41,7 @@ class RouterService implements ServiceLocatorAwareInterface
      */
     public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
     {
-        $this->_serviceLocator = $serviceLocator;
+        $this->serviceLocator = $serviceLocator;
     }
 
     /**
@@ -49,7 +50,7 @@ class RouterService implements ServiceLocatorAwareInterface
      */
     public function getServiceLocator()
     {
-        return $this->_serviceLocator;
+        return $this->serviceLocator;
     }
 
     /**
@@ -64,17 +65,28 @@ class RouterService implements ServiceLocatorAwareInterface
     /**
      * Returns a new TableGateway instance for the requested table
      * @param string $table
-     * @return \Zend\Db\TableGateway\TableGateway
+     * @return TableGateway
      */
     protected function getTableGateway($table)
     {
-        if (!isset($this->_tgCache[$table])) {
-            $this->_tgCache[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
+        if (!isset($this->cachedTableGateways[$table])) {
+            $this->cachedTableGateways[$table] = new TableGateway($table, $this->getServiceLocator()->get('zend_db'));
         }
 
-        return $this->_tgCache[$table];
+        return $this->cachedTableGateways[$table];
     }
 
+    public function getTransformsDetails()
+    {
+        if (is_null($this->timePerTransformationPart)) {
+            $times = array(array());
+        }else {
+            $times = $this->timePerTransformationPart;
+            unset($this->timePerTransformationPart);
+        }
+
+        return $times;
+    }
 
     /**
      * Process any Routing Transforms before processing an update.
@@ -84,11 +96,10 @@ class RouterService implements ServiceLocatorAwareInterface
      * @param int $type The original update type (CUD)
      * @return array $transformedData
      */
-    public function processTransforms(Entity $entity, $updatedData, $sourceNodeId, $type = Update::TYPE_UPDATE)
+    public function processTransforms(Entity $entity, array $updatedData, $sourceNodeId, $type = Update::TYPE_UPDATE)
     {
         /** @var \Entity\Service\EntityConfigService $entityConfigService */
         $entityConfigService = $this->getServiceLocator()->get('entityConfigService');
-
 
         $transformedData = array();
         $affectedAttributeIds = array();
@@ -99,6 +110,7 @@ class RouterService implements ServiceLocatorAwareInterface
             }
         }
 
+        $this->timePerTransformationPart = array();
         if (count($affectedAttributeIds)) {
             /** @var \Router\Transform\TransformFactory $transformFactory */
             $transformFactory = $this->getServiceLocator()->get('transformFactory');
@@ -109,10 +121,14 @@ class RouterService implements ServiceLocatorAwareInterface
 
             $transforms = array();
             foreach ($transformEntities as $transformEntity) {
+                $startTransform = microtime(TRUE);
                 $code = $transformEntity->getTransformType();
+
                 if (!isset($transforms[$code])) {
+                    $this->timePerTransformationPart[$code] = array();
                     $transforms[$code] = $transformFactory->getTransform($transformEntity);
                 }
+
                 $transform = $transforms[$code];
                 $fullTransformClass = get_class($transform);
                 $transformClassArray = explode('\\', $fullTransformClass);
@@ -159,6 +175,17 @@ class RouterService implements ServiceLocatorAwareInterface
 
                 $this->getServiceLocator()->get('logService')
                     ->log($logLevel, $logCode, $logMessagePrefix.$logMessage.$logMessageSuffix, $logData, $logEntities);
+
+                $timePerTransformationPart = $transform->getTransformationPartTimes();
+                foreach ($timePerTransformationPart as $part=>$time) {
+                    if (!array_key_exists($part, $this->timePerTransformationPart[$code])) {
+                        $this->timePerTransformationPart[$code][$part] = $time;
+                    }else{
+                        $this->timePerTransformationPart[$code][$part] += $time;
+                    }
+                }
+
+                $this->timePerTransformationPart[$code]['total'] = microtime(TRUE) - $startTransform;
             }
         }
 
@@ -273,7 +300,7 @@ class RouterService implements ServiceLocatorAwareInterface
      * @return bool $response indicator, if the action was successful
      * @throws \Magelink\Exception\MagelinkException
      */
-    public function distributeAction(Entity $entity, $sourceNodeId, $actionType, $action_data=array())
+    public function distributeAction(Entity $entity, $sourceNodeId, $actionType, array $action_data = array())
     {
         /** @var \Router\Entity\RouterEdge[] $edges */
         $edges = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager')
@@ -349,11 +376,11 @@ class RouterService implements ServiceLocatorAwareInterface
      * Check all assigned filters for the provided edge.
      * @param Entity $entity The entity being affected
      * @param RouterEdge $edge The edge to check for
-     * @param $actionType The action type (CUDA)
-     * @param $newData A key-value array of changed attributes and their new values
+     * @param string $actionType The action type (CUDA)
+     * @param array $newData A key-value array of changed attributes and their new values
      * @return bool Whether this has met filters
      */
-    public function checkFiltersEdge(Entity $entity, RouterEdge $edge, $actionType, $newData)
+    public function checkFiltersEdge(Entity $entity, RouterEdge $edge, $actionType, array $newData)
     {
         /** @var \Router\Filter\FilterFactory $factory */
         $factory = $this->getServiceLocator()->get('filterFactory');
@@ -417,6 +444,7 @@ class RouterService implements ServiceLocatorAwareInterface
         foreach($rows as $row){
             $edgeFilter[] = $repository->find($row['filter_id']);
         }
+
         return $edgeFilter;
     }
 
@@ -438,6 +466,7 @@ class RouterService implements ServiceLocatorAwareInterface
         foreach($rows as $row){
             $transformFilter[] = $repository->find($row['filter_id']);
         }
+
         return $transformFilter;
     }
 
