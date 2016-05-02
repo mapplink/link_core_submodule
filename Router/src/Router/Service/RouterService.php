@@ -76,11 +76,14 @@ class RouterService implements ServiceLocatorAwareInterface
         return $this->cachedTableGateways[$table];
     }
 
+    /**
+     * @return double[][] $timePerTransformationPart
+     */
     public function getTransformsDetails()
     {
         if (is_null($this->timePerTransformationPart)) {
             $times = array(array());
-        }else {
+        }else{
             $times = $this->timePerTransformationPart;
             unset($this->timePerTransformationPart);
         }
@@ -119,6 +122,7 @@ class RouterService implements ServiceLocatorAwareInterface
                 ->getRepository('Router\Entity\RouterTransform')
                 ->getApplicableTransforms($entity->getType(), $affectedAttributeIds, $type);
 
+            /** @var \Router\Transform\AbstractTransform[] $transforms */
             $transforms = array();
             foreach ($transformEntities as $transformEntity) {
                 $startTransform = microtime(TRUE);

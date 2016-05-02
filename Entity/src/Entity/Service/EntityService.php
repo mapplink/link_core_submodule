@@ -980,13 +980,13 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @return $this->transformEntityDetails
+     * @return double[][] $transformEntityDetails
      */
     public function getTransformEntityDetails()
     {
         if (count($this->transformEntityDetails) == 0) {
             $times = array(array());
-        }else {
+        }else{
             $times = $this->transformEntityDetails;
             $this->transformEntityDetails = array();
         }
