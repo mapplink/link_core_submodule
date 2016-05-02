@@ -1086,7 +1086,7 @@ class EntityService implements ServiceLocatorAwareInterface
         $transformsDetails = $routerService->getTransformsDetails();
         foreach ($transformsDetails as $transformType=>$transformTypeDetails) {
             if (!array_key_exists($transformType, $this->transformEntityDetails)) {
-                $this->transformEntityDetails[$transformTypeDetails] = array();
+                $this->transformEntityDetails[$transformType] = array();
             }
 
             foreach ($transformTypeDetails as $part=>$time) {
