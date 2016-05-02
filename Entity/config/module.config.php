@@ -1,13 +1,15 @@
 <?php
 
-return array (  
+return array (
     'service_manager'=>array(
         'invokables'=>array(
             'entityService'=>'Entity\Service\EntityService',
-            'entityConfigService'=>'Entity\Service\EntityConfigService',
+            'entityConfigService'=>'Entity\Service\EntityConfigService'
         ),
+        'shared'=>array(
+            'entityService'=>FALSE
+        )
     ),
-
     'doctrine'=>array(
         'driver'=>array(
             'entity_entities'=>array(
@@ -22,13 +24,11 @@ return array (
             )
         )
     ),
-
     'controllers'=>array(
         'invokables'=>array(
-            'Entity\Controller\Console'=>'Entity\Controller\Console',
-        ),
+            'Entity\Controller\Console'=>'Entity\Controller\Console'
+        )
     ),
-
     'entity_class'=>array(
         'order'=>'\Entity\Wrapper\Order',
         'address'=>'\Entity\Wrapper\Address',
