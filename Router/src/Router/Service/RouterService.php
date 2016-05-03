@@ -179,7 +179,7 @@ class RouterService implements ServiceLocatorAwareInterface
 
                 $this->getServiceLocator()->get('logService')
                     ->log($logLevel, $logCode, $logMessagePrefix.$logMessage.$logMessageSuffix, $logData, $logEntities);
-
+/*
                 $timePerTransformationPart = $transform->getTransformationPartTimes();
                 foreach ($timePerTransformationPart as $part=>$time) {
                     if (!array_key_exists($part, $this->timePerTransformationPart[$code])) {
@@ -188,7 +188,7 @@ class RouterService implements ServiceLocatorAwareInterface
                         $this->timePerTransformationPart[$code][$part] += $time;
                     }
                 }
-
+*/
                 $this->timePerTransformationPart[$code]['total'] = microtime(TRUE) - $startTransform;
             }
         }

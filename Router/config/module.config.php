@@ -12,9 +12,9 @@ return array (
         ),
         'shared'=>array(
             'routerService'=>FALSE,
-            'transform_copy'=>FALSE,
-            'transform_denormalize'=>FALSE,
-            'transform_set'=>FALSE
+            'transform_copy'=>TRUE,
+            'transform_denormalize'=>TRUE,
+            'transform_set'=>TRUE
         )
     ),
     'doctrine'=>array(
