@@ -179,7 +179,7 @@ class RouterService implements ServiceLocatorAwareInterface
 
                 $this->getServiceLocator()->get('logService')
                     ->log($logLevel, $logCode, $logMessagePrefix.$logMessage.$logMessageSuffix, $logData, $logEntities);
-/*
+/* ToDo (maybe): automate switch depending on the transformed being shared or not
                 $timePerTransformationPart = $transform->getTransformationPartTimes();
                 foreach ($timePerTransformationPart as $part=>$time) {
                     if (!array_key_exists($part, $this->timePerTransformationPart[$code])) {
