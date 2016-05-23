@@ -58,7 +58,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
      */
     protected function getArrayKeyData(array $array, $key, $default = array())
     {
-        if ($key && array_key_exists($key, $array)) {
+        if (($key || $key === 0) && array_key_exists($key, $array)) {
             $subarray = $array[$key];
         }else{
             $subarray = $default;
