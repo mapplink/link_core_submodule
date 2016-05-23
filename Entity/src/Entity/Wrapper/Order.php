@@ -25,12 +25,7 @@ class Order extends AbstractWrapper
     protected $_cachedAllOrders = array();
     /** @var \Entity\Wrapper\Order[] $_cachedSegregatedOrders */
     protected $_cachedSegregatedOrders = array();
-
-    /** @var \Entity\Wrapper\Orderitem[] $_cachedOrderitems */
-    protected $_cachedOrderitems = array();
-    /** @var \Entity\Wrapper\Creditmemo[] $_cachedCreditmemos */
-    protected $_cachedCreditmemos = array();
-    /** @var \Entity\Wrapper\Creditmemo[] $_cachedCreditmemos */
+    /** @var \Entity\Wrapper\Creditmemoitem[] $_cachedCreditmemos */
     protected $_cachedCreditmemoitems = array();
 
     /** @var float $_cachedOrderTotal */
@@ -52,11 +47,7 @@ class Order extends AbstractWrapper
      */
     public function getOrderitems($refresh = FALSE)
     {
-        if (!$this->_cachedOrderitems || $refresh) {
-            $this->_cachedOrderitems = $this->getChildren('orderitem');
-        }
-
-        return $this->_cachedOrderitems;
+        return $this->getChildren('orderitem', $refresh);
     }
 
     /**
@@ -65,11 +56,7 @@ class Order extends AbstractWrapper
      */
     public function getCreditmemos()
     {
-        if (!$this->_cachedCreditmemos) {
-            $this->_cachedCreditmemos = $this->getChildren('creditmemo');
-        }
-
-        return $this->_cachedCreditmemos;
+        return $this->getChildren('creditmemo');
     }
 
     /**

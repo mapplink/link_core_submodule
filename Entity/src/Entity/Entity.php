@@ -27,17 +27,16 @@ class Entity implements ServiceLocatorAwareInterface
     protected $_updated_at;
     protected $_parent_id;
 
-    /** @var array $this->_attributes An array of all attribute data arrays that are applicable to this Entity
-     *                                - Note: Will likely only contain those for the Node it was loaded for */
+    /** @var array $this->_attributes  An array of all attribute data arrays that are applicable to this Entity
+     *                                 - Note: Will likely only contain those for the Node it was loaded for */
     protected $_attributes = array();
     /** @var array $this->_attributesFetchData  An array of each attributes fetch data, indexed by attribute code */
     protected $_attributesFetchData = array();
     /** @var array $this->_attributesMap  Map where key is attribute code and value is attribute ID */
     protected $_attributesMap = array();
 
-    /** @var int $this->_loadedFromNode */
+    /** @var int|bool $this->_loadedFromNode */
     protected $_loadedFromNode = FALSE;
-
     /** @var array $this->_data  All loaded data for this Entity */
     protected $_data = array();
     /** @var array $this->_extendedData  All extended data for this Entity (fkey data, etc) */
@@ -372,7 +371,12 @@ class Entity implements ServiceLocatorAwareInterface
 
     /**
      * Resolve a foreign-key relationship. Specified attribute must be Entity type.
+<<<<<<< HEAD
      * @param string $attributeCode
+=======
+     *
+     * @param string $attribute_code
+>>>>>>> Removed extra caching on the order and tweaked caching on the entity
      * @param int|string $entityType
      * @return Entity
      */
@@ -392,11 +396,12 @@ class Entity implements ServiceLocatorAwareInterface
     }
 
     /**
-     * @return \Entity\Entity $this->_parentCache
+     * @param bool $refresh
+     * @return \Entity\Entity
      */
-    public function getParent()
+    public function getParent($refresh = FALSE)
     {
-        if ($this->_parentCache === FALSE) {
+        if ($this->_parentCache === FALSE || $refresh) {
             $this->_parentCache = $this->getEntityService()
                 ->loadEntityId($this->_loadedFromNode, $this->getParentId());
         }
@@ -407,15 +412,17 @@ class Entity implements ServiceLocatorAwareInterface
     /**
      * Loads all children of the given type for this Entity.
      * @param string $entityType
+     * @param bool $refresh
      * @return \Entity\Entity[]
      */
-    public function getChildren($entityType)
+    public function getChildren($entityType, $refresh = FALSE)
     {
-        if (array_key_exists($entityType, $this->_childrenCache)) {
-            return $this->_childrenCache[$entityType];
+        if (!array_key_exists($entityType, $this->_childrenCache) || $refresh) {
+            $this->_childrenCache[$entityType] = $this->getServiceLocator()->get('entityService')
+                ->loadChildren($this->_loadedFromNode, $this, $entityType);
         }
-        return ($this->_childrenCache[$entityType] = $this->getServiceLocator()->get('entityService')
-            ->loadChildren($this->_loadedFromNode, $this, $entityType));
+
+        return $this->_childrenCache[$entityType];
     }
 
 }
