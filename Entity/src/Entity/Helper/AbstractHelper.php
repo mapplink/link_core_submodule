@@ -215,22 +215,24 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
 
     /**
      * Escape a value for use in raw SQL
-     * @param mixed $value Should be a scalar value or something that will automatically convert to a string.
-     * @return string
+     * @param mixed $value  Should be a scalar value or something that will automatically convert to a string.
+     * @param bool $recursive
+     * @return string $quotedValue
      */
-    protected function escape($value)
+    protected function escape($value, $recursive = FALSE)
     {
         try{
             $quotedValue = $this->getAdapter()->platform->quoteValue($value);
-        }catch (\Exception $exception) {
+        }catch(\Exception $exception) {
             // ToDo: Remove temporary fallback, till the real issue is found
             if (is_array($value)) {
                 $value = array_shift($value);
-                $quotedValue = $this->escape($value);
+                $quotedValue = $this->escape($value, true);
             }
 
-            $this->getServiceLocator()->get('logService')
-                ->log(LogService::LEVEL_ERROR, 'escape_fail', $exception->getMessage(),
+            if (!$recursive) {
+                $this->getServiceLocator()->get('logService')
+                    ->log(LogService::LEVEL_ERROR, 'escape_fail', $exception->getMessage(),
                     array(
                         'value'=>$value,
                         'quoted value'=>isset($quotedValue) ? $quotedValue : 'NULL',
@@ -238,6 +240,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                     ),
                     array('exception object'=>$exception)
                 );
+            }
         }
 
         return $quotedValue;
