@@ -393,7 +393,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             .' '.round($createUpdateData, 1).'s spend on preparing data, '.round($writeUpdates, 1).'s on writing.'
             .' '.count($markedAsCompleted).' updates marked as completed.';
         $logData = array('marked as completed'=>implode(', ', $markedAsCompleted));
-        $this->_logService->log(LogService::LEVEL_DEBUGINTERNAL, $logCode.'_rt', $logMessage, $logData);
+        $this->_logService->log(LogService::LEVEL_INFO, $logCode.'_rt', $logMessage, $logData);
 
         return $triggerSliFeed;
     }
