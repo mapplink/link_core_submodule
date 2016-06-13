@@ -130,15 +130,15 @@ abstract class AbstractCRUDController extends BaseController
         }
 
         $viewModel = new ViewModel(array(
-            'paginator' => $this->getPaginator(),
-            'routeControl' => $this->getRouteGenerator(),
-            'listConfig' => $this->getListViewConfig(),
-            'title' => $this->getName(),
-            'hasFilter' => $this->hasSearchFilter(),
-            'isFilterOn' => $this->getSearchFilter()->isFilterOn(),
-            'sortedField' => $this->getColumnSorter()->getSortedField(),
-            'sortedDirection' => $this->getColumnSorter()->getSortedDirection(),
-            'isCreateEnabled' => $this->getEnableCreate(),
+            'paginator'=>$this->getPaginator(),
+            'routeControl'=>$this->getRouteGenerator(),
+            'listConfig'=>$this->getListViewConfig(),
+            'title'=>$this->getName(),
+            'hasFilter'=>$this->hasSearchFilter(),
+            'isFilterOn'=>$this->getSearchFilter()->isFilterOn(),
+            'sortedField'=>$this->getColumnSorter()->getSortedField(),
+            'sortedDirection'=>$this->getColumnSorter()->getSortedDirection(),
+            'isCreateEnabled'=>$this->getEnableCreate(),
         ));
 
         $viewModel->addChild($this->getSearchFilter()->buildView($this->getSearchFilter()->isFilterOn()), 'searchFilterBox');
@@ -175,10 +175,10 @@ abstract class AbstractCRUDController extends BaseController
         }
 
         $viewModel = new ViewModel(array(
-            'routeControl' => $this->getRouteGenerator(),
-            'title' => $this->getName(),
-            'form' => $form,
-            'isDeleteEnabled' => $this->getEnableDelete(),
+            'routeControl'=>$this->getRouteGenerator(),
+            'title'=>$this->getName(),
+            'form'=>$form,
+            'isDeleteEnabled'=>$this->getEnableDelete(),
         ));
 
         $viewModel->setTemplate('web/admin/edit');
@@ -222,9 +222,9 @@ abstract class AbstractCRUDController extends BaseController
         $form->get('submit')->setValue('Create');
 
         $viewModel = new ViewModel(array(
-            'form' => $form,
-            'routeControl' => $this->getRouteGenerator(),
-            'title' => $this->getName(),
+            'form'=>$form,
+            'routeControl'=>$this->getRouteGenerator(),
+            'title'=>$this->getName(),
         ));
 
         $viewModel->setTemplate('web/admin/edit');
@@ -253,7 +253,7 @@ abstract class AbstractCRUDController extends BaseController
 
                     $this->redirect()->toRoute(
                         $this->getRouteGenerator()->getRouteName('edit'),
-                        array('id' => $object->getId())
+                        array('id'=>$object->getId())
                     );
                 }else{
                     throw new MagelinkException('A problem occurred on save. Please check data entered.');
