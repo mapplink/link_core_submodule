@@ -178,7 +178,7 @@ abstract class AbstractCRUDController extends BaseController
             'routeControl'=>$this->getRouteGenerator(),
             'title'=>$this->getName(),
             'form'=>$form,
-            'isDeleteEnabled'=>$this->getEnableDelete(),
+            'isDeleteEnabled'=>$this->getEnableDelete()
         ));
 
         $viewModel->setTemplate('web/admin/edit');
@@ -225,6 +225,7 @@ abstract class AbstractCRUDController extends BaseController
             'form'=>$form,
             'routeControl'=>$this->getRouteGenerator(),
             'title'=>$this->getName(),
+            'isDeleteEnabled'=>FALSE
         ));
 
         $viewModel->setTemplate('web/admin/edit');
