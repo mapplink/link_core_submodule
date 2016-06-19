@@ -18,7 +18,7 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 
 abstract class AbstractGateway implements ServiceLocatorAwareInterface
 {
-    /** @var \Magento\Node */
+    /** @var \Node\AbstractNode */
     protected $_node;
     /** @var \Node\Entity\Node $_nodeEntity */
     protected $_nodeEntity;
