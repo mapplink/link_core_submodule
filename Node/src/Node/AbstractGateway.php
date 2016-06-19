@@ -33,8 +33,14 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     /** @var EntityService $_entityService */
     protected $_entityService;
 
+    /** @var int $apiOverlappingSeconds */
+    protected $apiOverlappingSeconds = 3;
+    /** @var int $lastRetrieveTimestamp */
+    protected $lastRetrieveTimestamp = NULL;
     /** @var int $retrieveTimestamp */
     protected $retrieveTimestamp = NULL;
+    /** @var int $newRetrieveTimestamp */
+    protected $newRetrieveTimestamp = NULL;
 
 
     /**
@@ -104,6 +110,58 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @return int $adjustedTimestamp
+     */
+    protected function getAdjustedTimestamp($timestamp = NULL)
+    {
+        if (is_null($timestamp) || intval($timestamp) != $timestamp || $timestamp == 0) {
+            $timestamp = time();
+        }
+
+        return $timestamp - $this->apiOverlappingSeconds;
+    }
+
+    /**
+     * @return int $this->newRetrieveTimestamp
+     */
+    protected function getNewRetrieveTimestamp()
+    {
+        if ($this->newRetrieveTimestamp === NULL) {
+            $this->newRetrieveTimestamp = $this->getAdjustedTimestamp($this->getRetrieveTimestamp());
+        }
+
+        return $this->newRetrieveTimestamp;
+    }
+
+    /** @return bool|int $this->lastRetrieveTimestamp */
+    protected function getLastRetrieveTimestamp()
+    {
+        if ($this->lastRetrieveTimestamp === NULL) {
+            $this->lastRetrieveTimestamp =
+                $this->_nodeService->getTimestamp($this->_nodeEntity->getNodeId(), static::GATEWAY_ENTITY, 'retrieve');
+        }
+
+        return $this->lastRetrieveTimestamp;
+    }
+
+    /** @param int $timestamp
+     * @return bool|string $date */
+    protected function convertTimestampToExternalDateFormat($timestamp)
+    {
+        $deltaInSeconds = intval($this->_node->getConfig('time_delta_'.static::GATEWAY_ENTITY)) * 3600;
+        $date = date('Y-m-d H:i:s', $timestamp + $deltaInSeconds);
+
+        return $date;
+    }
+
+    /** @return bool|string $lastRetrieve */
+    protected function getLastRetrieveDate()
+    {
+        $lastRetrieve = $this->convertTimestampToExternalDateFormat($this->getLastRetrieveTimestamp());
+        return $lastRetrieve;
+    }
+
+    /**
      * Frame method for retrieval
      */
     public function retrieve()
@@ -113,7 +171,7 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
 
         $results = $this->retrieveEntities();
 
-        $logCode = static::GATEWAY_NODE_CODE.'_'.static::GATEWAY_ENTITY_CODE.'_re_no'
+        $logCode = static::GATEWAY_NODE_CODE.'_'.static::GATEWAY_ENTITY_CODE.'_re_no';
         $seconds = ceil($this->getAdjustedTimestamp() - $this->getNewRetrieveTimestamp());
         $message = 'Retrieved '.$results.' '.static::GATEWAY_ENTITY.'s in '.$seconds.'s up to '
             .strftime('%H:%M:%S, %d/%m', $this->retrieveTimestamp).'.';
