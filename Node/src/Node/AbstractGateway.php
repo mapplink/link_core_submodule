@@ -18,6 +18,10 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 
 abstract class AbstractGateway implements ServiceLocatorAwareInterface
 {
+    const GATEWAY_NODE_CODE = 'nod';
+    const GATEWAY_ENTITY_CODE = 'act';
+    const GATEWAY_ENTITY = 'abstract';
+
     /** @var \Node\AbstractNode */
     protected $_node;
     /** @var \Node\Entity\Node $_nodeEntity */
@@ -33,14 +37,16 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     /** @var EntityService $_entityService */
     protected $_entityService;
 
-    /** @var int $apiOverlappingSeconds */
+    /** @var int $this->apiOverlappingSeconds */
     protected $apiOverlappingSeconds = 3;
-    /** @var int $lastRetrieveTimestamp */
+    /** @var int $this->lastRetrieveTimestamp */
     protected $lastRetrieveTimestamp = NULL;
-    /** @var int $retrieveTimestamp */
+    /** @var int $this->retrieveTimestamp */
     protected $retrieveTimestamp = NULL;
-    /** @var int $newRetrieveTimestamp */
+    /** @var int $this->newRetrieveTimestamp */
     protected $newRetrieveTimestamp = NULL;
+    /** @var int $this->lastRetrieveDate */
+    protected $lastRetrieveDate = NULL;
 
 
     /**
@@ -96,6 +102,14 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
      * @return bool $success
      */
     abstract protected function _init($entityType);
+
+    /**
+     * @return string $logCode
+     */
+    protected function getLogCode()
+    {
+        return static::GATEWAY_NODE_CODE.'_'.static::GATEWAY_ENTITY_CODE;
+    }
 
     /**
      * @return int $this->newRetrieveTimestamp
