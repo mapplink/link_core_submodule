@@ -18,7 +18,11 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 
 abstract class AbstractGateway implements ServiceLocatorAwareInterface
 {
-    /** @var \Magento\Node */
+    const GATEWAY_NODE_CODE = 'nod';
+    const GATEWAY_ENTITY_CODE = 'act';
+    const GATEWAY_ENTITY = 'abstract';
+
+    /** @var \Node\AbstractNode */
     protected $_node;
     /** @var \Node\Entity\Node $_nodeEntity */
     protected $_nodeEntity;
@@ -33,8 +37,16 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     /** @var EntityService $_entityService */
     protected $_entityService;
 
-    /** @var int $retrieveTimestamp */
+    /** @var int $this->apiOverlappingSeconds */
+    protected $apiOverlappingSeconds = 3;
+    /** @var int $this->lastRetrieveTimestamp */
+    protected $lastRetrieveTimestamp = NULL;
+    /** @var int $this->retrieveTimestamp */
     protected $retrieveTimestamp = NULL;
+    /** @var int $this->newRetrieveTimestamp */
+    protected $newRetrieveTimestamp = NULL;
+    /** @var int $this->lastRetrieveDate */
+    protected $lastRetrieveDate = NULL;
 
 
     /**
@@ -92,6 +104,14 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     abstract protected function _init($entityType);
 
     /**
+     * @return string $logCode
+     */
+    protected function getLogCode()
+    {
+        return static::GATEWAY_NODE_CODE.'_'.static::GATEWAY_ENTITY_CODE;
+    }
+
+    /**
      * @return int $this->newRetrieveTimestamp
      */
     protected function getRetrieveTimestamp()
@@ -104,9 +124,83 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     }
 
     /**
-     * Retrieve and action all updated records (either from polling, pushed data, or other sources).
+     * @return int $adjustedTimestamp
      */
-    abstract public function retrieve();
+    protected function getAdjustedTimestamp($timestamp = NULL)
+    {
+        if (is_null($timestamp) || intval($timestamp) != $timestamp || $timestamp == 0) {
+            $timestamp = time();
+        }
+
+        return $timestamp - $this->apiOverlappingSeconds;
+    }
+
+    /**
+     * @return int $this->newRetrieveTimestamp
+     */
+    protected function getNewRetrieveTimestamp()
+    {
+        if ($this->newRetrieveTimestamp === NULL) {
+            $this->newRetrieveTimestamp = $this->getAdjustedTimestamp($this->getRetrieveTimestamp());
+        }
+
+        return $this->newRetrieveTimestamp;
+    }
+
+    /** @return bool|int $this->lastRetrieveTimestamp */
+    protected function getLastRetrieveTimestamp()
+    {
+        if ($this->lastRetrieveTimestamp === NULL) {
+            $this->lastRetrieveTimestamp =
+                $this->_nodeService->getTimestamp($this->_nodeEntity->getNodeId(), static::GATEWAY_ENTITY, 'retrieve');
+        }
+
+        return $this->lastRetrieveTimestamp;
+    }
+
+    /** @param int $timestamp
+     * @return bool|string $date */
+    protected function convertTimestampToExternalDateFormat($timestamp)
+    {
+        $deltaInSeconds = intval($this->_node->getConfig('time_delta_'.static::GATEWAY_ENTITY)) * 3600;
+        $date = date('Y-m-d H:i:s', $timestamp + $deltaInSeconds);
+
+        return $date;
+    }
+
+    /** @return bool|string $lastRetrieve */
+    protected function getLastRetrieveDate()
+    {
+        $lastRetrieve = $this->convertTimestampToExternalDateFormat($this->getLastRetrieveTimestamp());
+        return $lastRetrieve;
+    }
+
+    /**
+     * Frame method for retrieval
+     */
+    public function retrieve()
+    {
+        $this->getNewRetrieveTimestamp();
+        $this->getLastRetrieveDate();
+
+        $results = $this->retrieveEntities();
+
+        $logCode = static::GATEWAY_NODE_CODE.'_'.static::GATEWAY_ENTITY_CODE.'_re_no';
+        $seconds = ceil($this->getAdjustedTimestamp() - $this->getNewRetrieveTimestamp());
+        $message = 'Retrieved '.$results.' '.static::GATEWAY_ENTITY.'s in '.$seconds.'s up to '
+            .strftime('%H:%M:%S, %d/%m', $this->retrieveTimestamp).'.';
+        $logData = array('type'=>static::GATEWAY_ENTITY, 'amount'=>$results, 'period [s]'=>$seconds);
+        if (count($results) > 0) {
+            $logData['per entity [s]'] = round($seconds / count($results), 3);
+        }
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO, 'mag_cu_re_no', $message, $logData);
+    }
+
+    /**
+     * Retrieve and action all updated records (either from polling, pushed data, or other sources).
+     * @return array $retrieveResults
+     */
+    abstract protected function retrieveEntities();
 
     /**
      * Write out all the updates to the given entity.
