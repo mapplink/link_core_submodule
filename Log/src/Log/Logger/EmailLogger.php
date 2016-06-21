@@ -40,7 +40,7 @@ class EmailLogger extends AbstractLogger
         /** @var ApplicationConfigService $applicationConfigService */
         $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
 
-        // TODO (maybe) : make cacheSize configurable
+        // @todo (maybe) : make cacheSize configurable
         $this->lastCache = array();
         $this->cacheSize = 20;
 

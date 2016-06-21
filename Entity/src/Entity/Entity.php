@@ -133,7 +133,7 @@ class Entity implements ServiceLocatorAwareInterface
                 $this->_extendedData[$matches[1]][$matches[2]] =
                     $row['a_fkey_'.strtolower($matches[1]).'_'.strtolower($matches[2]).'_v'];
             }else{
-                // TODO load as regular data?
+                // @todo load as regular data?
             }
 
         }

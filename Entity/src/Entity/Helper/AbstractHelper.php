@@ -224,7 +224,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
         try{
             $quotedValue = $this->getAdapter()->platform->quoteValue($value);
         }catch(\Exception $exception) {
-            // ToDo: Remove temporary fallback, till the real issue is found
+            // @todo: Remove temporary fallback, till the real issue is found
             if (is_array($value)) {
                 $value = array_shift($value);
                 $quotedValue = $this->escape($value, true);
@@ -277,7 +277,7 @@ abstract class AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwar
                         ),
                         array('exception object'=>$exception)
                     );
-                // ToDo: Remove temporary fallback, till the real issue is found
+                // @todo: Remove temporary fallback, till the real issue is found
                 if ($escapedColumn && is_array($value)) {
                     $value = array_shift($value);
                     $escapedValue = $this->escape($value);

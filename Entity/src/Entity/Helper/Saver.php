@@ -29,7 +29,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
     public function deleteEntity(Entity $entity)
     {
         $this->beginTransaction('delete-'.$entity->getId());
-        // ToDo: Implement proper Zend Framework functionality
+        // @todo: Implement proper Zend Framework functionality
         $sql = array(
             'DELETE FROM entity_value_datetime WHERE entity_id = :eid',
             'DELETE FROM entity_value_decimal WHERE entity_id = :eid',
@@ -64,7 +64,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      */
     public function setEntityUnique($entityId, $uniqueId)
     {
-        // ToDo: Implement proper Zend Framework functionality
+        // @todo: Implement proper Zend Framework functionality
         $sql = "UPDATE entity AS e SET e.unique_id = ".$this->escape($uniqueId)
             ." WHERE e.entity_id = ".$this->escape($entityId).";";
         $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
@@ -77,7 +77,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      */
     public function setEntityParent($childId, $parentId)
     {
-        // ToDo: Implement proper Zend Framework functionality
+        // @todo: Implement proper Zend Framework functionality
         $sql = "UPDATE entity AS e SET e.parent_id = ".$this->escape($parentId)
             ." WHERE e.entity_id = ".$this->escape($childId).";";
         $this->getAdapter()->query($sql, Adapter::QUERY_MODE_EXECUTE);
@@ -92,7 +92,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
     public function touchEntity(Entity $entity, array $attributeCodes = array())
     {
         $timestamp = date('Y-m-d H:i:s');
-        // ToDo: Implement proper Zend Framework functionality
+        // @todo: Implement proper Zend Framework functionality
         $sqls = array(
             "UPDATE entity AS e SET e.updated_at = ".$this->escape($timestamp)
                 ." WHERE e.entity_id = ".$this->escape($entity->getId()).";"
@@ -100,7 +100,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
 
         foreach ($attributeCodes as $attributeCode) {
             $attData = $this->getAttribute($attributeCode, $entity->getType());
-            // ToDo: Implement proper Zend Framework functionality
+            // @todo: Implement proper Zend Framework functionality
             $sqls[] = "UPDATE entity_value_".$attData['type']." AS ev SET ev.updated_at = ".$this->escape($timestamp)
                 ." WHERE ev.entity_id = ".$this->escape($entity->getId())
                     ." AND ev.attribute_id = ".$this->escape($attData['attribute_id']);
@@ -135,10 +135,10 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             $this->commitTransaction($transactionId);
         }catch (\Exception $exception) {
             $this->getServiceLocator()->get('logService')
-                ->log(LogService::LEVEL_DEBUGEXTRA, 
-                    'sav_touch_err', 
-                    'touchEntity - '.$entity->getId().' - Exception in processing, rolling back', 
-                    array('message'=>$exception->getMessage()), 
+                ->log(LogService::LEVEL_DEBUGEXTRA,
+                    'sav_touch_err',
+                    'touchEntity - '.$entity->getId().' - Exception in processing, rolling back',
+                    array('message'=>$exception->getMessage()),
                     array('entity'=>$entity, 'exception'=>$exception)
                 );
             $this->rollbackTransaction($transactionId);
@@ -206,7 +206,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
 
     /**
      * Save new entity data into the database. Does not update any logging or distribution tables (i.e. entity_update)
-     * 
+     *
      * @param Entity $entity The Entity to update.
      * @param array $updatedData
      * @param array $merge
@@ -219,7 +219,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         $attributesToMerge = array();
         $attributesToCreate = array();
         $attributesToDelete = array();
-        
+
         foreach ($updatedData as $code=>$newValue) {
             $oldValue = $entity->getData($code);
             if (is_object($newValue) && $newValue instanceof Entity) {
@@ -293,7 +293,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         foreach ($attributesToCreate as $code) {
             if (!array_key_exists($code, $attributes) || !$attributes[$code]) {
                 throw new NodeException('Invalid attribute '.$code);
-                // ToDo: Stop further processing even the exception is commented out
+                // @todo: Stop further processing even the exception is commented out
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
@@ -333,7 +333,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         foreach ($attributesToDelete as $code) {
             if (!array_key_exists($code, $attributes) || !$attributes[$code]) {
                 throw new NodeException('Invalid attribute ' . $code);
-                // ToDo: Stop further processing even the exception is commented out
+                // @todo: Stop further processing even the exception is commented out
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
@@ -349,7 +349,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         foreach ($attributesToUpdate as $code) {
             if (!array_key_exists($code, $attributes) || !$attributes[$code]) {
                 throw new NodeException('Invalid attribute '.$code);
-                // ToDo: Stop further processing even the exception is commented out
+                // @todo: Stop further processing even the exception is commented out
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
@@ -389,14 +389,14 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
                        )
                    );
                 throw new $exception;
-                // ToDo: Stop further processing even the exception is commented out
+                // @todo: Stop further processing even the exception is commented out
             }
         }
 
         foreach ($attributesToMerge as $code) {
             if (!array_key_exists($code, $attributes) || !$attributes[$code]) {
                 throw new NodeException('Invalid attribute ' . $code);
-                // ToDo: Stop further processing even the exception is commented out
+                // @todo: Stop further processing even the exception is commented out
             }
             $this->getServiceLocator()->get('logService')
                 ->log(LogService::LEVEL_DEBUGEXTRA,
@@ -491,7 +491,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
             throw new MagelinkException($exception->getMessage(), $exception->getCode(), $exception);
         }
     }
-    
+
     /**
      * Returns SQL to insert new value for attribute
      * @param int $entityId
@@ -514,9 +514,9 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         }else{
             $values = $value;
         }
-        
+
         $template = ' ('.$this->escape($entityId).', '.$this->escape($attributes['attribute_id']).', NOW(), {})';
-        
+
         $valuesSql = array();
         foreach ($values as $key=>$value) {
             if ($attributes['type'] == 'multi') {
@@ -534,10 +534,10 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
         }else{
             $sql = NULL;
         }
-        
+
         return $sql;
     }
-    
+
     /**
      * Returns array of SQL to update attribute with new merged data
      * @param int $entityId
@@ -550,7 +550,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
     protected function getValueMergeSql($entityId, $attributes, $value, $oldValue)
     {
         if ($attributes['type'] == 'multi') {
-            throw new MagelinkException('multi attribute merging not yet supported - TODO');
+            throw new MagelinkException('multi attribute merging not yet supported - @todo');
             $sqls = array();
         }else{
             $values = array();
@@ -578,7 +578,7 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
 
         return $sqls;
     }
-    
+
     /**
      * Returns SQL to delete value from attribute
      * @param int $entityId
@@ -587,10 +587,10 @@ class Saver extends AbstractHelper implements \Zend\ServiceManager\ServiceLocato
      */
     protected function getValueDeleteSql($entityId, $attributes)
     {
-        // ToDo: Implement proper Zend Framework functionality
+        // @todo: Implement proper Zend Framework functionality
         $sql = "DELETE FROM entity_value_".$attributes['type']." WHERE entity_id = ".$this->escape($entityId)
             ." AND attribute_id = ".$this->escape($attributes['attribute_id']).";";
         return $sql;
     }
-    
+
 }

@@ -402,7 +402,7 @@ class NodeService implements ServiceLocatorAwareInterface
     public function bulkSubscribeAttribute($nodeId, $attribute_codes, $entityType, $can_update = true)
     {
         unset($this->_subscribedAttributeCodeCache[$nodeId]);
-        // TODO optimize
+        // @todo optimize
 
         $entityType = $this->verifyEntityType($entityType);
         foreach ($attribute_codes as $code) {
@@ -420,7 +420,7 @@ class NodeService implements ServiceLocatorAwareInterface
     public function bulkUnsubscribeAttribute($nodeId, $attribute_codes, $entityType)
     {
         unset($this->_subscribedAttributeCodeCache[$nodeId]);
-        // TODO optimize
+        // @todo optimize
 
         $entityType = $this->verifyEntityType($entityType);
         foreach ($attribute_codes as $code) {

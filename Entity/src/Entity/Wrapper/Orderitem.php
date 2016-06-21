@@ -58,7 +58,7 @@ class Orderitem extends AbstractWrapper
      * @return string|NULL $sku
      */
     public function getSku()
-    {   
+    {
         $sku = $this->getData('sku');
 
         if ((!$sku) && ($product = $this->getProduct())) {
@@ -199,7 +199,7 @@ class Orderitem extends AbstractWrapper
         if ($product instanceof Product) {
             $weight = $product->getData('weight', 0);
         }else{
-            $weight = 0;  // ToDo : Log this
+            $weight = 0;  // @todo : Log this
         }
 
         return $weight;

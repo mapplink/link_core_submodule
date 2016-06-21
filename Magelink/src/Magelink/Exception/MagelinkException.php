@@ -13,7 +13,7 @@ namespace Magelink\Exception;
 
 class MagelinkException extends \Exception
 {
-    
+
     /**
      * Create the exception, logging to our LogService in the process (except where that caused problems).
      * @param string $message
@@ -23,16 +23,16 @@ class MagelinkException extends \Exception
     public function __construct($message = NULL, $code = 0, \Exception $previous = NULL)
     {
         parent::__construct($message, $code, $previous);
-        
+
         if ($this->canLog()) {
-            // TODO: Call LogService
+            // @todo: Call LogService
         }elseif (php_sapi_name() === 'cli') {
             echo 'EXCEPTION: '.get_class($this).': '.PHP_EOL.$this->__toString().PHP_EOL;
         }else{
-            // TODO: Implement behavior in web
+            // @todo: Implement behavior in web
         }
     }
-    
+
     /**
      * Returns whether or not we can log the exception automatically. Used to prevent infinite loops.
      * @return boolean
@@ -46,8 +46,8 @@ class MagelinkException extends \Exception
                 return FALSE;
             }
         }
-        
+
         return TRUE;
     }
-    
+
 }

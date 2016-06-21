@@ -224,7 +224,7 @@ class LogService implements ServiceLocatorAwareInterface
                 }
             }
 
-            // ToDo: Check if this is actually necessary : Enforce node ID
+            // @todo: Check if this is actually necessary : Enforce node ID
             foreach ($optionTypeMap as $type=>$codesArray) {
                 if (isset($options[$type]) && is_object($options[$type])) {
                     $parsedObject = $this->parseObject($options[$type]);
@@ -237,7 +237,7 @@ class LogService implements ServiceLocatorAwareInterface
                 }
             }
 
-            // ToDo: Check if this is actually necessary : Enforce exception type
+            // @todo: Check if this is actually necessary : Enforce exception type
             if (isset($options['exception']) && !($options['exception'] instanceof \Exception)) {
                 $options['note'] = 'Invalid exception option '.get_class($options['exception']);
                 unset($options['exception']);
@@ -254,7 +254,7 @@ class LogService implements ServiceLocatorAwareInterface
 
     /**
      * Parse a provided object to see if we can extract a node, entity, or exception from it
-     * ToDo : Parse users
+     * @todo : Parse users
      * @param $obj
      * @return array
      */
@@ -295,13 +295,13 @@ class LogService implements ServiceLocatorAwareInterface
     }
 
     /**
-     * ToDo : Generates a human-readable version of the log message identified by the given ID.
+     * @todo : Generates a human-readable version of the log message identified by the given ID.
      * @param int $logId
      */
     public function generateHuman($logId) {}
 
     /**
-     * ToDo : Returns whether or not the provided error code has a human readable version
+     * @todo : Returns whether or not the provided error code has a human readable version
      * @param string $code
      */
     public function hasHuman($code){}

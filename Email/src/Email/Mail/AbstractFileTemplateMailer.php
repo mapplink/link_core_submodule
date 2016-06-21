@@ -18,13 +18,13 @@ use Zend\Filter\Word\CamelCaseToDash;
 
 
 abstract class AbstractFileTemplateMailer extends BaseMailer
-{   
+{
 
     /**
      * Set the default template based on the name of the class
      */
     protected function setupTemplate()
-    {   
+    {
         $classRelection = new \ReflectionClass(get_called_class());
         $templateName = $classRelection->getShortName();
         $camelCaseToDashFilter = new CamelCaseToDash();
@@ -36,13 +36,13 @@ abstract class AbstractFileTemplateMailer extends BaseMailer
 
     /**
      * Render the template and return the rendered content
-     * 
+     *
      * @return string
      */
     public function renderTemplate($parameters = array())
-    {   
+    {
         $this->setupTemplate();
-        
+
         $view = new PhpRenderer();
         $resolver = new TemplateMapResolver();
         $resolver->setMap(array(
@@ -72,7 +72,7 @@ abstract class AbstractFileTemplateMailer extends BaseMailer
      */
     protected function init()
     {
-        //@TODO put this into config file
+        //@todo put this into config file
         $this->message->setFrom('support@lero9.com', 'System Admin');
     }
 
@@ -87,7 +87,7 @@ abstract class AbstractFileTemplateMailer extends BaseMailer
 
     /**
      * Set template name
-     * @param string $templateName 
+     * @param string $templateName
      */
     public function setTemplateName($templateName)
     {

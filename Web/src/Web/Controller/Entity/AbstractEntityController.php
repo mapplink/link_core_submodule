@@ -664,7 +664,7 @@ abstract class AbstractEntityController extends BaseController
             $data = $this->request->getPost();
             $message = 'Entity has been successfully updated!';
 
-            // ToDo: unique_id update
+            // @todo: unique_id update
 
             unset($data->submit);
             foreach ($this->getStaticFields() as $code=>$label) {

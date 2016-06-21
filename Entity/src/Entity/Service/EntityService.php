@@ -338,9 +338,9 @@ class EntityService implements ServiceLocatorAwareInterface
             ->loadEntities(
                 $entityType,
                 $storeId,
-                array('LOCAL_ID'=>$localId), // ToDo: Check if this necessary: array('LOCAL_ID'=>$localId, 'type_id'=>$entityType),
+                array('LOCAL_ID'=>$localId), // @todo: Check if this necessary: array('LOCAL_ID'=>$localId, 'type_id'=>$entityType),
                 $attributes,
-                array('LOCAL_ID'=>'eq'), // ToDo: Check if this necessary: array('LOCAL_ID'=>'eq', 'type_id'=>'eq'),
+                array('LOCAL_ID'=>'eq'), // @todo: Check if this necessary: array('LOCAL_ID'=>'eq', 'type_id'=>'eq'),
                 array('linked_to_node'=>$nodeId, 'limit'=>1, 'node_id'=>$nodeId)
             );
 
