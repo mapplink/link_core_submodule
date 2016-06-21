@@ -371,12 +371,7 @@ class Entity implements ServiceLocatorAwareInterface
 
     /**
      * Resolve a foreign-key relationship. Specified attribute must be Entity type.
-<<<<<<< HEAD
      * @param string $attributeCode
-=======
-     *
-     * @param string $attribute_code
->>>>>>> Removed extra caching on the order and tweaked caching on the entity
      * @param int|string $entityType
      * @return Entity
      */
