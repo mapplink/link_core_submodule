@@ -22,19 +22,19 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     const GATEWAY_ENTITY_CODE = 'act';
     const GATEWAY_ENTITY = 'abstract';
 
-    /** @var \Node\AbstractNode */
+    /** @var \Node\AbstractNode $this->_node */
     protected $_node;
-    /** @var \Node\Entity\Node $_nodeEntity */
+    /** @var \Node\Entity\Node $this->_nodeEntity */
     protected $_nodeEntity;
 
-    /** @var bool $isOverdueRun */
+    /** @var bool $this->isOverdueRun */
     protected $isOverdueRun = NULL;
 
-    /** @var ServiceLocatorAwareInterface $_serviceLocator */
+    /** @var ServiceLocatorAwareInterface $this->_serviceLocator */
     protected $_serviceLocator;
-    /** @var NodeService $_nodeService */
+    /** @var NodeService $this->_nodeService */
     protected $_nodeService;
-    /** @var EntityService $_entityService */
+    /** @var EntityService $this->_entityService */
     protected $_entityService;
 
     /** @var int $this->apiOverlappingSeconds */
