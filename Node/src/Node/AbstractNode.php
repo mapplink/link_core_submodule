@@ -273,8 +273,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $this->getPendingUpdates();
 
 
+        /* @var \Entity\Update $update */
         foreach ($this->updates as $update) {
-            /* @var $update \Entity\Update */
             $entity = $update->getEntity();
 
             $entityType = $entity->getTypeStr();
@@ -294,6 +294,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $markedAsCompleted = array();
         $createUpdateData = $writeUpdates = 0;
 
+        /** @var \Entity\Update[] $entityTypeUpdates */
         foreach ($updatesByType as $entityType=>$entityTypeUpdates) {
 
             if (!isset($this->_gateway[$entityType])) {
@@ -304,7 +305,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
 
             $updates = array();
             if ($this->_gateway[$entityType]) {
-                // Combine all updates for one entity into a single update
+                /** Combine all updates for one entity into a single update
+                 * @var \Entity\Update $updatesPerEntityId */
                 foreach ($entityTypeUpdates as $entityId=>$updatesPerEntityId) {
                     $update = $updatesPerEntityId[0];
                     $updates[$entityId] = array(
@@ -377,6 +379,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                     break;
                 }
 
+                /** @var \Entity\Update $updateToBeMarkedAsCompleted */
                 foreach ($entityTypeUpdates[$entityId] as $updateToBeMarkedAsCompleted) {
                     $markedAsCompleted[] = $updateToBeMarkedAsCompleted->getLogId();
                     $this->_nodeService->setUpdateStatus($this->_entity, $updateToBeMarkedAsCompleted, 1);
