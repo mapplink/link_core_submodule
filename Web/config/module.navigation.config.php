@@ -107,8 +107,10 @@ $navigation = array(
     )
 );
 
+$isHopsUsed = in_array('HOPS', include strstr(__FILE__, 'magelink/Web/', TRUE).'config/local.modules.php');
 $hopsNavigation = str_replace('magelink/Web', 'module/HOPS', __FILE__);
-if (file_exists($hopsNavigation)) {
+
+if ($isHopsUsed && file_exists($hopsNavigation)) {
     $navigation = array_replace_recursive(
         $navigation,
         include $hopsNavigation
