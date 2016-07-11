@@ -114,7 +114,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     /**
      * @return string $this->_entity->getName()
      */
-    public function getTitle(){
+    public function getTitle() {
         return $this->_entity->getName();
     }
 
@@ -165,7 +165,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             'AbstractNode retrieve', array('gateways'=>$gateways), array('node'=>$this));
 
         foreach ($gateways as $gateway) {
-            if(!isset($this->_gateway[$gateway])){
+            if (!isset($this->_gateway[$gateway])) {
                 // Lazy-load gateway for entity type
                 $this->_gateway[$gateway] = $this->_lazyLoad($gateway);
             }
@@ -230,7 +230,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
             }
             try{
                 $result = TRUE;
-                if($this->_gateway[$entityType]){
+                if ($this->_gateway[$entityType]) {
                     $this->_logService->log(LogService::LEVEL_INFO,
                         'send_action',
                         'Sending action '.$action->getId().' to '.$this->getNodeId().' ('.$action->getEntity()->getUniqueId().')',
@@ -239,10 +239,10 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                     );
                     $result = $this->_gateway[$entityType]->writeAction($action);
                 }
-                if($result){
+                if ($result) {
                     $this->_nodeService->setActionStatus($this->_entity, $action, 1);
                 }
-            }catch(MagelinkException $exception){
+            }catch (MagelinkException $exception) {
                 $message = 'Uncaught exception during action processing for '.$action->getId()
                     .' to '.$this->getNodeId().': '.$exception->getMessage();
                 $this->_logService->log(LogService::LEVEL_ERROR,
