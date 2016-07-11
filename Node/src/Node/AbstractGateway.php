@@ -10,6 +10,7 @@
 namespace Node;
 
 use Entity\Service\EntityService;
+use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Node\Service\NodeService;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
