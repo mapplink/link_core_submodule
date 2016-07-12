@@ -1415,6 +1415,11 @@ li.paginationTotal {
 	float: left;
 	clear: both;
 }
+.widget-admin .form-inline .form-group,
+.widget-admin .form-inline .form-group * {
+    width: 100%;
+    max-width: 400px;
+}
 .form-group.generic {
 	clear: none;
 }
