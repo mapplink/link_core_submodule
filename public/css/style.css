@@ -13,11 +13,11 @@ body {
 	background: #f9f6f1;
 	font: 13px/1.7em 'Open Sans';
 }
-	
-p { 
-	font: 13px/1.7em 'Open Sans'; 	
+
+p {
+	font: 13px/1.7em 'Open Sans';
 }
-	
+
 input,
 button,
 select,
@@ -72,7 +72,7 @@ textarea {
 	background:linear-gradient(top, #FAFAFA 0%,#E9E9E9 100%); /* W3C */
 	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FAFAFA', endColorstr='#E9E9E9');
 	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#FAFAFA', endColorstr='#E9E9E9')";
-	
+
 	font-size: 10px;
 	color: #444;
 	text-transform: uppercase;
@@ -94,9 +94,9 @@ textarea {
 	position: relative;
 
 	padding: 7px 0;
-	
+
 	background: #00ba8b !important;
-	
+
 	-moz-border-radius: 0;
 	-webkit-border-radius: 0;
 	border-radius: 0;
@@ -141,7 +141,7 @@ textarea {
 .subnavbar {
 		margin-bottom: 2.5em;
 	}
-	
+
 .subnavbar-inner {
 	height: 60px;
 	background: #fff;
@@ -150,35 +150,35 @@ textarea {
 
 .subnavbar .container > ul {
 	display: inline-block;
-	
+
 	height: 80px;
 	padding: 0;
 	margin: 0;
-	
+
 }
 
 .subnavbar .container > ul > li {
 	float: left;
-	
+
 	min-width: 90px;
 	height: 60px;
 	padding: 0;
 	margin: 0;
-	
+
 	text-align: center;
 	list-style: none;
-	
+
 	border-left: 1px solid #d9d9d9;
-	
-	
+
+
 }
 
 .subnavbar .container > ul > li > a {
 	display: block;
-	
+
 	height: 100%;
 	padding: 0 15px;
-	
+
 	font-size: 12px;
 	font-weight: bold;
 	color: #b2afaa;
@@ -191,7 +191,7 @@ textarea {
 
 .subnavbar .container > ul > li > a > i {
 	display: inline-block;
-	
+
 	width: 24px;
 	height: 24px;
 	margin-top: 11px;
@@ -201,25 +201,25 @@ textarea {
 
 .subnavbar .container > ul > li > a > span {
 	display: block;
-	
+
 }
 
 
 .subnavbar .container > ul > li.active > a {
-	
+
 	border-bottom:3px solid #ff7f74;
 	color: #383838;
 }
-	
+
 
 .subnavbar .dropdown .dropdown-menu a {
 	font-size: 12px;
 }
 
-	
+
 .subnavbar .dropdown .dropdown-menu {
 		text-align: left;
-		
+
 		-webkit-border-top-left-radius: 0;
 		-webkit-border-top-right-radius: 0;
 		-moz-border-radius-topleft: 0;
@@ -227,9 +227,9 @@ textarea {
 		border-top-left-radius: 0;
 		border-top-right-radius: 0;
 	}
-	
-	
-	
+
+
+
 .subnavbar .dropdown-menu::before {
 	content: '';
 	display: inline-block;
@@ -256,7 +256,7 @@ textarea {
 
 .subnavbar .caret {
 	margin-top: 4px;
-	
+
 	border-top-color: white;
 	border-bottom-color: white;
 }
@@ -275,7 +275,7 @@ textarea {
 
 .main {
 	padding-bottom: 2em;
-	
+
 	border-bottom: 1px solid #000;
 }
 
@@ -296,10 +296,10 @@ textarea {
 
 .extra-inner {
 	padding: 20px 0;
-	
+
 	font-size: 11px;
 	color: #BBB;
-	
+
 	background: #1A1A1A;
 }
 
@@ -309,7 +309,7 @@ textarea {
 
 .extra h4 {
 	margin-bottom: 1em;
-	
+
 	font-weight: 400;
 }
 
@@ -320,7 +320,7 @@ textarea {
 
 .extra li {
 	margin-bottom: .6em;
-	
+
 	list-style: none;
 }
 
@@ -333,13 +333,13 @@ textarea {
 
 .footer {
 	margin-top: 0;
-	
+
 	border-top: 1px solid #292929;
 }
 
 .footer-inner {
 	padding: 15px 0;
-	
+
 	font-size: 12px;
 	background: #111;
 	color: #999;
@@ -411,7 +411,7 @@ textarea {
 	font-size: 12px;
 	font-weight: 800;
 }
-	
+
 .widget-header [class^="icon-"], .widget-header [class*=" icon-"] {
 	display: inline-block;
 	margin-left: 13px;
@@ -438,7 +438,7 @@ textarea {
 
 .widget-header+.widget-content {
 	border-top: none;
-	
+
 	-webkit-border-top-left-radius: 0;
 	-webkit-border-top-right-radius: 0;
 	-moz-border-radius-topleft: 0;
@@ -451,7 +451,7 @@ textarea {
 	padding: 0;
 }
 
-/* Widget Content Clearfix */	
+/* Widget Content Clearfix */
 .widget-content:before,
 .widget-content:after {
 	content:"";
@@ -495,17 +495,17 @@ textarea {
 /* Widget Plain */
 
 .widget-plain {
-	
+
 	background: transparent;
-	
+
 	border: none;
 }
 
 .widget-plain .widget-content {
 	padding: 0;
-	
+
 	background: transparent;
-	
+
 	border: none;
 }
 
@@ -514,8 +514,8 @@ textarea {
 
 .widget-box {}
 
-.widget-box .widget-content {	
-	background: #E3E3E3;	
+.widget-box .widget-content {
+	background: #E3E3E3;
 	background: #FFF;
 }
 
@@ -562,7 +562,7 @@ textarea {
 
 .error-container h1 {
 	margin-bottom: .5em;
-	
+
 	font-size: 120px;
 	line-height: 1em;
 }
@@ -574,7 +574,7 @@ textarea {
 
 .error-container .error-details {
 	margin-bottom: 1.5em;
-	
+
 	font-size: 16px;
 }
 
@@ -1185,70 +1185,70 @@ color: #333;
 */
 
 @media (max-width: 480px) {
-	
+
 	.error-container h1 {
 		font-size: 72px;
 	}
-	
+
 }
 /*------------------------------------------------------------------
 [1. Max Width: 767px]
 */
 
 @media (max-width: 767px) {
-		
+
 	#main {
 		padding: 0 10px;
 		margin-right: -20px;
-		margin-left: -20px;	
+		margin-left: -20px;
 	}
-	
-	
+
+
 	.subnavbar {
 		margin-left: -20px;
-		margin-right: -20px;	
+		margin-right: -20px;
 	}
-	
-	
+
+
 	.subnavbar-inner {
 		height: auto;
 	}
-	
+
 	.subnavbar .container > ul {
 		width: 100%;
 		height: auto;
-		
+
 		border: none;
 	}
-	
+
 	.subnavbar .container > ul > li {
 		width: 33%;
 		height: 70px;
 		margin-bottom: 0;
-		
+
 		border: none;
 	}
-	
-	
-	
+
+
+
 	.subnavbar .container > ul > li.active > a {
 		font-size: 11px;
 		background: transparent;
 	}
-	
-	.subnavbar .container > ul > li > a > i {	
-		display: inline-block;	
+
+	.subnavbar .container > ul > li > a > i {
+		display: inline-block;
 		margin-bottom: 0;
-		
+
 		font-size: 20px;
 	}
-	
-	
+
+
 	.subnavbar-open-right .dropdown-menu {
 		left: auto;
 		right: 0;
 	}
-	
+
 	.subnavbar-open-right .dropdown-menu:before {
 		left: auto;
 		right: 12px;
@@ -1257,29 +1257,29 @@ color: #333;
 		left: auto;
 		right: 13px;
 	}
-	
+
 	.extra {
 		margin-right: -20px;
 		margin-left: -20px;
 	}
-	
+
 	.extra .container {
 		padding: 0 20px;
 	}
-	
+
 	.footer {
 		margin-right: -20px;
 		margin-left: -20px;
 	}
-	
+
 	.footer .container {
 		padding: 0 20px;
 	}
-	
+
 	.footer .footer-terms {
 		text-align: left;
 	}
-	
+
 	.footer .footer-terms a {
 		margin-left: 0;
 		margin-right: 1em;
@@ -1291,17 +1291,17 @@ color: #333;
 */
 
 @media (max-width: 979px) {
-	
+
 	.navbar-fixed-top {
 		position: static;
-		
+
 		margin-bottom: 0;
 	}
-	
+
 	.subnavbar {
 	}
-	
-	.subnavbar .container {		
+
+	.subnavbar .container {
 		width: auto;
 	}
 }
@@ -1313,7 +1313,7 @@ color: #333;
 	.navbar .search-query {
 		width: 200px;
 	}
-	
+
 	.container > .widget {
 		width: 1170px;
 	}
@@ -1341,7 +1341,7 @@ color: #333;
 }
 
 .widget .widget-content .mainBarcodeScan {
-	width:600px; 
+	width:600px;
 	margin: 40px auto;
 }
 
