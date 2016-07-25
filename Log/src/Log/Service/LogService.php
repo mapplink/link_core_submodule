@@ -183,7 +183,11 @@ class LogService implements ServiceLocatorAwareInterface
             }else{
                 $backtraces = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
                 array_shift($backtraces);
+
                 $topTrace = $backtraces[0];
+                if (!array_key_exists('line', $topTrace)) {
+                    $topTrace['line'] = 'void';
+                }
             }
 
             // Parse backtrace for node/entity if not specified
