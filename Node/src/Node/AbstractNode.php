@@ -114,7 +114,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     /**
      * @return string $this->_entity->getName()
      */
-    public function getTitle() {
+    public function getTitle()
+    {
         return $this->_entity->getName();
     }
 
