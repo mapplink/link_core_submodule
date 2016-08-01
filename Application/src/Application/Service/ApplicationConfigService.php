@@ -22,10 +22,8 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
 
     /** @var array|NULL $_config */
     protected $_config = NULL;
-
     /** @var array $cronjobs */
     protected $cronjobs = array();
-
     /** @var ServiceLocatorInterface */
     protected $_serviceLocator;
 
