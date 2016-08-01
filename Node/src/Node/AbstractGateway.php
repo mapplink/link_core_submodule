@@ -105,6 +105,51 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     abstract protected function _init($entityType);
 
     /**
+     * @param string $mapType
+     * @param mixed $key
+     * @param bool $flip
+     * @return string|NULL $string
+     * @throws MagelinkException
+     */
+    protected static function getMappedString($mapType, $key, $flip = FALSE)
+    {
+        $mapName = strtolower($mapType).'ById';
+
+        if (isset(static::$$mapName)) {
+            $map = static::$$mapName;
+        }else{
+            $map = array();
+        }
+
+        $isValid = count($map) > 0 && (!$flip || count($map) == count(array_flip($map)));
+        if ($isValid) {
+            if ($flip) {
+                $map = array_flip($map);
+            }
+            if (isset($map[$key])) {
+                $string = $map[$key];
+            }else{
+                $string = NULL;
+            }
+        }else{
+            $message = 'self::$'.$mapName.'['.var_export($key, TRUE).'] is not existing on '.get_called_class().'.';
+            throw new MagelinkException($message);
+        }
+
+        return $string;
+    }
+
+    /**
+     * @param string $mapType
+     * @param int $string
+     * @return mixed|FALSE|NULL $id
+     */
+    protected static function getMappedId($mapType, $string)
+    {
+        return self::getMappedString($mapType, $string, TRUE);
+    }
+
+    /**
      * @return string $logCode
      */
     protected function getLogCode()
