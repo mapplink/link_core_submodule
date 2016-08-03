@@ -1,11 +1,11 @@
 <?php
 /**
- * HOPS
- *
- * @category    HOPS
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * Address Entity
+ * @category Magelink
+ * @package Entity
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Entity\Wrapper;
@@ -13,15 +13,18 @@ namespace Entity\Wrapper;
 use Entity\Entity;
 use Entity\Service\EntityService;
 
-/**
- * Address entity
- */
+
 class Address extends AbstractWrapper
 {
+
     /** @var array|null */
-    protected $_isoCountryMap = NULL;
+    protected $isoCountryMap = NULL;
 
 
+    /**
+     * @param int $nodeId
+     * @return array $customers
+     */
     public function getRelatedCustomerEntities($nodeId)
     {
         /** @var EntityService $entityService */
@@ -38,8 +41,7 @@ class Address extends AbstractWrapper
     }
 
     /**
-     * Get short address 
-     * @return string
+     * @return string $shortAddress
      */
     public function getAddressShort()
     {
@@ -48,13 +50,13 @@ class Address extends AbstractWrapper
     }
 
     /**
-     * @return array
+     * @return array $fullAddressArray
      * @throws \Magelink\Exception\MagelinkException
      */
     public function getAddressFullArray()
-    {   
+    {
         $addressParts = array();
-        
+
         // Eliminate ambiguous line endings
         $streetInfo = str_replace("\r\n", "\n", $this->getData('street'));
         if (strpos($streetInfo, "\n") === FALSE) {
@@ -75,9 +77,9 @@ class Address extends AbstractWrapper
         } else {
             $addressArray[] = $this->getData('city');
         }
-        
+
         $addressArray[] = $this->getData('region');
-        
+
         if (!in_array($this->getData('country_code'), array('NZ','AU'))) {
             $addressArray[] = $this->getCountryFromCode($this->getData('country_code'), true). ' ' . $this->getData('postcode');
         } else {
@@ -96,9 +98,7 @@ class Address extends AbstractWrapper
     }
 
     /**
-     * Get a country from the iso2 country code map,
-     * format country to uppercase if required
-     * 
+     * Get a country from the iso2 country code map, format country to uppercase if required
      * @param string $countryCode
      * @param boolean $format
      * @return string $country
@@ -106,19 +106,19 @@ class Address extends AbstractWrapper
     protected function getCountryFromCode($countryCode, $format = FALSE)
     {
         $country = $countryCode;
-        
-        if (!$this->_isoCountryMap) {
+
+        if (!$this->isoCountryMap) {
             $config = $this->getServiceLocator()->get('Config');
 
             // Map the country code to a coutnry name if we have it in the module configuration
             if (array_key_exists('country_iso2_mapping', $config)) {
-                $this->_isoCountryMap = $config['country_iso2_mapping'];
+                $this->isoCountryMap = $config['country_iso2_mapping'];
             }
         }
-        if ($this->_isoCountryMap && key_exists($countryCode, $this->_isoCountryMap)) {
-            $country = $this->_isoCountryMap[$country];
+        if ($this->isoCountryMap && key_exists($countryCode, $this->isoCountryMap)) {
+            $country = $this->isoCountryMap[$country];
         }
-        
+
         if ($format) {
             switch ($countryCode)
             {
@@ -132,11 +132,10 @@ class Address extends AbstractWrapper
     }
 
     /**
-     * Get full address 
-     * @return string
+     * @return string $fullAddress
      */
     public function getAddressFull($separator = '<br/>')
-    {   
+    {
         return implode($separator, $this->getAddressFullArray());
     }
 
