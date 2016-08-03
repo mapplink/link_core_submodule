@@ -121,7 +121,7 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
             $map = array();
         }
 
-        $isValid = count($map) > 0 && (!$flip || count($map) == count(array_flip($map)));
+        $isValid = count($map) > 0; // && (!$flip; || count($map) == count(array_flip($map)));
         if ($isValid) {
             if ($flip) {
                 $map = array_flip($map);
@@ -129,11 +129,12 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
             if (isset($map[$key])) {
                 $string = $map[$key];
             }else{
+                $message = 'self::$'.$mapName.'['.var_export($key, TRUE).'] is not existing on '.get_called_class().'.';
+                throw new MagelinkException($message);
                 $string = NULL;
             }
         }else{
-            $message = 'self::$'.$mapName.'['.var_export($key, TRUE).'] is not existing on '.get_called_class().'.';
-            throw new MagelinkException($message);
+            throw new MagelinkException('self::$'.$mapName.' is not valid.');
         }
 
         return $string;
@@ -239,7 +240,7 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
         if (count($results) > 0) {
             $logData['per entity [s]'] = round($seconds / count($results), 3);
         }
-        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO, 'mag_cu_re_no', $message, $logData);
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO, 'node_re_no', $message, $logData);
     }
 
     /**
