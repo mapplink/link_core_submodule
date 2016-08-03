@@ -139,4 +139,40 @@ class Address extends AbstractWrapper
         return implode($separator, $this->getAddressFullArray());
     }
 
+    /**
+     * @return array $streetSuburb
+     */
+    public function getStreetSuburbArray()
+    {
+        $streetSuburb = array('street'=>'', 'suburb'=>'');
+
+        $addressArray = explode(chr(10), $this->getData('street', ''));
+        if (count($addressArray) == 1) {
+            $streetSuburb['street'] = array_shift($addressArray);
+        }elseif (count($addressArray) > 1) {
+            $streetSuburb['suburb'] = array_pop($addressArray);
+            $streetSuburb['street'] = implode(chr(10), $addressArray);
+        }
+
+        return $streetSuburb;
+    }
+
+    /**
+     * @return string $street
+     */
+    public function getStreet()
+    {
+        $streetSuburb = $this->getStreetSuburbArray();
+        return $streetSuburb['street'];
+    }
+
+    /**
+     * @return string $suburb
+     */
+    public function getSuburb()
+    {
+        $streetSuburb = $this->getStreetSuburbArray();
+        return $streetSuburb['suburb'];
+    }
+
 }
