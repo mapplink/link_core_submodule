@@ -113,28 +113,34 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
      */
     protected static function getMappedString($mapType, $key, $flip = FALSE)
     {
-        $mapName = strtolower($mapType).'ById';
-
-        if (isset(static::$$mapName)) {
-            $map = static::$$mapName;
+        if (is_null($key)) {
+            $string = NULL;
         }else{
-            $map = array();
-        }
+            $mapName = strtolower($mapType).'ById';
 
-        $isValid = count($map) > 0; // && (!$flip; || count($map) == count(array_flip($map)));
-        if ($isValid) {
-            if ($flip) {
-                $map = array_flip($map);
-            }
-            if (isset($map[$key])) {
-                $string = $map[$key];
+            if (isset(static::$$mapName)) {
+                $map = static::$$mapName;
             }else{
-                $message = 'self::$'.$mapName.'['.var_export($key, TRUE).'] is not existing on '.get_called_class().'.';
-                throw new MagelinkException($message);
-                $string = NULL;
+                $map = array();
             }
-        }else{
-            throw new MagelinkException('self::$'.$mapName.' is not valid.');
+
+            $isValid = count($map) > 0; // && (!$flip; || count($map) == count(array_flip($map)));
+            if ($isValid) {
+                if ($flip) {
+                    $map = array_flip($map);
+                }
+                if (isset($map[$key])) {
+                    $string = $map[$key];
+                }else{
+                    $message = 'self::$'.$mapName.'['.var_export($key, true).'] is not existing on '
+                        .get_called_class().'.';
+                    throw new MagelinkException($message);
+                    $string = NULL;
+                }
+            }else{
+                $message = 'self::$'.$mapName.' is not valid.';
+                throw new MagelinkException('self::$'.$mapName.' is not valid.');
+            }
         }
 
         return $string;
