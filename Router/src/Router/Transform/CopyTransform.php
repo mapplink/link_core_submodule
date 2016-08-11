@@ -30,16 +30,14 @@ class CopyTransform extends AbstractTransform
     }
 
     /**
-     * Apply the transform on any necessary data
-     *
      * @return array New data changes to be merged into the update.
      */
     public function _apply()
     {
         $src = $this->getSourceAttribute();
-        $dest = $this->getDestAttribute();
+        $destination = $this->getDestAttribute();
 
-        return array($dest['code']=>$this->_entity->getData($src['code']));
+        return array($destination['code']=>$this->getUpdateData($src['code']));
     }
 
 }
