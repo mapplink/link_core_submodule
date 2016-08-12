@@ -87,6 +87,11 @@ class DatabaseLogger extends AbstractLogger {
             }
         }
 
+        if (strlen($message) > 254) {
+            $data['log message'] = $message;
+            $message = substr($message, 0, 250).' ...';
+        }
+
         $newRow = array(
             'timestamp'=>date('Y-m-d H:i:s'),
             'level'=>$level,
