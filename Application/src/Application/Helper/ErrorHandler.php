@@ -16,7 +16,7 @@ namespace Application\Helper;
 class ErrorHandler
 {
 
-    const ERROR_TO = 'forms@lero9.co.nz';
+    const ERROR_TO = 'magelink_log@lero9.com';
     const ERROR_FROM = 'noreply@lero9.co.nz';
 
     /** @var bool|NULL $allowException */
