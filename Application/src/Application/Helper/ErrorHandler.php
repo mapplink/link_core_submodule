@@ -64,17 +64,23 @@ class ErrorHandler
 
     /**
      * Exception handler callback
-     * @param \Exception $ex
+     * @param \Exception $exception
      */
-    public function exceptionhandler (\Exception $ex)
+    public function exceptionhandler(\Exception $exception)
     {
-        @mail(
-            self::ERROR_TO,
-            'MageLink Exception Handler: '.get_class($ex),
-            $ex->__toString(),
-            'From: '.self::ERROR_FROM
-        );
-        print $ex->getTraceAsString();
+        $content = $exception->__toString();
+        if (mb_strlen($content) > EmailLogger::EMAIL_MAX_LENGTH) {
+            $content = mb_substr($content, 0, EmailLogger::EMAIL_MAX_LENGTH * 0.9)
+                ."\r\n...\r\n".mb_substr($content, EmailLogger::EMAIL_MAX_LENGTH * -0.1);
+        }
+        @mail(self::ERROR_TO, 'MageLink Exception Handler: '.get_class($exception), $content, 'From: '.self::ERROR_FROM);
+
+        $trace = $exception->getTraceAsString();
+        if (mb_strlen($trace) > EmailLogger::EMAIL_MAX_LENGTH) {
+            $trace = mb_substr($trace, 0, EmailLogger::EMAIL_MAX_LENGTH * 0.9)
+                ."\r\n...\r\n".mb_substr($trace, EmailLogger::EMAIL_MAX_LENGTH * -0.1);
+        }
+        print $trace;
     }
 
     /**
