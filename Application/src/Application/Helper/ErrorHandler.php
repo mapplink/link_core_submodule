@@ -1,7 +1,5 @@
 <?php
 /**
- * Application\Helper\ErrorHandler
- *
  * @category Application
  * @package Application\Helper
  * @author Matt Johnston
@@ -11,6 +9,8 @@
  */
 
 namespace Application\Helper;
+
+use Log\Logger\EmailLogger;
 
 
 class ErrorHandler
@@ -181,6 +181,10 @@ class ErrorHandler
             .PHP_EOL.PHP_EOL.$errorContext;
 
         if ($this->_lastError != $content) {
+            if (mb_strlen($content) > EmailLogger::EMAIL_MAX_LENGTH) {
+                $content = mb_substr($content, 0, EmailLogger::EMAIL_MAX_LENGTH * 0.9)
+                    ."\r\n...\r\n".mb_substr($content, EmailLogger::EMAIL_MAX_LENGTH * -0.1);
+            }
             mail(self::ERROR_TO, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);
             $this->_lastError = $content;
         }
