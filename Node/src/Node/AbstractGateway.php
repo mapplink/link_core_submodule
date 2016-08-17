@@ -132,8 +132,8 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
                 if (isset($map[$key])) {
                     $string = $map[$key];
                 }else{
-                    $message = 'self::$'.$mapName.'['.var_export($key, true).'] is not existing on '
-                        .get_called_class().'.';
+                    $message = 'static::$'.$mapName.'['.var_export($key, TRUE).'] is not existing on '
+                        .get_called_class().'. Keys: ['.implode(',', array_keys($map)).']';
                     throw new MagelinkException($message);
                     $string = NULL;
                 }
@@ -155,6 +155,10 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     {
         return self::getMappedString($mapType, $string, TRUE);
     }
+
+/*
+    protected static function map() {}
+*/
 
     /**
      * @return string $logCode
