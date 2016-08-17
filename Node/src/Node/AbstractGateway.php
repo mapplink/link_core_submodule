@@ -124,16 +124,18 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
                 $map = array();
             }
 
+            $message = 'static::$'.$mapName.'['.var_export($key, TRUE).']';
+
             $isValid = count($map) > 0; // && (!$flip; || count($map) == count(array_flip($map)));
             if ($isValid) {
                 if ($flip) {
                     $map = array_flip($map);
+                    $message = 'array_flip('.$message.')';
                 }
                 if (isset($map[$key])) {
                     $string = $map[$key];
                 }else{
-                    $message = 'static::$'.$mapName.'['.var_export($key, TRUE).'] is not existing on '
-                        .get_called_class().'. Keys: ['.implode(',', array_keys($map)).']';
+                    $message .= ' is not existing on '.get_called_class().'. Keys: ['.implode(',', array_keys($map)).']';
                     throw new MagelinkException($message);
                     $string = NULL;
                 }
