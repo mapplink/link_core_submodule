@@ -19,14 +19,14 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 class Action
 {
 
-    /** @var int $this->_id */
-    protected $_id;
-    /** @var Entity $this->_entity */
-    protected $_entity;
-    /** @var string $this->_type */
-    protected $_type;
-    /** @var array $this->_data */
-    protected $_data = array();
+    /** @var int $this->id */
+    protected $id;
+    /** @var Entity $this->entity */
+    protected $entity;
+    /** @var string $this->type */
+    protected $type;
+    /** @var array $this->data */
+    protected $data = array();
 
 
     /**
@@ -37,34 +37,34 @@ class Action
      */
     public function init($id, Entity $entity, $type, $data)
     {
-        $this->_id = $id;
-        $this->_entity = $entity;
-        $this->_type = $type;
-        $this->_data = $data;
+        $this->id = $id;
+        $this->entity = $entity;
+        $this->type = $type;
+        $this->data = $data;
     }
 
     /**
-     * @return int $this->_id
+     * @return int $this->id
      */
     public function getId()
     {
-        return $this->_id;
+        return $this->id;
     }
 
     /**
-     * @return Entity $this->_entity
+     * @return Entity $this->entity
      */
     public function getEntity()
     {
-        return $this->_entity;
+        return $this->entity;
     }
 
     /**
-     * @return string $this->_type
+     * @return string $this->type
      */
     public function getType()
     {
-        return $this->_type;
+        return $this->type;
     }
 
     /**
@@ -74,9 +74,9 @@ class Action
     public function getData($key = NULL)
     {
         if (is_null($key)) {
-            $data = $this->_data;
-        }elseif (isset($this->_data[$key])) {
-            $data = $this->_data[$key];
+            $data = $this->data;
+        }elseif (isset($this->data[$key])) {
+            $data = $this->data[$key];
         }else{
             $data = NULL;
         }
@@ -90,7 +90,7 @@ class Action
      */
     public function hasData($key)
     {
-        return isset($this->_data[$key]);
+        return isset($this->data[$key]);
     }
 
 }
