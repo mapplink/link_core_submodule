@@ -257,7 +257,7 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
 
     /**
      * Retrieve and action all updated records (either from polling, pushed data, or other sources).
-     * @return array $retrieveResults
+     * @return int $results
      */
     abstract protected function retrieveEntities();
 
