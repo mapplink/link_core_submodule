@@ -142,7 +142,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * Loads the entity with the given ID from the database for the given node.
      * @param int $nodeId
      * @param int $entityId
-     * @return \Entity\Entity|null
+     * @return \Entity\Entity|NULL
      */
     public function loadEntityId($nodeId, $entityId)
     {
@@ -189,7 +189,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param int|string $entityType
      * @param string $storeId
      * @param string $uniqueId
-     * @return \Entity\Entity|null
+     * @return \Entity\Entity|NULL
      */
     public function isEntity($nodeId, $entityType, $storeId, $uniqueId)
     {
@@ -275,7 +275,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param int|string $entityType
      * @param string $storeId
      * @param string $uniqueId
-     * @return \Entity\Entity|null
+     * @return \Entity\Entity|NULL
      */
     public function loadEntity($nodeId, $entityType, $storeId, $uniqueId)
     {
@@ -318,7 +318,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param int|string $entityType
      * @param string $storeId
      * @param string $localId
-     * @return \Entity\Entity|null
+     * @return \Entity\Entity|NULL
      */
     public function loadEntityLocal($nodeId, $entityType, $storeId, $localId)
     {
@@ -398,7 +398,7 @@ class EntityService implements ServiceLocatorAwareInterface
      *
      * @param int $nodeId
      * @param \Entity\Entity $child
-     * @return \Entity\Entity|null
+     * @return \Entity\Entity|NULL
      */
     public function loadParent($nodeId, \Entity\Entity $child)
     {
@@ -415,7 +415,7 @@ class EntityService implements ServiceLocatorAwareInterface
         if ($child->getParentId()) {
             return $this->loadEntityId($nodeId, $child->getParentId());
         }else{
-            return null;
+            return NULL;
         }
     }
 
@@ -436,8 +436,8 @@ class EntityService implements ServiceLocatorAwareInterface
      * * all_lt - Same as all_eq but does a less-than search instead of equals
      * * not_eq - Does an exact not equals search, or in the case of an attribute that has multiple values in the DB, checks that none of them are equal to this value.
      * * not_in - Same as not_eq but performs either a check the DB value is not one of the provided values, or if there are multiple values in the DB, that none of them are equal to any of the provided values,
-     * * null - Must be equal to null
-     * * notnull - Must not be equal to null
+     * * NULL - Must be equal to NULL
+     * * notnull - Must not be equal to NULL
      * * impossible - Will never be true (used internally)
 
      * In addition to the above, the options array can contain the following keys:
@@ -474,12 +474,14 @@ class EntityService implements ServiceLocatorAwareInterface
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_DEBUG,
                 'locate',
-                'locateEntity - '.$nodeId.' - '.$entityType.' - '.$store_id.'. '.PHP_EOL.'SD: '.PHP_EOL.var_export($searchData, TRUE).PHP_EOL.'; ST: '.PHP_EOL.var_export($searchType, TRUE).PHP_EOL.'; OPT: '.PHP_EOL.var_export($options, TRUE).PHP_EOL,
+                'locateEntity - '.$nodeId.' - '.$entityType.' - '.$store_id.'. '.PHP_EOL.'SD: '.PHP_EOL
+                    .var_export($searchData, TRUE).PHP_EOL.'; ST: '.PHP_EOL.var_export($searchType, TRUE).PHP_EOL
+                    .'; OPT: '.PHP_EOL.var_export($options, TRUE).PHP_EOL,
                 array(),
                 array('node'=>$nodeId)
             );
 
-        if ($attributes == null) {
+        if ($attributes == NULL) {
             $attributes = $this->getServiceLocator()->get('nodeService')->getSubscribedAttributeCodes($nodeId, $entityType);
         }
 
@@ -646,7 +648,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @throws MagelinkException
      * @return \Entity\Entity
      */
-    public function createEntity ($nodeId, $entityType, $storeId, $uniqueId, $data, $parent = NULL)
+    public function createEntity($nodeId, $entityType, $storeId, $uniqueId, $data, $parent = NULL)
     {
         $this->verifyNodeId($nodeId);
         $this->verifyEntityType($entityType);
@@ -818,7 +820,7 @@ class EntityService implements ServiceLocatorAwareInterface
      *
      * @param $nodeId
      * @param \Entity\Entity|int $entity
-     * @return string|null
+     * @return string|NULL
      */
     public function getLocalId($nodeId, $entity)
     {
@@ -845,7 +847,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * @param \Entity\Entity $entity The Entity to request an ID for
      * @param string $remote_type What type of Node to retrieve for
      * @param bool $allowMultiple If true, returns all found Local IDs as an array, otherwise simply returns the first.
-     * @return int|array|null The local ID found or an array of local IDs found
+     * @return int|array|NULL The local ID found or an array of local IDs found
      */
     public function getRemoteId($nodeId, \Entity\Entity $entity, $remote_type, $allowMultiple = TRUE)
     {
@@ -865,7 +867,7 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $res = $this->getTableGateway('entity_identifier')->select(array('node_id'=>$nodeIds, 'entity_id'=>$entity->getId()));
         foreach ($res as $row) {
-            if ($row['local_id'] == null || $row['local_id'] == '') {
+            if ($row['local_id'] == NULL || $row['local_id'] == '') {
                 continue;
             }
             if (!$allowMultiple) {
@@ -878,7 +880,7 @@ class EntityService implements ServiceLocatorAwareInterface
         if ($allowMultiple) {
             return $ret;
         }else{
-            return null;
+            return NULL;
         }
     }
 
@@ -1599,7 +1601,7 @@ class EntityService implements ServiceLocatorAwareInterface
      * Execute a MLQL query and return the first column of the first row
      * @param string $mlql The MLQL to be executed (see separate MLQL docs)
      * @throws MagelinkException If the MLQL is invalid or contains a syntax error
-     * @return mixed|null
+     * @return mixed|NULL
      */
     public function executeQueryScalar($mlql)
     {
@@ -1625,7 +1627,7 @@ class EntityService implements ServiceLocatorAwareInterface
     /**
      * Execute a MLQL query and return an array of entities - the query must return a column "entity_id".
      *
-     * If any of the entities cannot be loaded, that array entry will be null.
+     * If any of the entities cannot be loaded, that array entry will be NULL.
      * The query may optionally return a column "key" which will be used as the array key.
      *
      * @param int $nodeId The ID of the node executing this query
