@@ -624,6 +624,14 @@ class Order extends AbstractWrapper
     }
 
     /**
+     * @return mixed $shipmentMethod
+     */
+    public function getShipmentMethod()
+    {
+        return $this->getData('shipping_method', NULL);
+    }
+
+    /**
      * @return float $totalWeight
      * @throws MagelinkException
      */
