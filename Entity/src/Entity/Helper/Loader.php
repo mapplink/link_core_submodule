@@ -15,6 +15,7 @@ use Entity\Entity;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\NodeException;
+use Zend\Db\Adapter\Adapter;
 use Zend\Db\Sql\Expression;
 
 
@@ -238,31 +239,38 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
         }else{
             $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA, 'load_locate_nf', 'loadEntities - no fill query, no attributes ', array());
         }
-        
+
         return $entities;
     }
 
     /**
      * Fetches the entity type ID for a given entity from the database
-     * @param $entity_id
+     * @param $entityId
      * @return bool
      * @throws \Magelink\Exception\MagelinkException If the given entity ID is in an invalid format
      */
-    public function getEntityTypeId($entity_id)
+    public function getEntityTypeId($entityId)
     {
-        if (!is_int($entity_id)) {
-            throw new \Magelink\Exception\NodeException('Invalid entity id format!');
+        if (!is_int($entityId)) {
+            throw new NodeException('Invalid entityId format: '.var_export($entityId, TRUE));
         }
-        $res = $this->getAdapter()->query('SELECT e.type_id AS type_id FROM entity AS e WHERE e.entity_id = '.$this->escape($entity_id), \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
-        if (!$res) {
-            return false;
+
+        $query = 'SELECT e.type_id AS type_id FROM entity AS e WHERE e.entity_id = '.$this->escape($entityId);
+        $result = $this->getAdapter()->query($query, Adapter::QUERY_MODE_EXECUTE);
+
+        $entityTypeId = FALSE;
+        if ($result) {
+            foreach ($result as $row) {
+                if (isset($row['type_id'])) {
+                    $entityTypeId = $row['type_id'];
+                }
+                break;
+            }
         }
-        foreach ($res as $row) {
-            return $row['type_id'];
-        }
-        return false;
+
+        return $entityTypeId;
     }
-    
+
     /**
      * Load additional attributes into a given entity
      * @param \Entity\Entity $entity
@@ -286,7 +294,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             $attributes[$d['attribute_id']] = $d;
             $entity->addAttribute($d);
         }
-        
+
         $fillSql = $this->getAttributeFillSql(array($entity->getId()), $attributes);
         if (strlen($fillSql)) {
             $fillResult = $this->getAdapter()->query($fillSql, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
@@ -299,10 +307,10 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
         }else{
             $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUGEXTRA, 'enhance_empty', 'enhanceEntity - no fill query for '.$entity->getId().' with req '.implode(', ', $attributeCodes), array('atts'=>$attributeCodes));
         }
-        
+
         return $entity;
     }
-    
+
     /**
      * Take the results from a fill query and populate the entity values, parsing for array values etc.
      * @param array|\Zend\Db\ResultSet\ResultSet $fillResult
@@ -315,7 +323,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             if (!array_key_exists($row['ent_id'], $entityValues)) {
                 $entityValues[$row['ent_id']] = array();
             }
-            
+
             if (array_key_exists('key', $row) && $row['key'] !== null) {
                 // Multi type attribute
                 if (!array_key_exists($row['att_id'], $entityValues[$row['ent_id']])) {
@@ -336,7 +344,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
         }
         return $entityValues;
     }
-    
+
     /**
      * Based on the provided options, generates a Select object to retrieve matching records
      * @param int $entityTypeId
@@ -478,7 +486,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             $select->where($this->generateFieldCriteria($prefix.'e.updated_at', $searchData['UPDATED_AT'], $searchType['UPDATED_AT']));
             unset($searchData['UPDATED_AT']);
         }
-        
+
         foreach ($searchData as $k=>$v) {
             if (strpos($k, '.') !== false) {
                 $fkey_field = strtolower(substr($k, 0, strpos($k, '.')));
@@ -571,7 +579,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
                 $this->addJoin($select, $att, $suppress, $entityTypeId, $prefix);
             }
         }
-        
+
         if (array_key_exists('limit', $options)) {
             $select->limit(intval($options['limit']));
         }
@@ -595,7 +603,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             }
             $select->order($orders);
         }
-        
+
         return $select;
     }
 
@@ -640,7 +648,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
         );
         return $select;
     }
-    
+
     /**
      * Automatically populate default search types, and sanity-check values.
      * @param array $searchData
@@ -683,7 +691,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
         }
         return $searchType;
     }
-    
+
     /**
      * Generates the SQL to return all attribute values for the given entities and attributes.
      * @param array $entityIds
@@ -705,15 +713,15 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             }
             $attributesByType[$att['type']][] = $att['attribute_id'];
         }
-        
+
         $sql = array();
-        
+
         foreach ($attributesByType as $type=>$atts) {
             $sql[] = 'SELECT v.entity_id as ent_id, v.attribute_id AS att_id, v.value AS value, '.($type == 'multi' ? '`v`.`key` AS `key`' : 'NULL AS `key`').' FROM entity_value_'.$type.' AS v WHERE v.entity_id IN ('.implode(', ', $entityIds).') AND v.attribute_id IN ('.implode(', ', $atts).')';
         }
-        
+
         $fullSql = implode(' UNION ALL ', $sql);
-        
+
         return $fullSql;
     }
 
