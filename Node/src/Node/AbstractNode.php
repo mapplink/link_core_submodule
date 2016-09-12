@@ -268,7 +268,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
         $startMethod = microtime(TRUE);
         $logCode = 'node_procupd';
         $logMessage = '->processUpdates() started at '.date('d/m H:i:s', $startMethod).'.';
-        $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, array());
+        $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, array('updates'=>count($this->updates)));
 
         $updatesByType = array();
         $this->getPendingUpdates();
