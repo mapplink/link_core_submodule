@@ -59,6 +59,12 @@ class Address extends AbstractWrapper
 
         // Eliminate ambiguous line endings
         $streetInfo = str_replace("\r\n", "\n", $this->getData('street'));
+
+        // Fixes arrays on the street field (which should actually never occur) and convert them into string
+        if (is_array($streetInfo)) {
+            $streetInfo = array_pop($streetInfo);
+        }
+
         if (strpos($streetInfo, "\n") === FALSE) {
             $streetArray = array($streetInfo);
         }else{
