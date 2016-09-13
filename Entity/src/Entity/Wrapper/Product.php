@@ -11,21 +11,68 @@
 namespace Entity\Wrapper;
 
 use Entity\Entity;
-use Magento\Service\MagentoService;
+use Magelink\Exception\MagelinkException;
 
 
 class Product extends AbstractWrapper
 {
+
+    const TYPE_SIMPLE = 'simple';
+    const TYPE_CONFIGURABLE = 'configurable';
+
+
     /**
-     * Checks if product is shippable
+     * Checks if product is shippable - dependend on Magento node or Magento2 node
      * @return bool
      */
     public function isShippable()
     {
-        /** @var \Magento\Service\MagentoService $magentoService */
+        /** @var ServiceLocatorAwareInterface $magentoService */
         $magentoService = $this->getServiceLocator()->get('magentoService');
-        $isShippable = $magentoService->isProductTypeShippable($this->getData('type'));
+        if (!$magentoService) {
+            $magentoService = $this->getServiceLocator()->get('magento2Service');
+        }
+
+        if (!$magentoService) {
+            throw new MagelinkException('Neither Magento node nor Magento2 node installed.');
+        }else{
+            $isShippable = $magentoService->isProductTypeShippable($this->getData('type'));
+        }
 
         return $isShippable;
     }
+
+    /**
+     * @return bool $isTypeConfigurable
+     */
+    public function isTypeConfigurable()
+    {
+        return $this->getData('type', NULL) == self::TYPE_CONFIGURABLE;
+    }
+
+    /**
+     * @return bool $isTypeSimple
+     */
+    public function isTypeSimple()
+    {
+        return $this->getData('type', NULL) == self::TYPE_SIMPLE;
+    }
+
+    /**
+     * @param $nodeId
+     * @return array $configurableProductLinks
+     */
+    public function getConfigurableProductLinks($nodeId)
+    {
+        $configurableProductLinks = array();
+
+        if ($this->isTypeConfigurable()) {
+            foreach ($this->_entityService->loadAssociatedProducts($nodeId, $this) as $product) {
+                $configurableProductLinks[] = $this->_entityService->getLocalId($nodeId, $product);
+            }
+        }
+
+        return $configurableProductLinks;
+    }
+
 }

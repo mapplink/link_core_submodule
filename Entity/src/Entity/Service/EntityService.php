@@ -215,6 +215,44 @@ class EntityService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @param $nodeId
+     * @param \Entity\Wrapper\Product $product
+     * @return array|\Entity\Entity[]
+     * @throws \Magelink\Exception\NodeException
+     */
+    public function loadAssociatedProducts($nodeId, \Entity\Wrapper\Product $product)
+    {
+        $this->verifyNodeId($nodeId);
+
+        if ($product->getTypeStr() != 'product') {
+            throw new NodeException('Invalid entity passed to loadAssociatedProducts: '.$product->getTypeStr().'.');
+        }
+
+        $this->getServiceLocator()->get('logService')
+            ->log(LogService::LEVEL_DEBUG,
+                'loadasso',
+                'loadAssociatedProducts - '.$nodeId.' - '.$product->getId().' ('.$product->getTypeStr().')',
+                array('node_id'=>$nodeId, 'entity_id'=>$product->getId()),
+                array('product'=>$product)
+            );
+
+        $associatedProducts = $this->getLoader()->loadEntities(
+            'product',
+            0,
+            array('configurable_sku'=>$product->getUniqueId()),
+            array('entity_id'),
+            array('configurable_sku'=>'eq'),
+            array('node_id'=>$nodeId)
+        );
+
+        if (!$associatedProducts || !count($associatedProducts)) {
+            $associatedProducts = array();
+        }
+
+        return $associatedProducts;
+    }
+
+    /**
      * Load segregated orders
      * @param $nodeId
      * @param \Entity\Entity $entity
@@ -231,8 +269,8 @@ class EntityService implements ServiceLocatorAwareInterface
 
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_DEBUG,
-                'loadeid',
-                'loadEntityId - '.$nodeId.' - '.$entity->getId().' ('.$entity->getTypeStr().')',
+                'loadseg',
+                'loadSegregatedOrders - '.$nodeId.' - '.$entity->getId().' ('.$entity->getTypeStr().')',
                 array('node_id'=>$nodeId, 'entity_id'=>$entity->getId()),
                 array('entity'=>$entity)
             );
