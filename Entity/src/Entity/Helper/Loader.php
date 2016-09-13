@@ -515,7 +515,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             }else{
                 $attribute = $this->getAttribute($k, $entityTypeId);
                 if (!$attribute) {
-                    throw new NodeException('Invalid search attribute '.$k.' for type '.$entityTypeId);
+                    throw new NodeException('Invalid search attribute '.$k.' for type with id '.$entityTypeId);
                 }
                 $table = $prefix.'val_'.$k;
                 $field = $table.'.value';
