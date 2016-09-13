@@ -402,16 +402,16 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             $select->from(array($prefix.'e'=>'entity'));
         }
 
-        $fkey_type_ids = array();
-        $resolved_fkeys = array();
+        $fkTypeIds = array();
+        $resolvedFkeys = array();
 
         if (array_key_exists('fkey', $options)) {
             foreach ($options['fkey'] as $fkey_field=>$fkey_type) {
                 if (!array_key_exists($fkey_field, $searchData) && !in_array($fkey_field, $extraJoin)) {
                     $this->addJoin($select, $fkey_field, true, $entityTypeId, $prefix);
                 }
-                $resolved_fkeys[] = $fkey_field;
-                $this->addFkeyJoin($select, $fkey_type_ids, $fkey_field, $fkey_type, $prefix, $resolved_fkeys);
+                $resolvedFkeys[] = $fkey_field;
+                $this->addFkeyJoin($select, $fkTypeIds, $fkey_field, $fkey_type, $prefix, $resolvedFkeys);
             }
         }
 
@@ -487,48 +487,51 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             unset($searchData['UPDATED_AT']);
         }
 
-        foreach ($searchData as $k=>$v) {
-            if (strpos($k, '.') !== false) {
-                $fkey_field = strtolower(substr($k, 0, strpos($k, '.')));
-                $fkey_att = substr($k, strpos($k, '.')+1);
+        foreach ($searchData as $code=>$value) {
+            if (strpos($code, '.') !== FALSE) {
+                $fkField = strtolower(substr($code, 0, strpos($code, '.')));
+                $fkType = substr($code, strpos($code, '.') + 1);
 
-                if (!in_array($fkey_field, $resolved_fkeys)) {
-                    $resolved_fkeys[] = $fkey_field;
-                    $d = $this->getAttribute($fkey_field, $entityTypeId);
-                    if (!$d) {
-                        throw new NodeException('Invalid fkey attribute '.$fkey_field.' for '.$k);
-                    }elseif ($d['type'] != 'entity') {
-                        throw new NodeException('Invalid attribute type for '.$fkey_field.' - '.$k);
-                    }elseif (!isset($d['fetch_data']['fkey_type'])) {
-                        throw new NodeException('Fkey attribute '.$fkey_field.' for '.$k.' missing required fetchdata');
+                if (!in_array($fkField, $resolvedFkeys)) {
+                    $resolvedFkeys[] = $fkField;
+                    $fkAttribute = $this->getAttribute($fkField, $entityTypeId);
+                    if (!$fkAttribute) {
+                        throw new NodeException('Invalid fkey attribute '.$fkField.' for '.$code);
+                    }elseif ($fkAttribute['type'] != 'entity') {
+                        throw new NodeException('Invalid attribute type for '.$fkField.' - '.$code);
+                    }elseif (!isset($fkAttribute['fetch_data']['fkey_type'])) {
+                        throw new NodeException('Fkey attribute '.$fkField.' for '.$code.' missing required fetchdata');
                     }
-                    $this->addFkeyJoin($select, $fkey_type_ids, $fkey_field, $d['fetch_data']['fkey_type'], $prefix);
+                    $this->addFkeyJoin($select, $fkTypeIds, $fkField, $fkAttribute['fetch_data']['fkey_type'], $prefix);
                 }
 
-                $attribute = $this->getAttribute($fkey_att, $fkey_type_ids[$fkey_field]);
+                $attribute = $this->getAttribute($fkType, $fkTypeIds[$fkField]);
                 if (!$attribute) {
-                    throw new NodeException('Invalid fkey search attribute '.$k.' for type '.$fkey_type_ids[$fkey_field]);
+                    throw new NodeException('Invalid fkey search attribute '.$code.' for type '.$fkTypeIds[$fkField]);
                 }
-                $table = $prefix.'fkey_'.$fkey_field.'_'.$fkey_att;
+                $table = $prefix.'fkey_'.$fkField.'_'.$fkType;
                 $field = $table.'.value';
-                $baseCondition = $table.'.entity_id = '.$prefix.'fkey_'.$fkey_field.'.entity_id AND '.$table.'.attribute_id = '.$attribute['attribute_id'];
+                $baseCondition = $table.'.entity_id = '.$prefix.'fkey_'.$fkField.'.entity_id AND '
+                    .$table.'.attribute_id = '.$attribute['attribute_id'];
             }else{
-                $attribute = $this->getAttribute($k, $entityTypeId);
+                $attribute = $this->getAttribute($code, $entityTypeId);
                 if (!$attribute) {
-                    throw new NodeException('Invalid search attribute '.$k.' for type with id '.$entityTypeId);
+                    throw new NodeException('Invalid search attribute '.$code.' for type with id '.$entityTypeId);
                 }
-                $table = $prefix.'val_'.$k;
+                $table = $prefix.'val_'.$code;
                 $field = $table.'.value';
-                $baseCondition = $table.'.entity_id = '.$prefix.'e.entity_id AND '.$table.'.attribute_id = '.$attribute['attribute_id'];
+                $baseCondition = $table.'.entity_id = '.$prefix.'e.entity_id AND '
+                    .$table.'.attribute_id = '.$attribute['attribute_id'];
             }
 
-            switch($searchType[$k]) {
+            switch($searchType[$code]) {
             case 'multi_key':
                 $field = $table.'.`key`';
             case 'multi_value':
+                $expression = $baseCondition.' AND '.$this->generateFieldCriteria($field, $value, 'in', FALSE, FALSE);
                 $select->join(
                     array($table => 'entity_value_'.$attribute['type']),
-                    new \Zend\Db\Sql\Expression($baseCondition.' AND '.$this->generateFieldCriteria($field, $v, 'in', FALSE, FALSE)),
+                    new \Zend\Db\Sql\Expression($expression),
                     ($suppressSelect ? array() : array($table.'_v'=>new \Zend\Db\Sql\Expression($field))),
                     $select::JOIN_INNER
                 );
@@ -537,35 +540,38 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
             case 'all_in':
             case 'all_gt':
             case 'all_lt':
+                $expression = $baseCondition.' AND '
+                    .$this->generateFieldCriteria($table.'_neg.value', $value, $searchType[$code], TRUE);
                 $select->join(
-                        array($table.'_neg' => 'entity_value_'.$attribute['type']),
-                        new \Zend\Db\Sql\Expression($baseCondition.' AND '.$this->generateFieldCriteria($table.'_neg.value', $v, $searchType[$k], true)),
-                        array(),
-                        $select::JOIN_LEFT
-                    );
+                    array($table.'_neg' => 'entity_value_'.$attribute['type']),
+                    new \Zend\Db\Sql\Expression($expression),
+                    array(),
+                    $select::JOIN_LEFT
+                );
                 $select->where($table.'_neg.value_id IS NULL');
                 break;
             case 'null':
             case 'not_eq':
-                $cond = $this->generateFieldCriteria($field, $v, $searchType[$k]);
+                $cond = $this->generateFieldCriteria($field, $value, $searchType[$code]);
                 $select->join(
                     array($table => 'entity_value_'.$attribute['type']),
                     new \Zend\Db\Sql\Expression($baseCondition),
                     ($suppressSelect ? array() : array($table.'_v'=>new \Zend\Db\Sql\Expression($field))),
                     $select::JOIN_LEFT
                 );
-                if ($searchType[$k] != 'null' && $v != null) {
+                if ($searchType[$code] != 'null' && $value != null) {
                     $cond = '('.$cond.' OR '.$this->generateFieldCriteria($field, null, 'null').')';
                 }
                 $select->where($cond);
                 break;
             default:
+                $expression = $baseCondition.' AND '.$this->generateFieldCriteria($field, $value, $searchType[$code]);
                 $select->join(
-                        array($table => 'entity_value_'.$attribute['type']),
-                        new \Zend\Db\Sql\Expression($baseCondition.' AND '.$this->generateFieldCriteria($field, $v, $searchType[$k])),
-                        ($suppressSelect ? array() : array($table.'_v'=>new \Zend\Db\Sql\Expression($field))),
-                        $select::JOIN_INNER
-                    );
+                    array($table => 'entity_value_'.$attribute['type']),
+                    new \Zend\Db\Sql\Expression($expression),
+                    ($suppressSelect ? array() : array($table.'_v'=>new \Zend\Db\Sql\Expression($field))),
+                    $select::JOIN_INNER
+                );
                 break;
             }
         }
@@ -622,7 +628,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
         return $select;
     }
 
-    protected function addFkeyJoin(\Zend\Db\Sql\Select &$select, array &$fkey_type_ids, $fkey_field, $fkey_type, $prefix)
+    protected function addFkeyJoin(\Zend\Db\Sql\Select &$select, array &$fkTypeIds, $fkey_field, $fkey_type, $prefix)
     {
         if (strtoupper($fkey_field) === $fkey_field) {
             $srcField = $prefix.'e.'.strtolower($fkey_field);
@@ -639,7 +645,7 @@ class Loader extends AbstractHelper implements \Zend\ServiceManager\ServiceLocat
         }
         $joinTable = $prefix.'fkey_'.strtolower($fkey_field);
         $fkey_type_id = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($fkey_type);
-        $fkey_type_ids[strtolower($fkey_field)] = $fkey_type_id;
+        $fkTypeIds[strtolower($fkey_field)] = $fkey_type_id;
         $select->join(
             array($joinTable=>'entity'),
             new Expression($srcField.' = '.$joinTable.'.entity_id AND '.$joinTable.'.type_id = '.$fkey_type_id),
