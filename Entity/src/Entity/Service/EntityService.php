@@ -237,7 +237,7 @@ class EntityService implements ServiceLocatorAwareInterface
             );
 
         $associatedProducts = $this->getLoader()->loadEntities(
-            'product',
+            $product->getType(),
             0,
             array('configurable_sku'=>$product->getUniqueId()),
             array('entity_id', 'configurable_sku'),
