@@ -46,8 +46,6 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     protected $retrieveTimestamp = NULL;
     /** @var int $this->newRetrieveTimestamp */
     protected $newRetrieveTimestamp = NULL;
-    /** @var int $this->lastRetrieveDate */
-    protected $lastRetrieveDate = NULL;
 
 
     /**
