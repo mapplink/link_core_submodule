@@ -150,13 +150,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
     /**
      * @return string $nodeLogPrefix
      */
-    /** ToDo: Implement as abstract class
     abstract protected function getNodeLogPrefix();
-     */
-    protected function getNodeLogPrefix()
-    {
-        return 'nod_';
-    }
 
     /**
      * Retrieves all data from the node’s source - calls the appropriate retrieve functions on the gateways
