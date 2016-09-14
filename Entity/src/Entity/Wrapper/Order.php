@@ -595,7 +595,7 @@ class Order extends AbstractWrapper
      */
     public function getPayments()
     {
-        return $this->getData('payment_method');
+        return $this->getData('payment_method', array());
     }
 
     /**
@@ -603,7 +603,7 @@ class Order extends AbstractWrapper
      */
     public function getPaymentMethods()
     {
-        return $this->_entityService->getPaymentMethods($this);
+        return $this->_entityService->getPaymentMethods($this->getPayments());
     }
 
     /**
@@ -620,7 +620,7 @@ class Order extends AbstractWrapper
      */
     public function getPaymentCcTypes()
     {
-        return $this->_entityService->getPaymentCcTypes($this);
+        return $this->_entityService->getPaymentCcTypes($this->getPayments());
     }
 
     /**
