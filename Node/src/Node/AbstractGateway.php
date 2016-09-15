@@ -218,7 +218,8 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     }
 
     /** @param int $timestamp
-     * @return bool|string $date */
+     * @return string $date
+     */
     protected function convertTimestampToExternalDateFormat($timestamp)
     {
         $deltaInSeconds = intval($this->_node->getConfig('time_delta_'.static::GATEWAY_ENTITY)) * 3600;
@@ -227,7 +228,9 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
         return $date;
     }
 
-    /** @return bool|string $lastRetrieve */
+    /**
+     * @return int $this->lastRetrieveTimestamp
+     */
     protected function getLastRetrieveDate()
     {
         $lastRetrieve = $this->convertTimestampToExternalDateFormat($this->getLastRetrieveTimestamp());
