@@ -204,7 +204,9 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
         return $this->newRetrieveTimestamp;
     }
 
-    /** @return bool|int $this->lastRetrieveTimestamp */
+    /**
+     * @return int $this->lastRetrieveTimestamp
+     */
     protected function getLastRetrieveTimestamp()
     {
         if ($this->lastRetrieveTimestamp === NULL) {
