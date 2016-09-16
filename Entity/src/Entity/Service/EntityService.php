@@ -240,7 +240,7 @@ class EntityService implements ServiceLocatorAwareInterface
             $product->getType(),
             0,
             array('configurable_sku'=>$product->getUniqueId()),
-            array('entity_id', 'configurable_sku'),
+            array('configurable_sku'),
             array('configurable_sku'=>'eq'),
             array('node_id'=>$nodeId)
         );
