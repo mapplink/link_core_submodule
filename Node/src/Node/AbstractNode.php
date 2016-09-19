@@ -324,7 +324,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                         'combined'=>array()
                     );
                     foreach ($updatesPerEntityId as $update) {
-                        $this->_logService->log(LogService::LEVEL_INFO,
+                        $this->_logService->log(LogService::LEVEL_DEBUG,
                             $this->getNodeLogPrefix().'comb_update',
                             'Combining updates '.$update->getLogId().' to '.$this->getNodeId(),
                             array('attributes'=>$update->getAttributesSimple()),
