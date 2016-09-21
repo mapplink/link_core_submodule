@@ -257,10 +257,10 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
         $message = 'Retrieved '.$results.' '.static::GATEWAY_ENTITY.'s in '.$seconds.'s up to '
             .strftime('%H:%M:%S, %d/%m', $this->retrieveTimestamp).'.';
         $logData = array('type'=>static::GATEWAY_ENTITY, 'amount'=>$results, 'period [s]'=>$seconds);
-        if (count($results) > 0) {
-            $logData['per entity [s]'] = round($seconds / count($results), 3);
+        if ($results > 0) {
+            $logData['per entity [s]'] = round($seconds / $results, 3);
         }
-        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO, 'node_re_no', $message, $logData);
+        $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_INFO, $logCode, $message, $logData);
     }
 
     /**
