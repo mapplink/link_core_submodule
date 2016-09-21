@@ -75,7 +75,7 @@ class Product extends AbstractWrapper
     {
         $configurableProductLinks = array();
 
-        foreach ($this->getConfigurableSimples() as $product) {
+        foreach ($this->getConfigurableSimples($nodeId) as $product) {
             $configurableProductLinks[] = $this->_entityService->getLocalId($nodeId, $product);
         }
 
