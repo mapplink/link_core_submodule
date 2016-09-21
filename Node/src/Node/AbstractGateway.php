@@ -247,6 +247,11 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
 
         $results = $this->retrieveEntities();
 
+        if ($results > 0) {
+            $this->_nodeService->setTimestamp($this->_nodeEntity->getNodeId(),
+                static::GATEWAY_ENTITY, 'retrieve', $this->getNewRetrieveTimestamp());
+        }
+
         $logCode = static::GATEWAY_NODE_CODE.'_'.static::GATEWAY_ENTITY_CODE.'_re_no';
         $seconds = ceil($this->getAdjustedTimestamp() - $this->getNewRetrieveTimestamp());
         $message = 'Retrieved '.$results.' '.static::GATEWAY_ENTITY.'s in '.$seconds.'s up to '
