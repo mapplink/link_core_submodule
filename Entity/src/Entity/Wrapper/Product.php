@@ -60,16 +60,23 @@ class Product extends AbstractWrapper
 
     /**
      * @param $nodeId
+     * @return array $configurableSimples
+     */
+    public function getConfigurableSimples($nodeId)
+    {
+        return $this->_entityService->loadAssociatedProducts($nodeId, $this);
+    }
+
+    /**
+     * @param $nodeId
      * @return array $configurableProductLinks
      */
     public function getConfigurableProductLinks($nodeId)
     {
         $configurableProductLinks = array();
 
-        if ($this->isTypeConfigurable()) {
-            foreach ($this->_entityService->loadAssociatedProducts($nodeId, $this) as $product) {
-                $configurableProductLinks[] = $this->_entityService->getLocalId($nodeId, $product);
-            }
+        foreach ($this->getConfigurableSimples() as $product) {
+            $configurableProductLinks[] = $this->_entityService->getLocalId($nodeId, $product);
         }
 
         return $configurableProductLinks;
