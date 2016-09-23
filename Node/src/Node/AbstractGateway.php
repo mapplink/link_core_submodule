@@ -274,6 +274,7 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
      * @param \Entity\Entity $entity
      * @param string[] $attributes
      * @param int $type
+     * @return bool|NULL
      */
     abstract public function writeUpdates(\Entity\Entity $entity, $attributes, $type = \Entity\Update::TYPE_UPDATE);
 
