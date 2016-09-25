@@ -152,7 +152,17 @@ class Address extends AbstractWrapper
     {
         $streetSuburb = array('street'=>'', 'suburb'=>'');
 
+        $street = $this->getData('street', '');
+        if (is_array($street)) {
+            $street = implode(chr(10), $street);
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR,
+                'ety_add_str_err',
+                'Street attribute is array.',
+                array('entity id'=>$this->getEntityId(), 'entity unique'=>$this->getUniqueId())
+            );
+        }
         $addressArray = explode(chr(10), $this->getData('street', ''));
+
         if (count($addressArray) == 1) {
             $streetSuburb['street'] = array_shift($addressArray);
         }elseif (count($addressArray) > 1) {
