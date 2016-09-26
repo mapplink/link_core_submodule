@@ -12,6 +12,7 @@ namespace Entity\Wrapper;
 
 use Entity\Entity;
 use Entity\Service\EntityService;
+use Log\Service\LogService;
 
 
 class Address extends AbstractWrapper
