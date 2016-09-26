@@ -162,7 +162,7 @@ class Address extends AbstractWrapper
                 array('entity id'=>$this->getEntityId(), 'entity unique'=>$this->getUniqueId())
             );
         }
-        $addressArray = explode(chr(10), $this->getData('street', ''));
+        $addressArray = explode(chr(10), $street);
 
         if (count($addressArray) == 1) {
             $streetSuburb['street'] = array_shift($addressArray);
