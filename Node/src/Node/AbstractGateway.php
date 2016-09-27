@@ -145,7 +145,8 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
                 }
 
                 if (!isset($string)) {
-                    $message .= ' is not set or existing on '.get_called_class().'. Using map '.var_export($map, TRUE);
+                    $message .= ' is not set or existing on '.get_called_class()
+                        .'. Using map '.preg_replace('#\v+|\s{2,}#', ' ', var_export($map, TRUE));
                     throw new MagelinkException($message);
                 }
             }else{
