@@ -111,9 +111,9 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
      */
     protected static function getMappedString($mapType, $key, $flip = FALSE)
     {
-        if (is_null($key)) {
-            $string = NULL;
-        }else{
+        $string = NULL;
+
+        if (!is_null($key)) {
             $mapName = strtolower($mapType).'ById';
 
             if (isset(static::$$mapName)) {
@@ -122,24 +122,35 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
                 $map = array();
             }
 
+            $isValid = count($map) > 0;
             $message = 'static::$'.$mapName.'['.var_export($key, TRUE).']';
 
-            $isValid = count($map) > 0; // && (!$flip; || count($map) == count(array_flip($map)));
             if ($isValid) {
                 if ($flip) {
-                    $map = array_flip($map);
-                    $message = 'array_flip('.$message.')';
-                }
-                if (isset($map[$key])) {
+                    $message = 'Flipped '.$message;
+                    $duplicate = FALSE;
+
+                    foreach ($map as $mapKey=>$mapValue) {
+                        if ($key == $mapValue || is_array($mapValue) && in_array($key, $mapValue)) {
+                            if (is_null($string) && !$duplicate) {
+                                $string = $mapKey;
+                            }elseif (!is_null($string)) {
+                                $string = NULL;
+                                $duplicate = TRUE;
+                            }
+                        }
+                    }
+                }elseif (isset($map[$key])) {
                     $string = $map[$key];
-                }else{
-                    $message .= ' is not existing on '.get_called_class().'. Keys: ['.implode(',', array_keys($map)).']';
+                }
+
+                if (!isset($string)) {
+                    $message .= ' is not set or existing on '.get_called_class().'. Using map '.var_export($map, TRUE);
                     throw new MagelinkException($message);
-                    $string = NULL;
                 }
             }else{
                 $message = 'self::$'.$mapName.' is not valid.';
-                throw new MagelinkException('self::$'.$mapName.' is not valid.');
+                throw new MagelinkException($message);
             }
         }
 
