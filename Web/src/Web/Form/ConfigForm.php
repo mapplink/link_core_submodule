@@ -1,12 +1,11 @@
 <?php
 /**
  * Magelink\Form
- *
- * @category    Magelink
- * @package     Magelink\Form
- * @author      Andreas Gerhards <andreas@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Magelink
+ * @package Magelink\Form
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Form;
@@ -16,7 +15,7 @@ use Magelink\Entity\Config;
 
 
 class ConfigForm extends DoctrineZFBaseForm
-{   
+{
     /**
      * Constructor
      * @param \Doctrine\ORM\EntityManager $entityManager
@@ -32,8 +31,8 @@ class ConfigForm extends DoctrineZFBaseForm
 
     /**
      * Set up fields
-     * @param  array $excludeRoleIds 
-     * @return 
+     * @param  array $excludeRoleIds
+     * @return
      */
     protected function initFields()
     {
@@ -131,10 +130,10 @@ class ConfigForm extends DoctrineZFBaseForm
 
     /**
      * Save method
-     * @return 
+     * @return
      */
     public function save()
-    {   
+    {
         try {
             return parent::save();
         } catch (\Doctrine\DBAL\DBALException $e) {
@@ -144,5 +143,5 @@ class ConfigForm extends DoctrineZFBaseForm
 
         return false;
     }
-           
+
 }

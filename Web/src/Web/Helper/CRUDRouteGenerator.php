@@ -1,12 +1,12 @@
 <?php
 /**
- * Magelink\Controller
- *
- * @category    Magelink
- * @package     Magelink\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * Class to manage routes
+ * @category Magelink
+ * @package Magelink\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Helper;
@@ -14,9 +14,7 @@ namespace Web\Helper;
 
 use Zend\Filter\Word\CamelCaseToDash;
 
-/**
- * CrudRouteGenerator Class to manage routes
- */
+
 class CRUDRouteGenerator
 {
     /** @var \Web\Controller\BaseController $controller */
@@ -38,11 +36,11 @@ class CRUDRouteGenerator
 
     /**
      * Set up route prefix
-     * 
+     *
      * @param string $routePrefix
      */
     protected function setRoutePrefix($routePrefix = null)
-    {   
+    {
         if (!$routePrefix) {
             $classRelection = new \ReflectionClass(get_class($this->controller));
             $routePrefix = $classRelection->getShortName();
@@ -57,7 +55,7 @@ class CRUDRouteGenerator
 
     /**
      * Get the route name with prefix
-     * @param  string $name 
+     * @param  string $name
      * @return string
      */
     public function getRouteName($name)
@@ -66,7 +64,7 @@ class CRUDRouteGenerator
     }
 
     /**
-     * Get route config 
+     * Get route config
      * @return array
      */
     public function getRouteConfig()
@@ -136,5 +134,6 @@ class CRUDRouteGenerator
                 ),
             ),
         );
-    }    
+    }
+
 }

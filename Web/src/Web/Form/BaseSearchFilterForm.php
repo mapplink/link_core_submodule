@@ -1,34 +1,31 @@
 <?php
 /**
- * Magelink\Form
- *
- * @category    Magelink
- * @package     Magelink\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * Base search filter form
+ * @category Magelink
+ * @package Magelink\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
-//Base form for Doctrine ORM
 namespace Web\Form;
 
 use Zend\Form\Form;
 
-/**
- *  Filter form
- */
+
 class BaseSearchFilterForm extends Form
-{   
+{
     // Grouping the form fields for the entity fields
     protected $fieldGroup = array();
 
     /**
-     * Constructor 
-     * @param array $config 
-     * @param string $name  
+     * Constructor
+     * @param array $config
+     * @param string $name
      */
     public function __construct($config, $name = null)
-    {   
+    {
         parent::__construct($name);
 
         $this->initFields($config);
@@ -45,10 +42,10 @@ class BaseSearchFilterForm extends Form
 
     /**
      * Set up fields
-     * @return 
+     * @return
      */
     protected function initFields($config)
-    {   
+    {
         //For each entity field, there will be a label, an operator and an value and a entity filed name
         foreach ($config as $name => $fieldConfig) {
 
@@ -60,13 +57,13 @@ class BaseSearchFilterForm extends Form
                 'options' => array(
                     'label' => $fieldConfig['label'],
                     'attributes'=>array('class'=>'form-control'),
-                    'value_options' => 
+                    'value_options' =>
                         array('disabled' => 'disabled')
                         +
                         (isset($fieldConfig['operatorsKeyAsValue']) ?
                             $fieldConfig['operators'] :
                             array_combine($fieldConfig['operators'], $fieldConfig['operators']))
-                    
+
                 ),
             ));
 
@@ -85,7 +82,7 @@ class BaseSearchFilterForm extends Form
                 ),
             ));
         }
-        
+
     }
 
     /**
@@ -102,7 +99,7 @@ class BaseSearchFilterForm extends Form
                 }
             }
         }
-        
+
     }
 
 }

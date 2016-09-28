@@ -1,12 +1,11 @@
 <?php
 /**
- * Web\Controller
- *
- * @category    Web
- * @package     Web\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Web
+ * @package Web\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Controller\CRUD;
@@ -65,7 +64,7 @@ class UserAdminController extends AbstractCRUDController
     protected function getForm($user)
     {
         $currentUser = $this->getCurrentUser();
-        
+
         if (!$currentUser->isAdmin()) {
             $excludeRoleIds = array(UserRole::ROLE_ADMINISTRATOR);
         } else {
@@ -80,5 +79,6 @@ class UserAdminController extends AbstractCRUDController
         $form->bind($user);
 
         return $form;
-    }    
+    }
+
 }

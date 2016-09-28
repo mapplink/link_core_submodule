@@ -1,12 +1,11 @@
 <?php
 /**
- * Web\Controller
- *
- * @category    Web
- * @package     Web\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Web
+ * @package Web\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Controller\CRUD;
@@ -50,7 +49,7 @@ class LogEntryAdminController extends AbstractCRUDController
     {
         return array(
             'Id'           => array(),
-            'Timestamp'    => array('sortable' => true),      
+            'Timestamp'    => array('sortable' => true),
             'Level'        => array(),
             'Code'         => array(),
             'Module'       => array(),
@@ -87,7 +86,7 @@ class LogEntryAdminController extends AbstractCRUDController
                 'field'     => 'timestamp',
                 'valuetype' => 'Datetime',
             ),
-        );  
+        );
     }
 
 }

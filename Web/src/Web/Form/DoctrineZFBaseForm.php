@@ -1,15 +1,14 @@
 <?php
 /**
- * Magelink\Form
- *
- * @category    Magelink
- * @package     Magelink\Form
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * Base form for Doctrine ORM
+ * @category Magelink
+ * @package Magelink\Form
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
-//Base form for Doctrine ORM
 namespace Web\Form;
 
 use Zend\Form\Form;
@@ -17,9 +16,11 @@ use Zend\Form\Form;
 use DoctrineModule\Stdlib\Hydrator\DoctrineObject;
 
 class DoctrineZFBaseForm extends Form
-{   
-    // Doctrine entity manager
+{
+
+    /** @var \Doctrine\ORM\EntityManager $this->entityManager */
     protected $entityManager;
+
 
     /**
      * Constructor
@@ -27,7 +28,7 @@ class DoctrineZFBaseForm extends Form
      * @param string $name
      */
     public function __construct(\Doctrine\ORM\EntityManager $entityManager,  $name = null)
-    {   
+    {
         parent::__construct($name);
 
         $this->entityManager = $entityManager;
@@ -56,5 +57,5 @@ class DoctrineZFBaseForm extends Form
 
         return true;
     }
-           
+
 }

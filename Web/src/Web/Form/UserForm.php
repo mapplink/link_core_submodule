@@ -1,12 +1,11 @@
 <?php
 /**
- * Magelink\Form
- *
- * @category    Magelink
- * @package     Magelink\Form
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Magelink
+ * @package Magelink\Form
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Form;
@@ -18,12 +17,11 @@ use Magelink\Entity\User;
 
 
 class UserForm extends DoctrineZFBaseForm
-{   
-    //zfcUserService
-    protected 
-        $zfcUserService = null,
-        $excludeRoleIds = array()
-    ;
+{
+    /** @var null|\Zend\ServiceManager\ServiceManagerAwareInterface $this->zfcUserService */
+    protected $zfcUserService = NULL;
+    /** @var array $this->excludeRoleIds */
+    protected $excludeRoleIds = array();
 
     /**
      * Constructor
@@ -33,7 +31,7 @@ class UserForm extends DoctrineZFBaseForm
      * @param string $name
      */
     public function __construct(\Doctrine\ORM\EntityManager $entityManager, \Zend\ServiceManager\ServiceManagerAwareInterface $zfcUserService, $excludeRoleIds = array(), $name = null)
-    {   
+    {
         parent::__construct($entityManager, $name);
 
         $this->zfcUserService = $zfcUserService;
@@ -74,7 +72,7 @@ class UserForm extends DoctrineZFBaseForm
             'attributes'=>array('class'=>'form-control'),
         ));
 
-        
+
 
         $this->add(array(
             'name' => 'userId',
@@ -181,7 +179,7 @@ class UserForm extends DoctrineZFBaseForm
      * @throws \Doctrine\DBAL\DBALException If an unknown error occurs during save
      */
     public function save()
-    {   
+    {
         if ($newPassword = $this->get('passwordUpdate')->getValue()) {
             $bcrypt = new Bcrypt;
             $bcrypt->setCost($this->zfcUserService->getOptions()->getPasswordCost());
@@ -208,5 +206,5 @@ class UserForm extends DoctrineZFBaseForm
 
         return false;
     }
-           
+
 }

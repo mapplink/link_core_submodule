@@ -1,12 +1,11 @@
 <?php
 /**
- * Web\Controller
- *
- * @category    Web
- * @package     Web\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Web
+ * @package Web\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Controller\CRUD;
@@ -49,7 +48,7 @@ class EmailLogAdminController extends AbstractCRUDController
     protected function getListViewConfig()
     {
         return array(
-            'Id'           => array('linked' => true),     
+            'Id'           => array('linked' => true),
             'Timestamp'    => array('sortable' => true),
             'Success'      => array('type' => 'boolean'),
             'Message'      => array(),
@@ -87,4 +86,5 @@ class EmailLogAdminController extends AbstractCRUDController
             ),
         );
     }
+
 }

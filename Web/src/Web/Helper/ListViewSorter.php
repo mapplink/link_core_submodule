@@ -1,27 +1,25 @@
 <?php
 /**
- * Magelink\Controller
- *
- * @category    Magelink
- * @package     Magelink\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * Class to manage sorting
+ * @category Magelink
+ * @package Magelink\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Helper;
 
 
-/**
- * ListViewSorter  Class to manage sorting
- */
 class ListViewSorter
-{ 
-    protected
-        $config,         // List view config
-        $sortedField,    // Sorted field
-        $sortedDirection // ASC or DESC
-    ;
+{
+    /** @var array $this->config  List view config */
+    protected $config;
+    /** @var string $this->sortedField  Sorted field */
+    protected $sortedField;
+    /** @var string $this->sortedDirection  ASC or DESC */
+    protected $sortedDirection;
 
     /**
      * Constructor
@@ -51,8 +49,8 @@ class ListViewSorter
 
     /**
      * Check if sorting value valid
-     * @param  array $sorting 
-     * @return boolean        
+     * @param  array $sorting
+     * @return boolean
      */
     protected function isSortingValueValid($sorting)
     {
@@ -89,11 +87,10 @@ class ListViewSorter
         }
     }
 
-
     /**
      * Process sorting
-     * @param  \HOPS\Controller\EAVEntityServiceQuery $query
-     * @param  \Zend\Http\Reqeust $request
+     * @param $query
+     * @param \Zend\Http\Request $request
      */
     public function processEntity($query, $request)
     {
@@ -106,4 +103,5 @@ class ListViewSorter
             $this->sortedDirection = $sorting['direction'];
         }
     }
+
 }

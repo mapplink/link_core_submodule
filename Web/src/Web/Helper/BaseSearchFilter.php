@@ -1,12 +1,12 @@
 <?php
 /**
- * Magelink\Controller
- *
- * @category    Magelink
- * @package     Magelink\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * Class to manage searches
+ * @category Magelink
+ * @package Magelink\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Helper;
@@ -14,23 +14,21 @@ namespace Web\Helper;
 use Zend\View\Model\ViewModel;
 use Zend\Session\Container;
 
-/**
- * BaseSearchFilter  Class to manage the searches
- */
-class BaseSearchFilter 
+
+class BaseSearchFilter
 {
     /** @var array  */
     protected $config = array();
-
     /** @var bool */
     protected $isFilterOn = false;
-
     /** @var string The name to be used for the session namespace */
     protected $sessionNamespace;
-
     /** @var object */
     protected $form;
 
+    /**
+     * @return Container
+     */
     protected function getSesstion()
     {
         return $session = new Container($this->sessionNamespace);
@@ -42,7 +40,7 @@ class BaseSearchFilter
     public function getData()
     {
         $session = $this->getSesstion();
-        
+
         return $session->offsetGet('data');
     }
 
@@ -113,11 +111,11 @@ class BaseSearchFilter
 
                     $isFilterOn = true;
                 }
-                
+
                 $count++;
             }
         }
-        
+
         $this->isFilterOn = $isFilterOn;
     }
 

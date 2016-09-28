@@ -1,11 +1,11 @@
 <?php
 /**
  * Web\Controller\CRUD
- * @category    Web
- * @package     Web\Controller
- * @author      Andreas Gerhards <andreas@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Web
+ * @package Web\Controller
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Controller\CRUD;

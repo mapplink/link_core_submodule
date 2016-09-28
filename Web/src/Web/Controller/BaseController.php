@@ -4,7 +4,7 @@
  * @category Application
  * @package Application\Controller
  * @author Sean Yao
- * @author Andreas Gerhards <andreas@lero9.com>
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
  */
@@ -49,8 +49,8 @@ abstract class BaseController extends AbstractActionController
 
     /**
      * Persist an entity to DB
-     * @param  Object $entity 
-     * @return 
+     * @param  Object $entity
+     * @return
      */
     public function persistEntity($entity)
     {
@@ -61,8 +61,8 @@ abstract class BaseController extends AbstractActionController
 
     /**
      * Delete an entity to DB
-     * @param  Object $entity 
-     * @return 
+     * @param  Object $entity
+     * @return
      */
     public function removeEntity($entity)
     {
@@ -73,10 +73,10 @@ abstract class BaseController extends AbstractActionController
 
     /**
      * Load mailer
-     * 
-     * @param  string $name 
-     * @param  array  $args 
-     * @return 
+     *
+     * @param  string $name
+     * @param  array  $args
+     * @return
      */
     public function loadMailer($name, $args = array())
     {

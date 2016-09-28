@@ -1,12 +1,11 @@
 <?php
 /**
- * Magelink\Form
- *
- * @category    Magelink
- * @package     Magelink\Form
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Magelink
+ * @package Magelink\Form
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Form;
@@ -17,7 +16,7 @@ use Magelink\Entity\Location;
 
 
 class LocationForm extends DoctrineZFBaseForm
-{  
+{
 
     /**
      * Constructor
@@ -25,7 +24,7 @@ class LocationForm extends DoctrineZFBaseForm
      * @param string $name
      */
     public function __construct(\Doctrine\ORM\EntityManager $entityManager, $name = null)
-    {   
+    {
         parent::__construct($entityManager, $name);
 
         $this->initFields();
@@ -91,7 +90,7 @@ class LocationForm extends DoctrineZFBaseForm
      * @throws \Doctrine\DBAL\DBALException
      */
     public function save()
-    {   
+    {
         try {
             return parent::save();
         } catch (\Doctrine\DBAL\DBALException $e) {
@@ -108,4 +107,5 @@ class LocationForm extends DoctrineZFBaseForm
 
         return false;
     }
+
 }

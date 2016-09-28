@@ -1,12 +1,11 @@
 <?php
 /**
- * Web\Controller
- *
- * @category    Web
- * @package     Web\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Web
+ * @package Web\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Controller\CRUD;
@@ -31,7 +30,7 @@ class LocationAdminController extends AbstractCRUDController
     {
         return array(
             'Id'           => array('linked' => true),
-            'Code'         => array('linked' => true, 'sortable' => true),      
+            'Code'         => array('linked' => true, 'sortable' => true),
             'Note'         => array(),
             'IsActivated'  => array('type' => 'boolean'),
         );
@@ -61,4 +60,5 @@ class LocationAdminController extends AbstractCRUDController
             ),
         );
     }
+
 }

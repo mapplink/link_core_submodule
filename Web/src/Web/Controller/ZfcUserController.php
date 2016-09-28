@@ -1,12 +1,12 @@
 <?php
 /**
  * Web\Controller
- *
- * @category    Web
- * @package     Web\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @category Web
+ * @package Web\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Controller;
@@ -40,7 +40,7 @@ class ZfcUserController extends BaseController
 
             $passwordRestUrl = $this->url()
                 ->fromRoute(
-                    'zfcuser/resetpwd', 
+                    'zfcuser/resetpwd',
                     array('hash' => $user->getUserHash()),
                     array('force_canonical' => true)
                 )
@@ -77,7 +77,7 @@ class ZfcUserController extends BaseController
         $errorMessage = null;
 
         if (!$user) {
-           $errorMessage = 'Sorry, this page expired.'; 
+           $errorMessage = 'Sorry, this page expired.';
         }
 
         $request = $this->getRequest();
@@ -88,7 +88,7 @@ class ZfcUserController extends BaseController
             ));
 
             if (!$validator->isValid($request->getPost()->get('password'))) {
-                $errorMessage = 'Password needs to be 6 characters or more and only alphanumeric and -_. can be used.'; 
+                $errorMessage = 'Password needs to be 6 characters or more and only alphanumeric and -_. can be used.';
             } elseif ($request->getPost()->get('password') != $request->getPost()->get('passwordRetype')) {
                 $errorMessage = 'Password and password retype don\'t match';
             }

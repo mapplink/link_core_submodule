@@ -1,12 +1,12 @@
 <?php
 /**
- * Magelink\Controller
- *
- * @category    Magelink
- * @package     Magelink\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * Class for generating admin interface
+ * @category Magelink
+ * @package Magelink\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Controller\CRUD;
@@ -21,9 +21,7 @@ use Web\Helper\CRUDSearchFilter;
 use Zend\View\Model\ViewModel;
 use Zend\Filter\Word\CamelCaseToSeparator;
 
-/**
- * AbstractCRUDController for generating admin interface
- */
+
 abstract class AbstractCRUDController extends BaseController
 {
 
@@ -422,4 +420,5 @@ abstract class AbstractCRUDController extends BaseController
     {
         return array();
     }
+
 }

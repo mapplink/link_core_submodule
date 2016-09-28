@@ -1,12 +1,12 @@
 <?php
 /**
- * Magelink\Controller
- *
- * @category    Magelink
- * @package     Magelink\Controller
- * @author      Sean Yao <sean@lero9.com>
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * Class to manager crude routes
+ * @category Magelink
+ * @package Magelink\Controller
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license Commercial - All Rights Reserved
  */
 
 namespace Web\Helper;
@@ -15,15 +15,13 @@ use Zend\View\Model\ViewModel;
 use Zend\Session\Container;
 use Web\Form\BaseSearchFilterForm;
 
-/**
- * CRUDRouteControl  Class to manage crude routes
- */
-class CRUDSearchFilter extends BaseSearchFilter 
-{   
+
+class CRUDSearchFilter extends BaseSearchFilter
+{
 
     /**
      * Constructor
-     * @param array  $config          
+     * @param array  $config
      * @param string $namespaceSuffix -- session name suffix
      */
     public function __construct($config, $namespaceSuffix)
@@ -68,10 +66,10 @@ class CRUDSearchFilter extends BaseSearchFilter
             $query->andWhere('a.' . $field . ' ' . $operatorSymbol . ' ?' . $count)
                 ->setParameter($count, $value);
         }
-        
+
     }
 
-  
+
 
 
     /**
@@ -89,4 +87,5 @@ class CRUDSearchFilter extends BaseSearchFilter
 
         return $sidebarBlockView;
     }
+
 }
