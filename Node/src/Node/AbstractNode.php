@@ -368,11 +368,11 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                         $update['attributes'],
                         $update['type']
                     );
-/* ToDo: Implement this functionality
+
                     if ($success === FALSE) {
-                        unset($entityTypeUpdates[$entityId]);
+                        $entityTypeUpdates[$entityId] = array();
                     }
-*/                }catch (GatewayException $gatewayException) {
+                }catch (GatewayException $gatewayException) {
                     $logMessage = 'Exception during update processing for '.$logMessage.': '.$gatewayException->getMessage();
                     $logData = array_merge($logData, array(
                         'exception message'=>$gatewayException->getMessage(),
