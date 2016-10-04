@@ -11,6 +11,7 @@
 namespace Entity\Wrapper;
 
 use Entity\Entity;
+use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 
 
@@ -75,8 +76,18 @@ class Product extends AbstractWrapper
     {
         $configurableProductLinks = array();
 
+        /** @var Product $product */
         foreach ($this->getConfigurableSimples($nodeId) as $product) {
-            $configurableProductLinks[] = $this->_entityService->getLocalId($nodeId, $product);
+            $localId = $this->_entityService->getLocalId($nodeId, $product);
+            if (is_null($localId)) {
+                $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR,
+                    'ml_ety_p_lid_err',
+                    'Missing local id on node '.$nodeId.' while retrieving assigning it as an associated product.',
+                    array('entity id'=>$product->getId(), 'unique id'=>$product->getUniqueId(), 'node'=>$nodeId)
+                );
+            }else{
+                $configurableProductLinks[] = $this->_entityService->getLocalId($nodeId, $product);
+            }
         }
 
         return $configurableProductLinks;
