@@ -19,6 +19,9 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 
 class Entity implements ServiceLocatorAwareInterface
 {
+
+    const VARIABLE = '<variable>';
+
     /** Static entity attributes */
     protected $_id;
     protected $_type;
