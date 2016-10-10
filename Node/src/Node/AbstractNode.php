@@ -351,7 +351,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 $logData =  array(
                     'entity id'=>$entityId,
                     'entity type'=>$update['type'],
-                    'attributes'=>$update['attributes'],
+                    'attributes'=>array_unique($update['attributes']),
                     'combined'=>$update['combined']
                 );
 
