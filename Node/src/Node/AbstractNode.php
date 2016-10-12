@@ -237,7 +237,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                 $this->_gateway[$entityType] = $this->_lazyLoad($entityType);
             }
             try{
-                $result = TRUE;
+                $success = TRUE;
                 if ($this->_gateway[$entityType]) {
                     $this->_logService->log(LogService::LEVEL_INFO,
                         $this->getNodeLogPrefix().'send_action',
@@ -245,9 +245,9 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
                         array($action->getId()),
                         array('entity'=>$action->getEntity(), 'node'=>$this)
                     );
-                    $result = $this->_gateway[$entityType]->writeAction($action);
+                    $success = $this->_gateway[$entityType]->writeAction($action);
                 }
-                if ($result) {
+                if ($success !== FALSE) {
                     $this->_nodeService->setActionStatus($this->_entity, $action, 1);
                 }
             }catch (MagelinkException $exception) {
