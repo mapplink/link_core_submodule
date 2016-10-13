@@ -91,6 +91,11 @@ class DatabaseLogger extends AbstractLogger {
             $message = substr($message, 0, 250).' ...';
         }
 
+        $jsonData = json_encode($data);
+        if (strlen($jsonData) > 10240) {
+            $jsonData = substr($jsonData, 0, 10000).' ... '.substr($jsonData, -235);
+        }
+
         $newRow = array(
             'timestamp'=>date('Y-m-d H:i:s'),
             'level'=>$level,
@@ -98,7 +103,7 @@ class DatabaseLogger extends AbstractLogger {
             'module'=>$module,
             'class'=>$className,
             'message'=>$message,
-            'data'=>json_encode($data),
+            'data'=>$jsonData,
             'user_id'=>(isset($extraData['user']) ? $extraData['user'] : null),
             'node_id'=>(isset($extraData['node']) ? $extraData['node'] : null),
             'entity_id'=>(isset($extraData['entity']) ? $extraData['entity'] : null),
