@@ -127,16 +127,19 @@ class DatabaseLogger extends AbstractLogger {
 
             try{
                 $success = $this->_tableGateway->insert($newRow);
+                $errorMessage = 'No row inserted.';
             }catch(\Exception $repetitiveException) {
                 $success = FALSE;
+                $errorMessage = $repetitiveException->getMessage();
             }
 
             if (!$success && php_sapi_name() == 'cli') {
-                $newRow['exception'] = (isset($exception) ? $exception->getMessage() : '<no exception>');
-                $errorMessage = '[log_db_nosave] REPETITIVE ERROR saving log data';
+                $errorMessage = '[log_db_nosave] Insert problem: '.$errorMessage;
                 echo $errorMessage, PHP_EOL;
-                print_r($newRow);
-                echo PHP_EOL;
+                print_r($newRow).PHP_EOL;
+
+                $newRow['data'] = strlen($newRow['data']).' characters';
+                $errorMessage .= '; NewRow: '.json_encode($newRow);
                 throw new MagelinkException($errorMessage);
             }
         }
