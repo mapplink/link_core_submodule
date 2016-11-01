@@ -1,7 +1,7 @@
 <?php
 /**
  * Order item entity *
- * @category Entity
+ * @category Magelink
  * @package Entity\Wrapper
  * @author Seo Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>

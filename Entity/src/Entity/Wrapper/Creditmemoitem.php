@@ -1,7 +1,7 @@
 <?php
 /**
  * Order item entity *
- * @category Entity
+ * @category Magelink
  * @package Entity\Wrapper
  * @author Seo Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
@@ -73,7 +73,7 @@ class Creditmemoitem extends AbstractWrapper
      * Get sku for the orderitem
      */
     public function getSku()
-    {   
+    {
         $sku = $this->getData('sku');
 
         if ((!$sku) && ($product = $this->getProduct())) {

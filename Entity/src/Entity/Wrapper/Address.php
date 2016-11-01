@@ -2,7 +2,7 @@
 /**
  * Address Entity
  * @category Magelink
- * @package Entity
+ * @package Entity\Wrapper
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license Commercial - All Rights Reserved
