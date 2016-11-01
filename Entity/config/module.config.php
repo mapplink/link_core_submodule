@@ -30,10 +30,11 @@ return array (
         )
     ),
     'entity_class'=>array(
-        'order'=>'\Entity\Wrapper\Order',
         'address'=>'\Entity\Wrapper\Address',
-        'orderitem'=>'\Entity\Wrapper\Orderitem',
         'product'=>'\Entity\Wrapper\Product',
+        'order'=>'\Entity\Wrapper\Order',
+        'orderitem'=>'\Entity\Wrapper\Orderitem',
+        'stockitem'=>'\Entity\Wrapper\Stockitem',
         'creditmemo'=>'\Entity\Wrapper\Creditmemo',
         'creditmemoitem'=>'\Entity\Wrapper\Creditmemoitem'
     ),
