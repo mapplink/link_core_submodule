@@ -17,14 +17,15 @@ use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Adapter\Adapter;
 
 
-class DatabaseLogger extends AbstractLogger {
+class DatabaseLogger extends AbstractLogger
+{
+
+    const DATA_MAX_LENGTH = 10240;
 
     /** @var TableGateway $_tableGateway */
     protected $_tableGateway = FALSE;
-
     /** @var bool $_enableExtendedDatabase */
     protected $_extendedDatabaseLoggingEnabled = FALSE;
-
     /** @var array $_allowedLevels */
     protected $_allowedLevels = array(
         LogService::LEVEL_INFO,
@@ -92,8 +93,41 @@ class DatabaseLogger extends AbstractLogger {
         }
 
         $jsonData = json_encode($data);
-        if (strlen($jsonData) > 10240) {
-            $jsonData = substr($jsonData, 0, 10000).' ... '.substr($jsonData, -235);
+        if (strlen($jsonData) > self::DATA_MAX_LENGTH) {
+            $dataLength = mb_strlen($jsonData);
+            $dataStringLength = 0;
+            foreach ($data as &$dataRow) {
+                if (is_numeric($dataRow)) {
+                    $dataRow = (double) $dataRow;
+                }elseif (is_string($dataRow)) {
+                    $dataStringLength += json_encode($dataRow);
+                }
+            }
+
+            $ratio = self::DATA_MAX_LENGTH / $dataLength * $dataStringLength / $dataLength;
+
+            $shortenedData = array();
+            $shortenedLength = 0;
+            foreach ($data as $key=>$value) {
+                if (is_string($value)) {
+                    $newLength = $ratio * strlen($value);
+                    $newValue = mb_substr($value, 0, floor($newLength * 0.9))
+                        ."\r\n ... \r\n".mb_substr($value, floor($newLength * -0.1));
+                }else{
+                    $newValue = $value;
+                }
+
+                $shortenedLength += mb_strlen(json_encode($newValue));
+                if ($shortenedLength < self::DATA_MAX_LENGTH) {
+                    $shortenedData[$key] = $newValue;
+                }
+            }
+
+            $jsonData = json_encode($shortenedData);
+        }
+
+        if (strlen($jsonData) > DATA_MAX_LENGTH) {
+            $jsonData = substr($jsonData, 0, DATA_MAX_LENGTH * 0.9).' ... '.substr($jsonData, DATA_MAX_LENGTH * 0.1 - 5);
         }
 
         $newRow = array(
