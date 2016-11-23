@@ -126,8 +126,9 @@ class DatabaseLogger extends AbstractLogger
             $jsonData = json_encode($shortenedData);
         }
 
-        if (strlen($jsonData) > DATA_MAX_LENGTH) {
-            $jsonData = substr($jsonData, 0, DATA_MAX_LENGTH * 0.9).' ... '.substr($jsonData, DATA_MAX_LENGTH * 0.1 - 5);
+        if (strlen($jsonData) > self::DATA_MAX_LENGTH) {
+            $jsonData = substr($jsonData, 0, self::DATA_MAX_LENGTH * 0.9)
+                .' ... '.substr($jsonData, self::DATA_MAX_LENGTH * 0.1 - 5);
         }
 
         $newRow = array(
