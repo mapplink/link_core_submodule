@@ -37,13 +37,19 @@ class NodeStatus extends \Magelink\Entity\DoctrineBaseEntity
     private $action;
 
     /**
+     * @var string
+     * @ORM\Column(name="since_id", type="varchar", nullable=true)
+     */
+    private $sinceId;
+
+    /**
      * @var \DateTime
      *
      * @ORM\Column(name="timestamp", type="datetime", nullable=false)
      */
     private $timestamp = 'CURRENT_TIMESTAMP';
 
-   
+
 
     /**
      * @var \Node\Entity\Node
@@ -75,7 +81,7 @@ class NodeStatus extends \Magelink\Entity\DoctrineBaseEntity
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -113,11 +119,31 @@ class NodeStatus extends \Magelink\Entity\DoctrineBaseEntity
     /**
      * Get action
      *
-     * @return string 
+     * @return string
      */
     public function getAction()
     {
         return $this->action;
+    }
+
+    /**
+     * Set since ID
+     * @param string $sinceId
+     * @return NodeStatus
+     */
+    public function setSinceId($sinceId)
+    {
+        $this->sinceId = $sinceId;
+        return $this;
+    }
+
+    /**
+     * Get since ID
+     * @return string
+     */
+    public function getSinceId()
+    {
+        return $this->sinceId;
     }
 
     /**
@@ -136,7 +162,7 @@ class NodeStatus extends \Magelink\Entity\DoctrineBaseEntity
     /**
      * Get timestamp
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getTimestamp()
     {
@@ -159,7 +185,7 @@ class NodeStatus extends \Magelink\Entity\DoctrineBaseEntity
     /**
      * Get node
      *
-     * @return \Node\Entity\Node 
+     * @return \Node\Entity\Node
      */
     public function getNode()
     {

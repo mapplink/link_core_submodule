@@ -275,6 +275,87 @@ class NodeService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * Returns the since id entry from node_status, or 0 if none exists.
+     * @param int $nodeId
+     * @param int|string $entityType
+     * @param string $action Normally one of retrieve or update
+     * @return string $sinceId
+     */
+    public function getSinceId($nodeId, $entityType, $action)
+    {
+        if (is_int($entityType)) {
+            $entityTypeId = $entityType;
+        }else{
+            $entityTypeId = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
+        }
+
+        /** @var \Node\Entity\NodeStatus $nodeStatus */
+        $nodeStatus = $this->getServiceLocator()
+            ->get('Doctrine\ORM\EntityManager')
+            ->getRepository('Node\Entity\NodeStatus')
+            ->getStatusForNode($nodeId, $entityTypeId, $action);
+
+        if (is_null($nodeStatus)) {
+            $sinceId = 0;
+        }else{
+            $sinceId = $nodeStatus->getSinceId();
+        }
+
+        return $sinceId;
+    }
+
+    /**
+     * Updates the since id entry in node_status
+     * @param int $nodeId
+     * @param int|string $entityType
+     * @param string $action Normally one of retrieve or update
+     * @param int|null $sinceId The since id to update to
+     * @throws MagelinkException
+     */
+    public function setSinceId($nodeId, $entityType, $action, $sinceId = NULL)
+    {
+        if (is_int($entityType)) {
+            $entityTypeId = $entityType;
+        }else{
+            $entityTypeId = $this->getServiceLocator()->get('entityConfigService')->parseEntityType($entityType);
+        }
+
+        /** @var \Doctrine\ORM\EntityManager $entityManager */
+        $entityManager = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager');
+        /** @var \Node\Entity\NodeStatus $nodeStatus */
+        $nodeStatus = $entityManager
+            ->getRepository('Node\Entity\NodeStatus')
+            ->getStatusForNode($nodeId, $entityTypeId, $action);
+
+        if (!$nodeStatus) {
+            // We need to manually generate the ID as Doctrine doesn't like composite primary keys with auto increment
+            //    (although MySQL does it fine)
+            $idResult = $this->getAdapter()->query('SELECT MAX(id) AS max_id FROM node_status;', Adapter::QUERY_MODE_EXECUTE);
+
+            $id = FALSE;
+            foreach ($idResult as $result) {
+                if (is_null($result['max_id'])) {
+                    $result['max_id'] = 0;
+                }
+                $id = ++$result['max_id'];
+            }
+
+            if (!$id) {
+                throw new MagelinkException('Unable to locate node_status ID!');
+            }
+            $nodeStatus = new \Node\Entity\NodeStatus();
+            $nodeStatus->setNode($entityManager->getRepository('Node\Entity\Node')->find($nodeId));
+            $nodeStatus->setAction($action);
+            $nodeStatus->setEntityTypeId($entityTypeId);
+            $nodeStatus->setId($id);
+        }
+
+        $entityManager->setSinceId($sinceId);
+        $entityManager->persist($nodeStatus);
+        $entityManager->flush($nodeStatus);
+    }
+
+    /**
      * Returns the timestamp entry from node_status, or 0 if none exists.
      * @param int $nodeId
      * @param int|string $entityType
