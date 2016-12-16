@@ -40,6 +40,8 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
 
     /** @var int $this->apiOverlappingSeconds */
     protected $apiOverlappingSeconds = 3;
+    /** @var int $this->lastSinceId */
+    protected $lastSinceId = NULL;
     /** @var int $this->lastRetrieveTimestamp */
     protected $lastRetrieveTimestamp = NULL;
     /** @var int $this->retrieveTimestamp */
@@ -213,6 +215,19 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
         }
 
         return $this->newRetrieveTimestamp;
+    }
+
+    /**
+     * @return string $this->lastSinceId
+     */
+    protected function getLastSinceId()
+    {
+        if (is_null($this->lastSinceId)) {
+            $this->lastSinceId =
+                $this->_nodeService->getSinceId($this->_nodeEntity->getNodeId(), static::GATEWAY_ENTITY, 'retrieve');
+        }
+
+        return $this->lastRetrieveTimestamp;
     }
 
     /**
