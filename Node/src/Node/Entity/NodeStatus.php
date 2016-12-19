@@ -38,7 +38,7 @@ class NodeStatus extends \Magelink\Entity\DoctrineBaseEntity
 
     /**
      * @var string
-     * @ORM\Column(name="since_id", type="varchar", nullable=true)
+     * @ORM\Column(name="since_id", type="string", nullable=true)
      */
     private $sinceId;
 
