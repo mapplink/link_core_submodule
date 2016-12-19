@@ -86,6 +86,31 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @return array $modules
+     */
+    protected function getModules()
+    {
+        return $this->getConfigData('modules');
+    }
+
+    /**
+     * @param string $module
+     * @return bool $isModuleEnabled
+     */
+    protected function isModuleEnabled($module)
+    {
+        if (is_string($module)) {
+            $modules = array_map('strtolower', $this->getModules());
+            $isModuleEnabled = in_array(strtolower($module), $modules);
+        }else{
+//            throw new MagelinkException('Passed module is not a string.');
+            $isModuleEnabled = FALSE;
+        }
+
+        return $isModuleEnabled;
+    }
+
+    /**
      * @return array $configSystemCronData
      */
     protected function getConfigSystemCronData()
