@@ -97,7 +97,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
      * @param string $module
      * @return bool $isModuleEnabled
      */
-    protected function isModuleEnabled($module)
+    public function isModuleEnabled($module)
     {
         if (is_string($module)) {
             $modules = array_map('strtolower', $this->getModules());
