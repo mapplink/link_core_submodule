@@ -36,7 +36,6 @@ class Tester extends CronRunnable
         /** @var \Entity\Service\EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
 
-
         $response = $entityService->locateEntity(8, 'customer', FALSE,
             array('billing_address'=>36061, 'shipping_address'=>36061),
             array('billing_address'=>'all_eq', 'shipping_address'=>'all_eq'),

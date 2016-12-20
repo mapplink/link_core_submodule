@@ -49,12 +49,7 @@ class LogClear extends CronRunnable
         // Log cron
         $message = 'Deleted ' . $deletedRows . ' rows from log_entry table older than ' .
             $fromDate . ' with log_id less than ' . $maxLogId;
-        $this->getServiceLocator()->get('logService')
-            ->log(LogService::LEVEL_INFO,
-                'crn_logclear',
-                $message,
-                array('query'=>$sqlString)
-            );
+        $this->_logService->log(LogService::LEVEL_INFO, 'crn_logclear', $message, array('query'=>$sqlString));
     }
 
     /**
