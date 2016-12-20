@@ -31,49 +31,27 @@ class Synchronizer extends CronRunnable
      */
     protected function _cronRun()
     {
-        /** @var ServiceLocatorAwareInterface $serviceLocator */
-        $serviceLocator = $this->getServiceLocator();
-        /** @var LogService $logService */
-        $logService = $serviceLocator->get('logService');
-        $appConfig = $serviceLocator->get('Config');
-        $typeConfig = $appConfig['node_types'];
+        /** @var array $appConfig */
+        $appConfig = $this->getServiceLocator()->get('Config');
 
         try{
             $nodesToUpdate = array();
 
-            $nodes = $serviceLocator->get('nodeService')->getActiveNodes();
+            $nodes = $this->getServiceLocator()->get('nodeService')->getActiveNodes();
             foreach ($nodes as $nodeEntity) {
                 $nodeId = $nodeEntity->getId();
                 if ($nodeId) {
-                    if (!($nodeEntity instanceof NodeEntity)) {
-                        throw new MagelinkException('Invalid node type passed (' . get_class($nodeEntity) . ')!');
-                    }
-
-                    if (!isset($typeConfig[$nodeEntity->getType()])) {
-                        throw new MagelinkException('Invalid type name, module not installed? ' . $nodeEntity->getType());
-                    }
-                    $thisTypeConfig = $typeConfig[$nodeEntity->getType()];
-
-                    $className = '\\'.$thisTypeConfig['module'].'\\Node';
-                    if (!class_exists($className)) {
-                        throw new MagelinkException('Node class does not exist: ' . $className);
-                    }
-
                     /** @var AbstractNode $node */
-                    $node = new $className();
-                    if ($node instanceof ServiceLocatorAwareInterface) {
-                        $node->setServiceLocator($serviceLocator);
-                    }
-
+                    $node = self::getNodeFromNodeEntity($nodeEntity, $this->getServiceLocator());
                     $logData = array('node id'=>$nodeId);
 
                     try{
                         $node->init($nodeEntity, $this->scheduledRun);
                         $logMessage = 'Cron synchronizer finished init on node '.$nodeId;
-                        $logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
+                        $this->_logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
                         $node->retrieve();
                         $logMessage = 'Cron synchronizer finished retrieve on node '.$nodeId;
-                        $logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
+                        $this->_logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
                         $nodesToUpdate[] = $node;
                     }catch (NodeException $nodeException) {
                         $logMessage = 'Synchronizer error on node '.$node->getNodeId().': '.$nodeException->getMessage();
@@ -81,7 +59,7 @@ class Synchronizer extends CronRunnable
                             $nodeException->getMessage(),
                             $nodeException->getTraceAsString()
                         ));
-                        $logService->log(LogService::LEVEL_ERROR, 'crn_sync_node_ex', $logMessage, $logData,
+                        $this->_logService->log(LogService::LEVEL_ERROR, 'crn_sync_node_ex', $logMessage, $logData,
                                 array('exception'=>$nodeException, 'node entity'=>$nodeEntity, 'node'=>$node));
                         echo PHP_EOL.$nodeException->getTraceAsString().PHP_EOL;
                     }
@@ -94,14 +72,14 @@ class Synchronizer extends CronRunnable
                 try{
                     $node->update();
                     $logMessage = 'Cron synchronizer finished update on node '.$nodeId;
-                    $logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
+                    $this->_logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
                 }catch (NodeException $nodeException) {
                     $logMessage = 'Synchronizer error updating node '.$nodeId.': '.$nodeException->getMessage();
                     $logData = array_merge($logData, array(
                         $nodeException->getMessage(),
                         $nodeException->getTraceAsString()
                     ));
-                    $logService->log(LogService::LEVEL_ERROR, 'crn_sync_nupdex',
+                    $this->_logService->log(LogService::LEVEL_ERROR, 'crn_sync_nupdex',
                         $logMessage, $logData, array('exception'=>$nodeException, 'node'=>$node));
                     echo PHP_EOL.$nodeException->getTraceAsString().PHP_EOL;
                 }
@@ -110,27 +88,27 @@ class Synchronizer extends CronRunnable
                 try{
                     $node->deinit();
                     $logMessage = 'Cron synchronizer finished deinit on node '.$nodeId;
-                    $logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
+                    $this->_logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
                 }catch (NodeException $nodeException) {
                     $logMessage = 'Synchronizer error (node) on node '.$nodeId.' deinit: '.$nodeException->getMessage();
                     $logData = array_merge($logData, array(
                         $nodeException->getMessage(),
                         $nodeException->getTraceAsString()
                     ));
-                    $logService->log(LogService::LEVEL_ERROR, 'crn_sync_nodeex',
+                    $this->_logService->log(LogService::LEVEL_ERROR, 'crn_sync_nodeex',
                         $logMessage, $logData, array('exception'=>$nodeException, 'node'=>$node));
                     echo PHP_EOL.$nodeException->getTraceAsString().PHP_EOL;
                 }
             }
         }catch (SyncException $syncException) {
-            $logService->log(LogService::LEVEL_ERROR, 'crn_sync_syncex',
+            $this->_logService->log(LogService::LEVEL_ERROR, 'crn_sync_syncex',
                 'Synchronizer error (sync): '.$syncException->getMessage(),
                 array($syncException->getMessage(), $syncException->getTraceAsString()),
                 array('exception'=>$syncException)
             );
             echo PHP_EOL.$syncException->getTraceAsString().PHP_EOL;
         }catch (MagelinkException $magelinkException) {
-            $logService->log(LogService::LEVEL_ERROR, 'crn_sync_mageex',
+            $this->_logService->log(LogService::LEVEL_ERROR, 'crn_sync_mageex',
                 'Synchronizer error (mage): '.$magelinkException->getMessage(),
                 array($magelinkException->getMessage(), $magelinkException->getTraceAsString()),
                 array('exception'=>$magelinkException)

@@ -15,6 +15,7 @@ use Application\Service\ApplicationConfigService;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Magelink\Exception\SyncException;
+use Node\Entity\Node as NodeEntity;
 use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Where;
 use Zend\Db\Adapter\AdapterInterface;
@@ -149,6 +150,38 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
         return $this->getServiceLocator()->get('zend_db');
     }
 
+    /**
+     * @param NodeEntity $nodeEntity
+     * @return AbstractNode $node
+     * @throws MagelinkException
+     */
+    public static function getNodeFromNodeEntity(NodeEntity $nodeEntity, ServiceLocatorInterface $serviceLocator)
+    {
+        $appConfig = $serviceLocator->get('Config');
+        $typeConfig = $appConfig['node_types'];
+
+        if (!($nodeEntity instanceof NodeEntity)) {
+            throw new MagelinkException('Invalid node type passed (' . get_class($nodeEntity) . ')!');
+        }
+
+        if (!isset($typeConfig[$nodeEntity->getType()])) {
+            throw new MagelinkException('Invalid type name, module not installed? ' . $nodeEntity->getType());
+        }
+        $thisTypeConfig = $typeConfig[$nodeEntity->getType()];
+
+        $className = '\\'.$thisTypeConfig['module'].'\\Node';
+        if (!class_exists($className)) {
+            throw new MagelinkException('Node class does not exist: ' . $className);
+        }
+
+        /** @var AbstractNode $node */
+        $node = new $className();
+        if ($node instanceof ServiceLocatorAwareInterface) {
+            $node->setServiceLocator($serviceLocator);
+        }
+
+        return $node;
+    }
     /**
      * Returns a new TableGateway instance for cron table
      * @return TableGateway $this->_cronTableGateway
