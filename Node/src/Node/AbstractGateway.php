@@ -223,8 +223,9 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
     protected function getLastSinceId()
     {
         if (is_null($this->lastSinceId)) {
-            $this->lastSinceId =
-                $this->_nodeService->getSinceId($this->_nodeEntity->getNodeId(), static::GATEWAY_ENTITY, 'retrieve');
+            $this->lastSinceId = max(1,
+                $this->_nodeService->getSinceId($this->_nodeEntity->getNodeId(), static::GATEWAY_ENTITY, 'retrieve')
+            );
         }
 
         return $this->lastSinceId;
