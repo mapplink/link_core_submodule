@@ -227,7 +227,7 @@ abstract class AbstractGateway implements ServiceLocatorAwareInterface
                 $this->_nodeService->getSinceId($this->_nodeEntity->getNodeId(), static::GATEWAY_ENTITY, 'retrieve');
         }
 
-        return $this->lastRetrieveTimestamp;
+        return $this->lastSinceId;
     }
 
     /**
