@@ -20,6 +20,8 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 class ApplicationConfigService implements ServiceLocatorAwareInterface
 {
 
+    /** @var array|NULL $applicationConfig */
+    protected $applicationConfig = NULL;
     /** @var array|NULL $_config */
     protected $_config = NULL;
     /** @var array $cronjobs */
@@ -66,6 +68,26 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @return array $applicationConfig
+     */
+    protected function getApplicationConfigData($code = NULL)
+    {
+        if (!$this->applicationConfig) {
+            $this->applicationConfig = $this->getServiceLocator()->get('ApplicationConfig');
+        }
+
+        if ($code && is_array($this->applicationConfig)) {
+            $applicationConfig = $this->getArrayKeyData($this->applicationConfig, $code);
+        }elseif (!$code) {
+            $applicationConfig = $this->applicationConfig;
+        }else{
+            $applicationConfig = array();
+        }
+
+        return $applicationConfig;
+    }
+
+    /**
      * @return array $config
      */
     protected function getConfigData($code = NULL)
@@ -90,7 +112,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
      */
     protected function getModules()
     {
-        return $this->getConfigData('modules');
+        return $this->getApplicationConfigData('modules');
     }
 
     /**
