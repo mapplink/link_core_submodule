@@ -68,6 +68,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @param string|NULL $code
      * @return array $applicationConfig
      */
     protected function getApplicationConfigData($code = NULL)
@@ -88,6 +89,7 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @param string|NULL $code
      * @return array $config
      */
     protected function getConfigData($code = NULL)
