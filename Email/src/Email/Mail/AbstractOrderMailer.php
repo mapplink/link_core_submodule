@@ -10,6 +10,7 @@
 
 namespace Email\Mail;
 
+use Application\Service\ApplicationConfigService;
 use Email\Entity\EmailSender;
 use Entity\Wrapper\Order;
 use Log\Service\LogService;
@@ -82,8 +83,10 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
                 'Magento'=>'\Magento\Gateway\OrderGateway',
                 'Magento2'=>'\Magento2\Gateway\OrderGateway'
             );
-            foreach ($gatewaysToCheck as $gateway) {
-                $sendEmail |= $gateway::isOrderToBeWritten($this->entity);
+            foreach ($gatewaysToCheck as $module=>$gateway) {
+                if ($applicationConfigService->isModuleEnabled($module)) {
+                    $sendEmail |= $gateway::isOrderToBeWritten($this->entity);
+                }
             }
         }else{
             $sendEmail = TRUE;
