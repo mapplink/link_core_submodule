@@ -1,7 +1,5 @@
 <?php
 /**
- * Email\Mail
- *
  * @category Email
  * @package Email\Service
  * @author Seo Yao
@@ -14,6 +12,7 @@ namespace Email\Mail;
 
 use Email\Entity\EmailSender;
 use Entity\Wrapper\Order;
+use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
 use Doctrine\Tests\Common\Annotations\Ticket\Doctrine\ORM\Entity;
 
@@ -29,16 +28,9 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
      */
     protected $accessibleEntityTypes = array(
         'order'=>NULL,
-        'orderitem'=>array(
-            'OrderItems'=>'renderOrderItems()'
-        ),
-        'customer'=>array(
-            'customer.'=>'@order.customer'
-        ),
-        'address'=>array(
-            'shipping_address.'=>'@order.shipping_address',
-            'billing_address.'=>'@order.billing_address'
-        )
+        'orderitem'=>array('OrderItems'=>'renderOrderItems()'),
+        'customer'=>array('customer.'=>'@order.customer'),
+        'address'=>array('shipping_address.'=>'@order.shipping_address','billing_address.'=>'@order.billing_address')
     );
 
 
@@ -77,6 +69,14 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
     abstract protected function _setupTemplate();
 
     /**
+     * @return bool $isSendEmail
+     */
+    protected function isSendEmail()
+    {
+        return is_int($this->entity->getStoreId());
+    }
+
+    /**
      * Set sender details
      * @throws MagelinkException
      */
@@ -99,13 +99,17 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
                     }
                 }
 
+                $message = 'No sender email defined, neither on the template '.$this->template->getHumanName()
+                    .' nor as a default sender on store '.$this->entity->getStoreId().'.';
+
                 if (!is_null($defaultSender)) {
                     $this->template->setSenderEmail($defaultSender->getSenderEmail());
                     $this->template->setSenderName($defaultSender->getSenderName());
-                }else {
-                    $message = 'No sender email defined, neither on the template '.$this->template->getHumanName()
-                        .' nor as a default sender on store '.$this->entity->getStoreId().'.';
+                }elseif ($this->isSendEmail()) {
                     throw new MagelinkException($message);
+                }else{
+                    $this->getServiceLocator()->get('logService')
+                        ->log(LogService::LEVEL_WARN, 'email_notmpl', $message, array());
                 }
             }
         }
@@ -163,32 +167,33 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
      */
     public function send()
     {
-        parent::send();
+        if ($this->isSendEmail()) {
+            parent::send();
 
-        $fromAddress = array();
-        foreach ($this->getMessage()->getFrom() as $from) {
-            $fromAddress[$from->getEmail()] = $from->getName();
+            $fromAddress = array();
+            foreach ($this->getMessage()->getFrom() as $from) {
+                $fromAddress[$from->getEmail()] = $from->getName();
+            }
+
+            $toAddrs = array();
+            foreach ($this->getMessage()->getTo() as $to) {
+                $toAddrs[$to->getEmail()] = $to->getName();
+            }
+
+            /** @var \Entity\Service\EntityService $entityService */
+            $entityService = $this->getServiceLocator()->get('entityService');
+            /** @var \Zend\Authentication\AuthenticationService $authService */
+            $authService = $this->getServiceLocator()->get('zfcuser_auth_service');
+
+            $entityService->createEntityComment(
+                $this->entity,
+                $authService->getIdentity()->getDisplayName(),
+                $this->getMessage()->getSubject(),
+                $this->getMessage()->getBodyText(),
+                '',
+                FALSE
+            );
         }
-
-        $toAddrs = array();
-        foreach ($this->getMessage()->getTo() as $to) {
-            $toAddrs[$to->getEmail()] = $to->getName();
-        }
-
-        /** @var \Entity\Service\EntityService $entityService */
-        $entityService = $this->getServiceLocator()->get('entityService');
-        /** @var \Zend\Authentication\AuthenticationService $authService */
-        $authService = $this->getServiceLocator()->get('zfcuser_auth_service');
-
-        $entityService->createEntityComment(
-            $this->entity,
-            $authService->getIdentity()->getDisplayName(),
-            $this->getMessage()->getSubject(),
-            $this->getMessage()->getBodyText(),
-            '',
-            FALSE
-        );
-
     }
 
     /**
@@ -204,15 +209,15 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
 
             $glue = "\n";
             if (!is_object($this->template)) {
-                $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
-                    'email_no_template',
-                    'No template is set for shipping address on order '.$this->entity->getUniqueId(),
-                    array(
-                        'order id'=>$this->entity->getId(), 'order unique id'=>$this->entity->getUniqueId(),
-                        'address id'=>$address->getId(), 'address unique id'=>$address->getUniqueId()
-                    ),
-                    array('order'=>$this->entity, 'address'=>$address)
-                );
+                $this->getServiceLocator()->get('logService')
+                    ->log(LogService::LEVEL_INFO, 'email_add_notmpl',
+                        'No template is set for shipping address on order '.$this->entity->getUniqueId(),
+                        array(
+                            'order id'=>$this->entity->getId(), 'order unique id'=>$this->entity->getUniqueId(),
+                            'address id'=>$address->getId(), 'address unique id'=>$address->getUniqueId()
+                        ),
+                        array('order'=>$this->entity, 'address'=>$address)
+                    );
             }elseif ($this->template->isHTML()) {
                 $glue = '<br/>';
             }
@@ -237,14 +242,13 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
         $content = trim($content);
 
         if (!is_object($this->template)) {
-            $this->getServiceLocator()->get('logService')->log(\Log\Service\LogService::LEVEL_INFO,
-                'email_no_template',
-                'No template is set for order items on order '.$this->entity->getUniqueId(),
-                array(
-                    'order id'=>$this->entity->getId(), 'order unique id'=>$this->entity->getUniqueId(),
-                ),
-                array('order'=>$this->entity, 'orderitems'=>$items)
-            );
+            $this->getServiceLocator()->get('logService')
+                ->log(LogService::LEVEL_INFO,
+                    'email_oi_notmpl',
+                    'No template is set for order items on order '.$this->entity->getUniqueId(),
+                    array('order id'=>$this->entity->getId(), 'order unique id'=>$this->entity->getUniqueId()),
+                    array('order'=>$this->entity, 'orderitems'=>$items)
+                );
         }elseif ($this->template->isHTML()) {
             $content = nl2br($content);
         }
