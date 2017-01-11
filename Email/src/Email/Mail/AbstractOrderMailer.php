@@ -73,7 +73,23 @@ abstract class AbstractOrderMailer extends AbstractDatabaseTemplateMailer
      */
     protected function isSendEmail()
     {
-        return is_int($this->entity->getStoreId());
+        /** @var ApplicationConfigService $applicationConfigService */
+        $applicationConfigService = $this->getServiceLocator()->get('applicationConfigService');
+
+        if ($this->entity instanceof \HOPS\Wrapper\Order) {
+            $sendEmail = FALSE;
+            $gatewaysToCheck = array(
+                'Magento'=>'\Magento\Gateway\OrderGateway',
+                'Magento2'=>'\Magento2\Gateway\OrderGateway'
+            );
+            foreach ($gatewaysToCheck as $gateway) {
+                $sendEmail |= $gateway::isOrderToBeWritten($this->entity);
+            }
+        }else{
+            $sendEmail = TRUE;
+        }
+
+        return (bool) $sendEmail;
     }
 
     /**
