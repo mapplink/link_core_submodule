@@ -26,7 +26,7 @@ class EmailSender extends \Magelink\Entity\DoctrineBaseEntity
      * @ORM\GeneratedValue(strategy="IDENTITY") */
     private $senderId;
     /** @var string
-     * @ORM\Column(name="store_id", type="smallint", nullable=false) */
+     * @ORM\Column(name="store_id", type="string", length=254, nullable=false) */
     private $storeId;
     /** @var string
      * @ORM\Column(name="code", type="string", length=254, nullable=false) */
