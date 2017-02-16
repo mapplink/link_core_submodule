@@ -17,6 +17,10 @@ use Magelink\Exception\MagelinkException;
 
 class Creditmemo extends AbstractWrapper
 {
+
+    const TEMPORARY_PREFIX = 'TMP-';
+
+
     /**
      * Retrieve all the order items attached to this order
      * @return \Entity\Wrapper\Orderitem[]
@@ -28,7 +32,7 @@ class Creditmemo extends AbstractWrapper
 
     /**
      * Retrieve all the order items attached to this order
-     * @return \Entity\Wrapper\Orderitem[]
+     * @return \Entity\Wrapper\Creditmemoitem[]
      */
     public function getCreditmemoitems()
     {
