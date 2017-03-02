@@ -146,6 +146,7 @@ class EntityService implements ServiceLocatorAwareInterface
      */
     public function loadEntityId($nodeId, $entityId)
     {
+        $logCode = 'loadid';
         $this->verifyNodeId($nodeId);
 
         if (is_string($entityId) || is_numeric($entityId)) {
@@ -157,28 +158,35 @@ class EntityService implements ServiceLocatorAwareInterface
         }
 
         $entityTypeId = $this->getLoader()->getEntityTypeId($entityId);
-        $this->getServiceLocator()->get('logService')->log(
-            LogService::LEVEL_DEBUG,
-            'loadeid',
-            'loadEntityId - '.$nodeId.' - '.$entityId.' ('.$entityTypeId.')',
-            array('node_id'=>$nodeId, 'entity_id'=>$entityId), array('entity'=>$entityId)
-        );
-
-        $attributes = $this->getServiceLocator()->get('nodeService')
-            ->getSubscribedAttributeCodes($nodeId, $entityTypeId);
-        $entities = $this->getLoader()->loadEntities(
-            $entityTypeId,
-            0,
-            array('ENTITY_ID'=>$entityId),
-            $attributes,
-            array('ENTITY_ID'=>'eq'),
-            array('limit'=>1, 'node_id'=>$nodeId)
-        );
-
-        if (!$entities || !count($entities)) {
+        if ($entityTypeId === FALSE) {
             $entity = NULL;
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_ERROR, $logCode.'_notype',
+                'No entity type ID could be retrieved for loadEntityId().',
+                array('node_id'=>$nodeId, 'entity_id'=>$entityId)
+            );
         }else{
-            $entity = array_shift($entities);
+            $this->getServiceLocator()->get('logService')->log(LogService::LEVEL_DEBUG, $logCode,
+                'loadEntityId - '.$nodeId.' - '.$entityId.' ('.$entityTypeId.')',
+                array('node_id'=>$nodeId, 'entity_id'=>$entityId),
+                array('entity'=>$entityId)
+            );
+
+            $attributes = $this->getServiceLocator()->get('nodeService')
+                ->getSubscribedAttributeCodes($nodeId, $entityTypeId);
+            $entities = $this->getLoader()->loadEntities(
+                $entityTypeId,
+                0,
+                array('ENTITY_ID'=>$entityId),
+                $attributes,
+                array('ENTITY_ID'=>'eq'),
+                array('limit'=>1, 'node_id'=>$nodeId)
+            );
+
+            if (!$entities || !count($entities)) {
+                $entity = null;
+            }else{
+                $entity = array_shift($entities);
+            }
         }
 
         return $entity;

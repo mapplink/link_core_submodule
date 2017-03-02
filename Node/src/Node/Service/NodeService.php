@@ -12,6 +12,7 @@
 
 namespace Node\Service;
 
+use Entity\Entity;
 use Entity\Service\EntityService;
 use Entity\Action;
 use Entity\Update;
@@ -154,16 +155,23 @@ class NodeService implements ServiceLocatorAwareInterface
 
         foreach ($updateRowSet as $row) {
             if (!isset($entities[$row['entity_id']])) {
-                $entities[$row['entity_id']] = $this->getServiceLocator()->get('entityService')
+                $entity = $this->getServiceLocator()->get('entityService')
                     ->loadEntityId($nodeEntity->getId(), $row['entity_id']);
-            }
-
-            try{
-                $update = new Update();
-                $update->init($entities[$row['entity_id']], (array) $row);
-                $updates[] = $update;
-            }catch (\Exception $exception) {
-                $logService->log(LogService::LEVEL_ERROR, $logCode.'_err', $exception->getMessage(), $row);
+                if ($entity instanceof Entity) {
+                    try{
+                        $update = new Update();
+                        $update->init($entity, (array) $row);
+                        $updates[] = $update;
+                        $entities[$row['entity_id']] = $entity;
+                    }catch (\Exception $exception) {
+                        $logService->log(LogService::LEVEL_ERROR, $logCode.'_err', $exception->getMessage(), $row);
+                    }
+                }else{
+                    $logService->log(LogService::LEVEL_ERROR, $logCode.'x',
+                        'Entity could not be loaded on NodeService->getPendingUpdates(). Update will not be processed.',
+                        array('node_id'=>$nodeEntity->getId(), 'entity_id'=>$row['entity_id'])
+                    );
+                }
             }
         }
 
@@ -225,11 +233,23 @@ class NodeService implements ServiceLocatorAwareInterface
 
             $loadTime += -$start + ($start = microtime(TRUE));
 
-            $action = new Action();
-            $action->init($entityAction->getId(), $entity, $entityAction->getActionType(), $entityAction->getSimpleData());
-            $actions[] = $action;
+            if ($entity instanceof Entity) {
+                $action = new Action();
+                $action->init(
+                    $entityAction->getId(),
+                    $entity,
+                    $entityAction->getActionType(),
+                    $entityAction->getSimpleData()
+                );
+                $actions[] = $action;
 
-            $createTime += -$start + ($start = microtime(TRUE));
+                $createTime += -$start + ($start = microtime(true));
+            }else{
+                $logService->log(LogService::LEVEL_ERROR, $logCode.'x',
+                    'Entity could not be loaded on NodeService->getPendingActions(). Action not initialised.',
+                    array('node_id'=>$nodeEntity->getId(), 'entity_id'=>$entityAction->getEntityId())
+                );
+            }
         }
 
         $methodRuntime = round(microtime(TRUE) - $startMethod, 1);
