@@ -1209,18 +1209,18 @@ class EntityService implements ServiceLocatorAwareInterface
      *
      * @param int $nodeId
      * @param \Entity\Entity $entity
-     * @param string $new_unique_id
+     * @param string $newUniqueId
      */
-    public function updateEntityUnique($nodeId, \Entity\Entity $entity, $new_unique_id)
+    public function updateEntityUnique($nodeId, \Entity\Entity $entity, $newUniqueId)
     {
         $this->getServiceLocator()->get('logService')
             ->log(LogService::LEVEL_INFO,
                 'update_unique',
-                'updateEntityUnique - setting ID '.$new_unique_id.' for ' . $entity->getId(),
-                array('new_id'=>$new_unique_id),
+                'updateEntityUnique - setting ID '.$newUniqueId.' for '.$entity->getId(),
+                array('old unique'=>$entity->getUniqueId(), 'new unique'=>$newUniqueId, 'type'=>$entity->getTypeStr()),
                 array('entity'=>$entity, 'node'=>$nodeId)
             );
-        $this->getSaver()->setEntityUnique($entity->getId(), $new_unique_id);
+        $this->getSaver()->setEntityUnique($entity->getId(), $newUniqueId);
         $this->getSaver()->touchEntity($entity);
     }
 
