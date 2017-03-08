@@ -21,11 +21,14 @@ class ErrorHandler
 
     /** @var bool|NULL $allowException */
     protected static $allowException = NULL;
-
     /** @var string|FALSE $_lastError */
     protected $_lastError = FALSE;
 
 
+    /**
+     * ErrorHandler constructor.
+     * @param bool|NULL $allowException
+     */
     public function __construct($allowException = NULL)
     {
         if (self::$allowException === NULL) {
@@ -48,6 +51,9 @@ class ErrorHandler
         }
     }
 
+    /**
+     * Shutdownhandler: Throws last error is there is any
+     */
     public function shutdownhandler()
     {
         $error = error_get_last();
@@ -64,18 +70,35 @@ class ErrorHandler
 
     /**
      * Exception handler callback
-     * @param \Exception $exception
+     * @param \Throwable $throwable
      */
-    public function exceptionhandler(\Exception $exception)
+    public function exceptionhandler($throwable)
     {
-        $content = $exception->__toString();
+        // This code block is added for PHP5 compatibility
+        $type = get_class($throwable);
+        $methodDefinitionLine = __LINE__ - 4;
+        $prefix = 'Uncaught '.$type.': Argument 1 passed to '.__CLASS__.'::'.__METHOD__.' must be an instance of ';
+        $postfix = ', instance of '.$type.' given in '.__FILE__.':'.$methodDefinitionLine;
+        if (strnatcmp(phpversion(),'7.0.0') >= 0) {
+            if (!$throwable instanceof \Throwable) {
+                throw new \Exception($prefix.'Throwable'.$postfix);
+            }
+        }else{
+            if (!$throwable instanceof \Exception) {
+                throw new \Exception($prefix.'Exception'.$postfix);
+            }
+        }
+
+        $subject = 'MageLink Exception Handler: '.get_class($throwable);
+        $content = $throwable->__toString();
+
         if (mb_strlen($content) > EmailLogger::EMAIL_MAX_LENGTH) {
             $content = mb_substr($content, 0, EmailLogger::EMAIL_MAX_LENGTH * 0.9)
                 ."\r\n...\r\n".mb_substr($content, EmailLogger::EMAIL_MAX_LENGTH * -0.1);
         }
-        @mail(self::ERROR_TO, 'MageLink Exception Handler: '.get_class($exception), $content, 'From: '.self::ERROR_FROM);
+        @mail(self::ERROR_TO, $subject, $content, 'From: '.self::ERROR_FROM);
 
-        $trace = $exception->getTraceAsString();
+        $trace = $throwable->getTraceAsString();
         if (mb_strlen($trace) > EmailLogger::EMAIL_MAX_LENGTH) {
             $trace = mb_substr($trace, 0, EmailLogger::EMAIL_MAX_LENGTH * 0.9)
                 ."\r\n...\r\n".mb_substr($trace, EmailLogger::EMAIL_MAX_LENGTH * -0.1);
@@ -90,7 +113,7 @@ class ErrorHandler
      * @param string $errorFile
      * @param int $errorLine
      * @param array $errorContext
-     * @return bool
+     * @return bool|FALSE
      */
     public function errorhandler($errorNo, $errorText, $errorFile = NULL, $errorLine = NULL, array $errorContext = NULL)
     {
