@@ -78,7 +78,7 @@ abstract class AbstractEntityController extends BaseController
      * @param Entity $entity
      * @return array
      */
-    protected function getSimpleActions(\Entity\Entity $entity)
+    protected function getSimpleActions(Entity $entity)
     {
         return array();
     }
@@ -196,16 +196,16 @@ abstract class AbstractEntityController extends BaseController
 
     /**
      * Retrieves the selected entity for use in simple action handlers
-     * @return \Entity\Entity
+     * @return Entity
      */
     protected function getSelectedEntity()
     {
         if($this->params()->fromRoute('entity_id')){
-            /** @var \Entity\Service\EntityService $entityService */
+            /** @var EntityService $entityService */
             $entityService = $this->getServiceLocator()->get('entityService');
             return $entityService->loadEntityId($this->getNodeId(), $this->params()->fromRoute('entity_id'));
         }else if($this->params()->fromQuery('entity_id')){
-            /** @var \Entity\Service\EntityService $entityService */
+            /** @var EntityService $entityService */
             $entityService = $this->getServiceLocator()->get('entityService');
             return $entityService->loadEntityId($this->getNodeId(), $this->params()->fromQuery('entity_id'));
         }else{
@@ -216,12 +216,12 @@ abstract class AbstractEntityController extends BaseController
     /**
      * For a massaction request, returns the affected Entity objects
      * @throws MagelinkException If invalid data is passed
-     * @return \Entity\Entity[]
+     * @return Entity[]
      */
     protected function getMassactionEntities()
     {
 
-        /** @var \Entity\Service\EntityService $entityService */
+        /** @var EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
 
         $data = $this->getRequest()->getContent();
@@ -307,7 +307,7 @@ abstract class AbstractEntityController extends BaseController
      * @param Entity $entity
      * @return array
      */
-    protected function getAllSimpleActions(\Entity\Entity $entity)
+    protected function getAllSimpleActions(Entity $entity)
     {
         $actions = $this->getSimpleActions($entity, FALSE);
         if($this->getEnableEdit()){
@@ -655,7 +655,7 @@ abstract class AbstractEntityController extends BaseController
             return;
         }
 
-        /** @var \Entity\Service\EntityService $entityService */
+        /** @var EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
         /** @var \Entity\Service\EntityConfigService $entityConfigService */
         $entityConfigService = $this->getServiceLocator()->get('entityConfigService');
@@ -751,7 +751,7 @@ abstract class AbstractEntityController extends BaseController
 
         if($text && strlen(trim($text))){
 
-            /** @var \Entity\Service\EntityService $entityService */
+            /** @var EntityService $entityService */
             $entityService = $this->getServiceLocator()->get('entityService');
             /** @var \Zend\Authentication\AuthenticationService $authService */
             $authService = $this->getServiceLocator()->get('zfcuser_auth_service');
@@ -773,9 +773,9 @@ abstract class AbstractEntityController extends BaseController
      * @param bool $allowAdd Whether to show UI elements for adding new comments
      * @return ViewModel
      */
-    protected function addEntityComments(ViewModel $view, \Entity\Entity $entity, $allowAdd=true)
+    protected function addEntityComments(ViewModel $view, Entity $entity, $allowAdd=true)
     {
-        /** @var \Entity\Service\EntityService $entityService */
+        /** @var EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
 
         $comments = array_reverse($entityService->loadEntityComments($entity));
@@ -794,7 +794,7 @@ abstract class AbstractEntityController extends BaseController
         return $view;
     }
 
-    protected function getEditViewdata(\Entity\Entity $entity)
+    protected function getEditViewdata(Entity $entity)
     {
         return array();
     }
@@ -850,7 +850,7 @@ abstract class AbstractEntityController extends BaseController
      * @param Entity $entity
      * @return string
      */
-    protected function getActionsHtml(\Entity\Entity $entity)
+    protected function getActionsHtml(Entity $entity)
     {
         $html = array();
         foreach ($this->getAllSimpleActions($entity) as $key=>$data) {
@@ -899,7 +899,7 @@ abstract class AbstractEntityController extends BaseController
 
     public function dataAction()
     {
-        /** @var \Entity\Service\EntityService $entityService */
+        /** @var EntityService $entityService */
         $entityService = $this->getServiceLocator()->get('entityService');
         /** @var \Entity\Service\EntityConfigService $entityConfigService */
         $entityConfigService = $this->getServiceLocator()->get('entityConfigService');
@@ -1074,10 +1074,11 @@ EOF;
                             $attributeData['code'],
                             (isset($fetch_data['fkey_type']) ? $fetch_data['fkey_type'] : NULL)
                         );
-                        if($fkey){
-                            $data = $fkey->$display_data['render_fkey_func']();
+                        $func = is_string($display_data['render_fkey_func']) ? $display_data['render_fkey_func'] : '';
+                        if ($fkey instanceof Entity && strlen($func) > 0) {
+                            $data = $fkey->$func();
                         }else{
-                            $data = null;
+                            $data = NULL;
                         }
                     }else{
                         $data = 'INVALID_CONFIG';
