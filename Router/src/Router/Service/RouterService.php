@@ -245,6 +245,17 @@ class RouterService implements ServiceLocatorAwareInterface
             array('entity'=>$entity, 'node'=>$sourceNodeId)
         );
 
+        $this->saveUpdate($sourceNodeId, $entity, $attributes, $affectedNodeIds, $type);
+    }
+
+    /**
+     * @param int $sourceNodeId
+     * @param Entity $entity
+     * @param array $affectedNodeIds
+     * @param int $type
+     */
+    protected function saveUpdate($sourceNodeId, \Entity\Entity $entity, $attributes, array $affectedNodeIds, $type)
+    {
         $affectedRows = $this->getTableGateway('entity_update_log')->insert(array(
             'entity_id'=>$entity->getId(),
             'entity_type'=>$entity->getType(),
@@ -259,12 +270,12 @@ class RouterService implements ServiceLocatorAwareInterface
         if (!$affectedRows || !$logId){
             throw new MagelinkException('Error recording update to entity ' . $entity->getId());
         }else{
-            foreach ($affectedNodes as $node) {
+            foreach ($affectedNodeIds as $nodeId) {
                 try{
                     $affectedRows = $this->getTableGateway('entity_update')->insert(
                         array(
                             'entity_id'=>$entity->getId(),
-                            'node_id'=>$node->getId(),
+                            'node_id'=>$nodeId,
                             'log_id'=>$logId,
                             'type'=>$type,
                             'complete'=>0,
