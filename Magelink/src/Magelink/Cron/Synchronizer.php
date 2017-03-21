@@ -49,6 +49,8 @@ class Synchronizer extends CronRunnable
                         $node->init($nodeEntity, $this->scheduledRun);
                         $logMessage = 'Cron synchronizer finished init on node '.$nodeId;
                         $this->_logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
+                        $nodesToDeinit[] = $node;
+
                         $node->retrieve();
                         $logMessage = 'Cron synchronizer finished retrieve on node '.$nodeId;
                         $this->_logService->log(LogService::LEVEL_INFO, 'crn_sync_node', $logMessage, $logData);
@@ -83,7 +85,10 @@ class Synchronizer extends CronRunnable
                         $logMessage, $logData, array('exception'=>$nodeException, 'node'=>$node));
                     echo PHP_EOL.$nodeException->getTraceAsString().PHP_EOL;
                 }
+            }
 
+            foreach ($nodesToDeinit as $node) {
+                $nodeId = $node->getNodeId();
                 $logData = array('node id'=>$nodeId);
                 try{
                     $node->deinit();
