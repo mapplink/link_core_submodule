@@ -6,10 +6,29 @@ return array(
             'class'=>'\Magelink\Cron\Synchronizer',
             'interval'=>30,
             'offset'=>0,
-            'lockTime'=>160,
+            'lockTime'=>360,
+            'overdue'=>TRUE
+        ),
+        'retrieval'=>array(
+            'class'=>'\Magelink\Cron\Retrieval',
+            'interval'=>30,
+            'offset'=>2,
+            'lockTime'=>180,
+            'overdue'=>TRUE
+        ),
+        'update'=>array(
+            'class'=>'\Magelink\Cron\Update',
+            'interval'=>30,
+            'offset'=>22,
+            'lockTime'=>180,
+            'overdue'=>TRUE
+        ),
+        'productStock'=>array(
+            'class'=>'\Magelink\Cron\ProductStock',
+            'interval'=>30,
+            'offset'=>12,
+            'lockTime'=>180,
             'overdue'=>TRUE
         )
     )
 );
-
-?>
