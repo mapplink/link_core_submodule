@@ -27,33 +27,29 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 abstract class AbstractNode implements ServiceLocatorAwareInterface
 {
 
-    /** @var \Node\AbstractGateway[] $_gateway */
+    /** @var \Node\AbstractGateway[] $this->_gateway */
     protected $_gateway = array();
-    /** @var ServiceLocatorAwareInterface[] $_api */
+    /** @var ServiceLocatorAwareInterface[] $this->_api */
     protected $_api = array();
-
-    /** @var NodeEntity $_entity */
+    /** @var NodeEntity $this->_entity */
     protected $_entity = NULL;
-
-    /** @var array $_config */
+    /** @var array $this->_config */
     protected $_config = NULL;
-    /** @var array $_typeConfig */
+    /** @var array $this->_typeConfig */
     protected $_typeConfig = NULL;
-
-    /** @var bool $isOverdueRun */
+    /** @var bool $this->isOverdueRun */
     protected $isOverdueRun = NULL;
-    /** @var Update[] $updates */
+    /** @var Update[] $this->updates */
     protected $updates = array();
-    /** @var Action[] $actions */
+    /** @var Action[] $this->actions */
     protected $actions = array();
-
-    /** @var EntityService $_entityService */
+    /** @var EntityService $this->_entityService */
     protected $_entityService = NULL;
-    /** @var LogService $_logService */
+    /** @var LogService $this->_logService */
     protected $_logService = NULL;
-    /** @var NodeService $_nodeService */
+    /** @var NodeService $this->_nodeService */
     protected $_nodeService = NULL;
-    /** @var ServiceLocatorInterface $_serviceLocator */
+    /** @var ServiceLocatorInterface $this->_serviceLocator */
     protected $_serviceLocator;
 
 
@@ -68,7 +64,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
 
     /**
      * Get service locator
-     * @return ServiceLocatorInterface
+     * @return ServiceLocatorInterface $this->_serviceLocator
      */
     public function getServiceLocator()
     {
@@ -109,7 +105,7 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
 
     /**
      * Returns the node entity
-     * @return Entity\Node
+     * @return Entity\Node $this->_entity
      */
     public function getNodeEntity()
     {
@@ -142,8 +138,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
 
     /**
      * Lazy-load a gateway for the provided entity type (providing DI and initialization)
-     * @param $entityType
-     * @return AbstractGateway
+     * @param string $entityType
+     * @return AbstractGateway $gateway
      */
     protected function _lazyLoad($entityType)
     {
@@ -288,7 +284,6 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
 
         $updatesByType = array();
         $this->getPendingUpdates();
-
 
         /* @var \Entity\Update $update */
         foreach ($this->updates as $update) {
@@ -489,8 +484,8 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
 
     /**
      * Returns the value of a config setting for this node, or if no key specified, all keys
-     * @param string|null $key
-     * @return null
+     * @param string|NULL $key
+     * @return mixed $config
      */
     public function getConfig($key = NULL)
     {
@@ -509,7 +504,6 @@ abstract class AbstractNode implements ServiceLocatorAwareInterface
      * To be implemented in each NodeModule
      * Should set up any initial data structures, connections, and open any required files that the node needs to operate.
      * In the case of any errors that mean a successful sync is unlikely, a InitException MUST be thrown.
-     * @param NodeEntity $nodeEntity
      */
     abstract protected function _init();
 
