@@ -52,10 +52,7 @@ class ProductStock extends CronRunnable
                             $node->retrieve();
                             $logMessage = 'Cron "productStock" finished retrieve on node '.$nodeId;
                             $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
-                        }else{
-                            $logMessage = 'Cron "productStock" does no retrieve on node '.$nodeId;
                         }
-                        $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
                     }catch (NodeException $nodeException) {
                         $logMessage = 'Synchronizer error on node '.$node->getNodeId().': '.$nodeException->getMessage();
                         $logData = array_merge($logData, array(
@@ -76,10 +73,8 @@ class ProductStock extends CronRunnable
                     if ($nodeEntity->getType() != 'accredo') {
                         $node->update();
                         $logMessage = 'Cron "productStock" finished update on node '.$nodeId;
-                    }else{
-                        $logMessage = 'Cron "productStock" does no update on node '.$nodeId;
+                        $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
                     }
-                    $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
                 }catch(NodeException $nodeException){
                     $logMessage = 'Synchronizer error updating node '.$nodeId.': '.$nodeException->getMessage();
                     $logData = array_merge($logData, array(

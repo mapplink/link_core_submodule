@@ -47,9 +47,6 @@ class Retrieval extends CronRunnable
                         $node->retrieve();
                         $logMessage = 'Cron "retrieval" finished retrieve on node '.$nodeId;
                         $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
-
-                        $logMessage = 'Cron "retrieval" does no update on node '.$nodeId;
-                        $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
                     }catch (NodeException $nodeException) {
                         $logMessage = 'Synchronizer error on node '.$node->getNodeId().': '.$nodeException->getMessage();
                         $logData = array_merge($logData, array(

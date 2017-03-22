@@ -45,9 +45,6 @@ class Update extends CronRunnable
                         $logMessage = 'Cron "update" finished init on node '.$nodeId;
                         $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
 
-                        $logMessage = 'Cron "update" does no retrieve on node '.$nodeId;
-                        $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
-
                         $node->update();
                         $logMessage = 'Cron "update" finished update on node '.$nodeId;
                         $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
