@@ -68,6 +68,7 @@ class ProductStock extends CronRunnable
 
             foreach ($nodesToDeinit as $node) {
                 $nodeId = $node->getNodeId();
+                $nodeEntity = $node->getNodeEntity();
                 $logData = array('node id'=>$nodeId);
                 try{
                     if ($nodeEntity->getType() != 'accredo') {
