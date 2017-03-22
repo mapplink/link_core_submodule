@@ -23,9 +23,6 @@ use Zend\ServiceManager\ServiceLocatorAwareInterface;
 class Update extends CronRunnable
 {
 
-    const LOGCODE = 'crn_supd';
-
-
     /**
      * Performs any scheduled actions.
      */
@@ -46,21 +43,21 @@ class Update extends CronRunnable
                     try{
                         $node->init($nodeEntity, $this->scheduledRun);
                         $logMessage = 'Cron "update" finished init on node '.$nodeId;
-                        $this->_logService->log(LogService::LEVEL_INFO, self::LOGCODE.'_node', $logMessage, $logData);
+                        $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
 
                         $logMessage = 'Cron "update" does no retrieve on node '.$nodeId;
-                        $this->_logService->log(LogService::LEVEL_INFO, self::LOGCODE.'_node', $logMessage, $logData);
+                        $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
 
                         $node->update();
                         $logMessage = 'Cron "update" finished update on node '.$nodeId;
-                        $this->_logService->log(LogService::LEVEL_INFO, self::LOGCODE.'_node', $logMessage, $logData);
+                        $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
                     }catch (NodeException $nodeException) {
                         $logMessage = 'Synchronizer error on node '.$node->getNodeId().': '.$nodeException->getMessage();
                         $logData = array_merge($logData, array(
                             $nodeException->getMessage(),
                             $nodeException->getTraceAsString()
                         ));
-                        $this->_logService->log(LogService::LEVEL_ERROR, self::LOGCODE.'_nupdex',
+                        $this->_logService->log(LogService::LEVEL_ERROR, $this->getLogCode().'_nupdex',
                             $logMessage, $logData, array('exception'=>$nodeException, 'node'=>$node));
                         echo PHP_EOL.$nodeException->getTraceAsString().PHP_EOL;
                     }
@@ -69,28 +66,28 @@ class Update extends CronRunnable
                     try{
                         $node->deinit();
                         $logMessage = 'Cron "update" finished deinit on node '.$nodeId;
-                        $this->_logService->log(LogService::LEVEL_INFO, self::LOGCODE.'_node', $logMessage, $logData);
+                        $this->_logService->log(LogService::LEVEL_INFO, $this->getLogCode().'_node', $logMessage, $logData);
                     }catch (NodeException $nodeException) {
                         $logMessage = 'Synchronizer error (node) on node '.$nodeId.' deinit: '.$nodeException->getMessage();
                         $logData = array_merge($logData, array(
                             $nodeException->getMessage(),
                             $nodeException->getTraceAsString()
                         ));
-                        $this->_logService->log(LogService::LEVEL_ERROR, self::LOGCODE.'_nodeex',
+                        $this->_logService->log(LogService::LEVEL_ERROR, $this->getLogCode().'_nodeex',
                             $logMessage, $logData, array('exception'=>$nodeException, 'node'=>$node));
                         echo PHP_EOL.$nodeException->getTraceAsString().PHP_EOL;
                     }
                 }
             }
         }catch (SyncException $syncException) {
-            $this->_logService->log(LogService::LEVEL_ERROR, self::LOGCODE.'_syncex',
+            $this->_logService->log(LogService::LEVEL_ERROR, $this->getLogCode().'_syncex',
                 'Synchronizer error (sync): '.$syncException->getMessage(),
                 array($syncException->getMessage(), $syncException->getTraceAsString()),
                 array('exception'=>$syncException)
             );
             echo PHP_EOL.$syncException->getTraceAsString().PHP_EOL;
         }catch (MagelinkException $magelinkException) {
-            $this->_logService->log(LogService::LEVEL_ERROR, self::LOGCODE.'_mageex',
+            $this->_logService->log(LogService::LEVEL_ERROR, $this->getLogCode().'_mageex',
                 'Synchronizer error (mage): '.$magelinkException->getMessage(),
                 array($magelinkException->getMessage(), $magelinkException->getTraceAsString()),
                 array('exception'=>$magelinkException)
