@@ -422,7 +422,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $this->reduceOverdueFlag();
 
             $logCode = $this->getLogCode().'_run';
-            $logMessage = 'Cron '.$this->getName().' started at '.$startDate;
+            $logMessage = 'Cron "'.$this->getName().'" started at '.$startDate;
             $logData['start'] = $startDate;
             $logEntities = array('magelinkCron'=>$this);
             $this->_logService->log(LogService::LEVEL_INFO, $logCode, $logMessage, $logData);
@@ -436,7 +436,7 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
             $runMinutes = floor($runtime / 60);
             $runSeconds = round(fmod($runtime, 60), 1);
 
-            $logMessage = 'Cron '.$this->getName().' finished at '.$endDate
+            $logMessage = 'Cron "'.$this->getName().'" finished at '.$endDate
                 .'. Runtime was '.($runMinutes ? $runMinutes.'min, ' : '').$runSeconds.'s.';
             $logData = array_merge($logData, array('end'=>$endDate, 'runtime'=>$runtime));
             $this->_logService->log(LogService::LEVEL_INFO, $logCode.'done', $logMessage, $logData, $logEntities);
