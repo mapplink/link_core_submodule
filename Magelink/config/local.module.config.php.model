@@ -1,5 +1,7 @@
 <?php
 
+//return array();
+
 return array(
     'magelink_cron'=>array(
         'synchronizer'=>array(
@@ -12,22 +14,22 @@ return array(
         'retrieval'=>array(
             'class'=>'\Magelink\Cron\Retrieval',
             'interval'=>30,
-            'offset'=>2,
-            'lockTime'=>180,
+            'offset'=>20,
+            'lockTime'=>360,
             'overdue'=>TRUE
         ),
         'update'=>array(
             'class'=>'\Magelink\Cron\Update',
             'interval'=>30,
-            'offset'=>22,
-            'lockTime'=>180,
+            'offset'=>15,
+            'lockTime'=>360,
             'overdue'=>TRUE
         ),
         'productStock'=>array(
             'class'=>'\Magelink\Cron\ProductStock',
             'interval'=>30,
-            'offset'=>12,
-            'lockTime'=>180,
+            'offset'=>0,
+            'lockTime'=>360,
             'overdue'=>TRUE
         )
     )
