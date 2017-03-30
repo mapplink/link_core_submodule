@@ -17,7 +17,21 @@ use Magelink\Exception\MagelinkException;
 
 class DefaultController extends BaseController
 {
+
+    /**
+     * @return ViewModel
+     */
     public function indexAction()
+    {
+        $username = $this->getCurrentUser()->getDisplayName();
+        return new ViewModel(array('username'=>$username));
+    }
+
+    /**
+     * @return void|ViewModel
+     * @throws MagelinkException
+     */
+    public function dashboardAction()
     {
         $config = $this->getServiceLocator()->get('Config');
         $widgets = $config['dashboard_widgets'];

@@ -5,7 +5,7 @@ $navigation = array(
         'default'=>array(
             'dashboard'=>array(
                 'label'=>'Dashboard',
-                'route'=>'home',
+                'route'=>'dashboard',
                 'iconClass'=>'glyphicon glyphicon-dashboard',
                 'pages'=>array(
                 ),
