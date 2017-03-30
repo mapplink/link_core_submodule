@@ -21,7 +21,16 @@ $routeConfig = array(
                     ),
                 ),
             ),
-
+            'dashboard'=>array(
+                'type'=>'Zend\Mvc\Router\Http\Literal',
+                'options'=>array(
+                    'route'=>'/dashboard',
+                    'defaults'=>array(
+                        'controller'=>'Web\Controller\Default',
+                        'action'=>'dashboard',
+                    ),
+                ),
+            ),
             'query'=>array(
                 'type'=>'Zend\Mvc\Router\Http\Literal',
                 'options'=>array(
