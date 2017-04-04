@@ -1,4 +1,5 @@
 <?php
+
 return array(
     'BjyAuthorize\Guard\Controller'=>array(
         // Guest
@@ -21,6 +22,6 @@ return array(
         array('controller'=>'Web\Controller\CRUD\ConfigAdmin', 'roles'=>array('administrator')),
         array('controller'=>'Web\Controller\CRUD\CronjobAdmin', 'roles'=>array('administrator')),
         array('controller'=>'Web\Controller\CRUD\NodeAdmin', 'roles'=>array('administrator')),
-        array('controller'=>'Web\Controller\Query', 'roles'=>array('administrator')),
+        array('controller'=>'Web\Controller\Query', 'roles'=>array('administrator'))
     )
 );
