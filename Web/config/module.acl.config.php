@@ -4,8 +4,10 @@ return array(
         // Guest
         array('controller'=>'zfcuser', 'roles'=>array('guest')),
         array('controller'=>'Web\Controller\CRUD\ZfcUser', 'roles'=>array('guest')),
+        // Picker Packer
+        array('controller'=>'Web\Controller\Default', 'action'=>'index', 'roles'=>array('picker-packer')),
         // Manager
-        array('controller'=>'Web\Controller\Default', 'roles'=>array('manager')),
+        array('controller'=>'Web\Controller\Default', 'action'=>'dashboard', 'roles'=>array('manager')),
         array('controller'=>'Web\Controller\CRUD\UserAdmin', 'roles'=>array('manager')),
         array('controller'=>'Web\Controller\CRUD\LocationAdmin', 'roles'=>array('manager')),
         array('controller'=>'Web\Controller\CRUD\EmailTemplateAdmin', 'roles'=>array('manager')),
