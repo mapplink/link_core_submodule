@@ -44,13 +44,36 @@ return array (
     ),
 
     'magelink_cron'=>array(
+/*
         'synchronizer'=>array(
             'class'=>'\Magelink\Cron\Synchronizer',
             'interval'=>30,
             'offset'=>0,
-            'lockTime'=>180,
+            'lockTime'=>360,
+            'overdue'=>TRUE
+        ),
+        'retrieval'=>array(
+            'class'=>'\Magelink\Cron\Retrieval',
+            'interval'=>30,
+            'offset'=>20,
+            'lockTime'=>360,
+            'overdue'=>TRUE
+        ),
+        'update'=>array(
+            'class'=>'\Magelink\Cron\Update',
+            'interval'=>30,
+            'offset'=>15,
+            'lockTime'=>360,
+            'overdue'=>TRUE
+        ),
+        'productStock'=>array(
+            'class'=>'\Magelink\Cron\ProductStock',
+            'interval'=>30,
+            'offset'=>0,
+            'lockTime'=>360,
             'overdue'=>TRUE
         )
+*/
     ),
 
     'country_iso2_mapping'=>array (
