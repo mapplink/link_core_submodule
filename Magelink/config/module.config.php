@@ -44,14 +44,14 @@ return array (
     ),
 
     'magelink_cron'=>array(
-/**/
+/*
         'synchronizer'=>array(
             'class'=>'\Magelink\Cron\Synchronizer',
             'interval'=>30,
             'offset'=>0,
             'lockTime'=>360,
             'overdue'=>TRUE
-/*        ),
+        ),
         'retrieval'=>array(
             'class'=>'\Magelink\Cron\Retrieval',
             'interval'=>30,
@@ -72,7 +72,8 @@ return array (
             'offset'=>0,
             'lockTime'=>360,
             'overdue'=>TRUE
-/**/        )
+        )
+*/
     ),
 
     'country_iso2_mapping'=>array (

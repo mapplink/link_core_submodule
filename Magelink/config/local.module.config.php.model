@@ -4,6 +4,7 @@
 
 return array(
     'magelink_cron'=>array(
+        // Either this one ...
         'synchronizer'=>array(
             'class'=>'\Magelink\Cron\Synchronizer',
             'interval'=>30,
@@ -11,6 +12,7 @@ return array(
             'lockTime'=>360,
             'overdue'=>TRUE
         ),
+        // ... or these 3:
         'retrieval'=>array(
             'class'=>'\Magelink\Cron\Retrieval',
             'interval'=>30,
