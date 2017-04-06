@@ -7,7 +7,7 @@
  * @author Seo Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
- * @license Commercial - All Rights Reserved
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
  */
 
 namespace Email\Form;
@@ -17,7 +17,7 @@ use Zend\InputFilter\InputFilter;
 use Email\Entity\EmailTemplate;
 
 class EmailTemplateParamForm extends DoctrineZFBaseForm
-{  
+{
 
     /**
      * Constructor
@@ -25,7 +25,7 @@ class EmailTemplateParamForm extends DoctrineZFBaseForm
      * @param string $name
      */
     public function __construct(\Doctrine\ORM\EntityManager $entityManager, $name = null)
-    {   
+    {
         parent::__construct($entityManager, $name);
 
         $this->initFields();
@@ -34,8 +34,8 @@ class EmailTemplateParamForm extends DoctrineZFBaseForm
 
     /**
      * Set up fields
-     * @param  array $excludeRoleIds 
-     * @return 
+     * @param  array $excludeRoleIds
+     * @return
      */
     protected function initFields()
     {
@@ -64,7 +64,7 @@ class EmailTemplateParamForm extends DoctrineZFBaseForm
                 'label' => 'Email Template',
             ),
         ));
-      
+
         $this->add(array(
             'name' => 'submit',
             'type' => 'Submit',
