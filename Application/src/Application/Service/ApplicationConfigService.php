@@ -219,6 +219,30 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     }
 
     /**
+     * @return string $adminEmailsData
+     */
+    protected function getAdminEmailsData()
+    {
+        return $this->getArrayKeyData($this->getConfigSystemLogData(), 'admin_emails');
+    }
+
+    /**
+     * @return string $sender
+     */
+    public function getSender()
+    {
+        return $this->getArrayKeyData($this->getAdminEmailsData(), 'from', '');
+    }
+
+    /**
+     * @return string $adminEmail
+     */
+    public function getAdminEmail()
+    {
+        return $this->getArrayKeyData($this->getAdminEmailsData(), 'to', '');
+    }
+
+    /**
      * @return array $configCronData
      */
     protected function getConfigClientData()
@@ -233,7 +257,6 @@ class ApplicationConfigService implements ServiceLocatorAwareInterface
     {
         return $this->getArrayKeyData($this->getConfigClientData(), 'email', '');
     }
-
 
     protected function getClientHour($code, $default)
     {
