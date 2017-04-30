@@ -10,7 +10,6 @@
 
 namespace Application;
 
-use Application\Helper\ErrorHandler;
 use Application\Service\ApplicationConfigService;
 use Log\Service\LogService;
 use Magelink\Exception\MagelinkException;
@@ -682,7 +681,10 @@ abstract class CronRunnable implements ServiceLocatorAwareInterface
 
             $this->_logService->log(LogService::LEVEL_INFO,
                     $subject, $message, array('cron job'=>$name, 'file name'=>$filename, 'user id'=>$user->getId()));
-            mail(ErrorHandler::ERROR_TO, $subject, $message, 'From: ' . ErrorHandler::ERROR_FROM);
+
+            $sender = $this->_applicationConfigService->getSender();
+            $adminEmail = $this->_applicationConfigService->getAdminEmail();
+            mail($sender, $subject, $message, 'From: ' . $adminEmail);
         }
 
         return $success;

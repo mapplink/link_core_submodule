@@ -10,18 +10,23 @@
 
 namespace Application\Helper;
 
+use Application\Service\ApplicationConfigService;
 use Log\Logger\EmailLogger;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 
 class ErrorHandler
 {
 
-    const ERROR_TO = 'magelink_log@lero9.com';
-    const ERROR_FROM = 'noreply@lero9.co.nz';
-
-    /** @var bool|NULL $allowException */
+    /** @var ServiceLocatorInterface self::$serviceLocator */
+    protected static $serviceLocator = NULL;
+    /** @var bool|NULL self::$allowException */
     protected static $allowException = NULL;
-    /** @var string|FALSE $_lastError */
+    /** @var string self::$sender */
+    protected static $sender = '';
+    /** @var string self::$recipient */
+    protected static $recipient = '';
+    /** @var string|FALSE $this->_lastError */
     protected $_lastError = FALSE;
 
 
@@ -31,6 +36,11 @@ class ErrorHandler
      */
     public function __construct($allowException = NULL)
     {
+        $configDir = strstr(__DIR__, 'magelink/Application', TRUE).'config/autoload/';
+        $config = array_replace_recursive(include $configDir.'global.php', include $configDir.'local.php');
+        self::$sender = $config['system_log']['admin_emails']['from'];
+        self::$recipient = $config['system_log']['admin_emails']['to'];
+
         if (self::$allowException === NULL) {
             register_shutdown_function(array($this, 'shutdownhandler'));
         }
@@ -96,7 +106,7 @@ class ErrorHandler
             $content = mb_substr($content, 0, EmailLogger::EMAIL_MAX_LENGTH * 0.9)
                 ."\r\n...\r\n".mb_substr($content, EmailLogger::EMAIL_MAX_LENGTH * -0.1);
         }
-        @mail(self::ERROR_TO, $subject, $content, 'From: '.self::ERROR_FROM);
+        @mail(self::$recipient, $subject, $content, 'From: '.self::$sender);
 
         $trace = $throwable->getTraceAsString();
         if (mb_strlen($trace) > EmailLogger::EMAIL_MAX_LENGTH) {
@@ -214,7 +224,7 @@ class ErrorHandler
                 $content = mb_substr($content, 0, EmailLogger::EMAIL_MAX_LENGTH * 0.9)
                     ."\r\n...\r\n".mb_substr($content, EmailLogger::EMAIL_MAX_LENGTH * -0.1);
             }
-            mail(self::ERROR_TO, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::ERROR_FROM);
+            mail(self::$recipient, 'MageLink Error Handler: '.$errorType, $content, 'From: '.self::$sender);
             $this->_lastError = $content;
         }
 

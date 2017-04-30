@@ -23,6 +23,8 @@ class EmailLogger extends AbstractLogger
     protected $lastCache = array();
     protected $cacheSize = 20;
 
+    protected $sender;
+    protected $adminEmail;
     protected $clientEmail;
     protected $clientEmailStarthour;
     protected $clientEmailEndhour;
@@ -46,6 +48,8 @@ class EmailLogger extends AbstractLogger
         $this->lastCache = array();
         $this->cacheSize = 20;
 
+        $this->sender = $applicationConfigService->getSender();
+        $this->adminEmail = $applicationConfigService->getAdminEmail();
         $this->clientEmail = $applicationConfigService->getClientEmail();
         $this->clientEmailStarthour = $applicationConfigService->getClientStarthour();
         $this->clientEmailEndhour = $applicationConfigService->getClientEndhour();
@@ -127,11 +131,11 @@ class EmailLogger extends AbstractLogger
                 ."\r\n...\r\n".mb_substr($content, self::EMAIL_MAX_LENGTH * -0.1);
         }
 
-        mail(ErrorHandler::ERROR_TO, $subject, $content, 'Content-Type: text/plain');
+        $additionalHeader = 'Content-Type: text/plain'."\r\n".'From: '.$this->sender;
+        mail($this->adminEmail, $subject, $content, $additionalHeader);
 
         $daytime = (date('H') > $this->clientEmailStarthour) && (date('H') < $this->clientEmailEndhour);
         if ($this->clientEmail && $daytime && $this->notifyClient()) {
-            $additionalHeader = 'Content-Type: text/plain'."\r\n".'From: '.ErrorHandler::ERROR_FROM;
             mail($this->clientEmail, $clientSubject, $content, $additionalHeader);
         }
     }
