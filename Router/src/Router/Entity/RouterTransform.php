@@ -1,6 +1,5 @@
 <?php
 /**
- * @category Router
  * @package Router\Entity
  * @author Sean Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
@@ -238,4 +237,5 @@ class RouterTransform extends \Magelink\Entity\DataDBaseEntity
     {
         return $this->srcAttribute;
     }
+
 }

@@ -1,8 +1,7 @@
 <?php
 /**
- * Magelink\Form
- * @category Magelink
- * @package Magelink\Form
+ * @package Web\Form
+ * @author Sean Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
@@ -37,70 +36,70 @@ class ConfigForm extends DoctrineZFBaseForm
     protected function initFields()
     {
         $this->add(array(
-            'name' => 'configId',
-            'type' => 'Hidden',
+            'name'=>'configId',
+            'type'=>'Hidden',
             'attributes'=>array('class'=>'form-control'),
         ));
 
         $this->add(array(
-            'name' => 'module',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Module',
+            'name'=>'module',
+            'type'=>'Text',
+            'options'=>array(
+                'label'=>'Module',
             ),
-            'attributes' => array(
-                'readonly' => TRUE,
+            'attributes'=>array(
+                'readonly'=>TRUE,
                 'class'=>'form-control',
             ),
         ));
 
         $this->add(array(
-            'name' => 'humanName',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Name',
+            'name'=>'humanName',
+            'type'=>'Text',
+            'options'=>array(
+                'label'=>'Name',
             ),
-            'attributes' => array(
-                'readonly' => TRUE,
+            'attributes'=>array(
+                'readonly'=>TRUE,
                 'class'=>'form-control',
             ),
         ));
 
         $this->add(array(
-            'name' => 'key',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Key',
+            'name'=>'key',
+            'type'=>'Text',
+            'options'=>array(
+                'label'=>'Key',
             ),
-            'attributes' => array(
-                'readonly' => TRUE,
+            'attributes'=>array(
+                'readonly'=>TRUE,
                 'class'=>'form-control',
             ),
         ));
 
         $this->add(array(
-            'name' => 'value',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Value',
+            'name'=>'value',
+            'type'=>'Text',
+            'options'=>array(
+                'label'=>'Value',
             ),
             'attributes'=>array('class'=>'form-control'),
         ));
 
         $this->add(array(
-            'name' => 'defaultValue',
-            'type' => 'Text',
-            'options' => array(
-                'label' => 'Default',
+            'name'=>'defaultValue',
+            'type'=>'Text',
+            'options'=>array(
+                'label'=>'Default',
                 'class'=>'form-control',
             ),
         ));
 
         $this->add(array(
-            'name' => 'submit',
-            'type' => 'Submit',
-            'attributes' => array(
-                'value' => 'Save',
+            'name'=>'submit',
+            'type'=>'Submit',
+            'attributes'=>array(
+                'value'=>'Save',
                 'class'=>'form-control',
             ),
         ));
@@ -116,11 +115,11 @@ class ConfigForm extends DoctrineZFBaseForm
         $inputFilter = new InputFilter();
 /*
         $inputFilter->add(array(
-            'name'     => 'value',
-            'required' => true,
-            'validators' => array(
+            'name'    =>'value',
+            'required'=>true,
+            'validators'=>array(
                 array(
-                    'name' => 'Value',
+                    'name'=>'Value',
                 ),
             ),
         ));
@@ -134,11 +133,10 @@ class ConfigForm extends DoctrineZFBaseForm
      */
     public function save()
     {
-        try {
+        try{
             return parent::save();
-        } catch (\Doctrine\DBAL\DBALException $e) {
-            $message = $e->getMessage();
-            throw $e;
+        }catch (\Doctrine\DBAL\DBALException $exception) {
+            throw $exception;
         }
 
         return false;

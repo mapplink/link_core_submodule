@@ -1,7 +1,5 @@
 <?php
 /**
- * Node\Abstract Node
- * @category Node
  * @package Node
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

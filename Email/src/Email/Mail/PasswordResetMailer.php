@@ -1,12 +1,19 @@
 <?php
+/*
+ * @package Email\Mail
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
+ */
 
 namespace Email\Mail;
 
+
 class PasswordResetMailer extends AbstractFileTemplateMailer
 {
-    protected 
-        $url // Url to password reset 
-    ;
+    /** @var string $this->url  Url to password reset */
+    protected $url;
 
     /**
      * Constructor
@@ -48,6 +55,5 @@ class PasswordResetMailer extends AbstractFileTemplateMailer
         )));
         parent::send();
     }
-
     
 }

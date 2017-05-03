@@ -1,8 +1,5 @@
 <?php
-/**
- * Order shipment notification mailer
- *
- * @category Email
+/*
  * @package Email\Mail
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

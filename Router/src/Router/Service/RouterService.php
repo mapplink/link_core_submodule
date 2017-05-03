@@ -2,7 +2,6 @@
 /**
  * The RouterService is responsible for distributing entities and related associations,
  *   as well as providing notifications to nodes when new data is available.
- * @category Router
  * @package Router\Service
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

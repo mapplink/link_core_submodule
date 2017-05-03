@@ -1,4 +1,10 @@
 <?php
+/**
+ * @package Web\Helper
+ * @author Sean Yao
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
+ */
 
 namespace Web\Helper;
 
@@ -9,7 +15,8 @@ use Doctrine\ORM\Tools\Pagination\Paginator as BasePaginator;
  */
 class Paginator extends BasePaginator
 {  
-    protected 
+
+    protected
         $page         = null,   // Current page
         $routeName    = null,   // Route name
         $routeParams  = array(), // Route params
@@ -136,4 +143,5 @@ class Paginator extends BasePaginator
     {
         return $this->routeQueries;
     }
+
 }

@@ -1,6 +1,5 @@
 <?php
 /**
- * @category Application
  * @package Application\Helper
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

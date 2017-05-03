@@ -1,8 +1,15 @@
 <?php
+/**
+ * @package Web\Widget
+ * @author Matt Johnston
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
+ */
 
 namespace Web\Widget;
 
-class OrdersStatus extends BarWidget {
+class OrdersStatus extends BarWidget
+{
 
     /**
      * Should be overridden by child classes to implement data loading.
@@ -31,4 +38,5 @@ class OrdersStatus extends BarWidget {
     function getTitle() {
         return 'Orders by Status';
     }
+
 }

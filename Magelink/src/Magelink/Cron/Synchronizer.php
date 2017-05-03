@@ -1,8 +1,5 @@
 <?php
 /**
- * Magelink
- *
- * @category Magelink
  * @package Magelink\Cron
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

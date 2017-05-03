@@ -1,8 +1,7 @@
 <?php
 /**
  * Class to manage sorting
- * @category Magelink
- * @package Magelink\Controller
+ * @package Web\Helper
  * @author Sean Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
@@ -14,12 +13,14 @@ namespace Web\Helper;
 
 class ListViewSorter
 {
+
     /** @var array $this->config  List view config */
     protected $config;
     /** @var string $this->sortedField  Sorted field */
     protected $sortedField;
     /** @var string $this->sortedDirection  ASC or DESC */
     protected $sortedDirection;
+
 
     /**
      * Constructor

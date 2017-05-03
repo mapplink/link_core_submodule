@@ -1,7 +1,6 @@
 <?php
 /**
  * Class AbstractHelper provides standard functionality for use by the various Entity helpers (Saver/Loader/Querier)
- * @category Entity
  * @package Entity\Helper
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

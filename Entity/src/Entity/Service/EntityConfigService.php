@@ -1,8 +1,5 @@
 <?php
 /**
- * Entity\Service
- *
- * @category Entity
  * @package Entity\Service
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

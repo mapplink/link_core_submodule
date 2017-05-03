@@ -1,8 +1,6 @@
 <?php
 /**
- * BaseController
- * @category Application
- * @package Application\Controller
+ * @package Web\Controller
  * @author Sean Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
@@ -73,9 +71,8 @@ abstract class BaseController extends AbstractActionController
 
     /**
      * Load mailer
-     *
-     * @param  string $name
-     * @param  array  $args
+     * @param string $name
+     * @param array  $args
      * @return
      */
     public function loadMailer($name, $args = array())
@@ -93,4 +90,5 @@ abstract class BaseController extends AbstractActionController
     {
         return $this->getServiceLocator()->get('zend_db');
     }
+
 }

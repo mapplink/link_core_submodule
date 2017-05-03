@@ -1,7 +1,6 @@
 <?php
 /**
- * @category Web
- * @package Controller
+ * @package Web\Controller
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2016 LERO9 Ltd.
  * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information

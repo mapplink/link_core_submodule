@@ -1,7 +1,5 @@
 <?php
 /**
- * Web\Controller\CRUD
- * @category Web
  * @package Web\Controller
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.

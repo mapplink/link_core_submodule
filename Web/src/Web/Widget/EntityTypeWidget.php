@@ -1,8 +1,16 @@
 <?php
+/**
+ * @package Web\Widget
+ * @author Matt Johnston
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
+ */
 
 namespace Web\Widget;
 
-class EntityTypeWidget extends BarWidget {
+
+class EntityTypeWidget extends BarWidget
+{
 
     /**
      * Should be overridden by child classes to implement data loading.
@@ -36,4 +44,5 @@ class EntityTypeWidget extends BarWidget {
     function getTitle() {
         return 'Entities';
     }
+
 }

@@ -1,7 +1,6 @@
 <?php
 /**
  * Responsible for updating entities in the database
- * @category Entity
  * @package Entity\Helper
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

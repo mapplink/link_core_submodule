@@ -1,6 +1,5 @@
 <?php
 /**
- * @category Magelink
  * @package Magelink\Cron
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2017 LERO9 Ltd.

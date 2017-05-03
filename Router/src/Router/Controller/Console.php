@@ -1,9 +1,9 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * @package Router\Controller
+ * @author Sean Yao
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
  */
 
 namespace Router\Controller;
@@ -11,17 +11,20 @@ namespace Router\Controller;
 use Application\Controller\AbstractConsole;
 use Magelink\Exception\MagelinkException;
 
-/**
- * Manages assorted router maintenance tasks
- */
+
 class Console extends AbstractConsole
 {
 
+    /** @var array $this->_tasks */
     protected $_tasks = array(
         'refreshtransform',
         'distribute'
     );
 
+    /**
+     * @param $id
+     * @throws MagelinkException
+     */
     protected function refreshtransformTask($id)
     {
         /** @var \Router\Entity\RouterTransform $tf */
@@ -105,8 +108,9 @@ class Console extends AbstractConsole
 
     }
 
-    protected function distributeTask($id){
-
-    }
+    /**
+     * @param $id
+     */
+    protected function distributeTask($id) {}
 
 }

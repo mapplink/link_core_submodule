@@ -1,13 +1,10 @@
 <?php
 /**
- * Log
- *
- * @category Log
  * @package Log\Cron
- * @author <alex@lero9.co.nz>
+ * @author Alex Pape
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
- */
+*/
 
 namespace Log\Cron;
 

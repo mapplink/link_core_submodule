@@ -1,5 +1,5 @@
-MAGELINK MODULE
-===============
+MAGELINK CORE MODULE
+====================
 
 Copyright (c)2014, Lero9. 
 All rights reserved.

@@ -1,6 +1,5 @@
 <?php
 /**
- * @category Log
  * @package Log\Logger
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

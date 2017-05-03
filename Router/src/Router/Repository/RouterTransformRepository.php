@@ -1,7 +1,15 @@
 <?php
+/**
+ * @package Router\Repository
+ * @author Sean Yao
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
+ */
 
 namespace Router\Repository;
 
+use Magelink\Exception\MagelinkException;
 use Doctrine\ORM\EntityRepository;
 
 /**
@@ -13,8 +21,18 @@ use Doctrine\ORM\EntityRepository;
 class RouterTransformRepository extends EntityRepository
 {
 
-    public function getApplicableTransforms($entity_type, $possible_attribute_ids, $type){
-        $dql = "SELECT rt FROM \Router\Entity\RouterTransform rt WHERE rt.entityTypeId = :entity_type_id AND rt.srcAttribute IN (:att_ids)";
+    /**
+     * @param int $entity_type
+     * @param string $possible_attribute_ids
+     * @param int $type
+     * @return array $applicableTransforms
+     * @throws MagelinkException
+     */
+    public function getApplicableTransforms($entity_type, $possible_attribute_ids, $type)
+    {
+        $dql = "SELECT rt FROM \Router\Entity\RouterTransform rt"
+            ." WHERE rt.entityTypeId = :entity_type_id AND rt.srcAttribute IN (:att_ids)";
+
         switch($type){
             case \Entity\Update::TYPE_CREATE:
                 $dql .= ' AND rt.enableCreate = 1';
@@ -26,7 +44,7 @@ class RouterTransformRepository extends EntityRepository
                 $dql .= ' AND rt.enableDelete = 1';
                 break;
             default:
-                throw new \Magelink\Exception\MagelinkException('Invalid update type: ' . $type);
+                throw new MagelinkException('Invalid update type: ' . $type);
         }
 
         return $this->getEntityManager()

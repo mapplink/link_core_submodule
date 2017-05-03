@@ -2,7 +2,6 @@
 /**
  * Responsible for providing node_status data (i.e. updated timestamps), attribute/node assignments
  *   and locating/updating pending updates and actions.
- * @category Node
  * @package Node\Service
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

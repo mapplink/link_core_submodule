@@ -1,10 +1,7 @@
 <?php
 /**
- * Class to manage searches
- * @category Magelink
- * @package Magelink\Controller
+ * @package Web\Helper
  * @author Sean Yao
- * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
  */
@@ -17,6 +14,7 @@ use Zend\Session\Container;
 
 class BaseSearchFilter
 {
+
     /** @var array  */
     protected $config = array();
     /** @var bool */

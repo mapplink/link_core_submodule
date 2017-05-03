@@ -1,6 +1,5 @@
 <?php
 /**
- * @category Web
  * @package Web\Controller
  * @author Sean Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
@@ -23,11 +22,14 @@ class EmailTemplateParamAdminController extends AbstractCRUDController
         return 'Email\Entity\EmailTemplateParam';
     }
 
+    /**
+     * @return array $listViewConfig
+     */
     protected function getListViewConfig()
     {
         return array(
-            'Key'           => array('linked' => true, 'sortable' => true),
-            'EmailTemplate' => array('getMethod' => 'getTemplateName'),
+            'Key'=>array('linked'=>true, 'sortable'=>true),
+            'EmailTemplate'=>array('getMethod'=>'getTemplateName'),
         );
     }
 

@@ -1,4 +1,11 @@
 <?php
+/**
+ * A Filter is an object that decides whether a particular edge or transform should apply to a specific entity.
+ * @package Router\Filter
+ * @author Matt Johnston
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
+ */
 
 namespace Router\Filter;
 
@@ -6,11 +13,7 @@ use Magelink\Exception\MagelinkException;
 use Entity\Service\EntityService;
 use Entity\Entity;
 
-/**
- * A Filter is an object that decides whether a particular edge or transform should apply to a specific entity.
- *
- * @package Router\Filter
- */
+
 abstract class AbstractFilter implements ServiceLocatorAwareInterface {
 
     /** @var  \Node\Service\NodeService */
@@ -137,4 +140,5 @@ abstract class AbstractFilter implements ServiceLocatorAwareInterface {
     {
         return $this->_serviceLocator;
     }
+
 }

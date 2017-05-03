@@ -1,6 +1,5 @@
 <?php
 /**
- * @category Application
  * @package Application\Service
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2015 LERO9 Ltd.

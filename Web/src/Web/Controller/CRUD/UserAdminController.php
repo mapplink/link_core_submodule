@@ -1,6 +1,5 @@
 <?php
 /**
- * @category Web
  * @package Web\Controller
  * @author Sean Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>

@@ -1,9 +1,8 @@
 <?php
 /**
  * A simple transform that sets an attribute to a provided value. Source attribute used only for trigger, value ignored
- * @category Router
  * @package Router\Transform
- * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @author Matt Johnston
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
  */
@@ -14,7 +13,9 @@ namespace Router\Transform;
 class SetTransform extends AbstractTransform
 {
 
+    /** @var mixed $this->_value */
     protected $_value = null;
+
 
     /**
      * Perform any initialization/setup actions, and check any prerequisites.
@@ -31,6 +32,7 @@ class SetTransform extends AbstractTransform
             // Value not configured
             return false;
         }
+
         return true;
     }
 

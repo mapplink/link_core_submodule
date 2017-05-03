@@ -1,4 +1,10 @@
 <?php
+/**
+ * @package Magelink\Auth
+ * @author Sean Yao
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
+ */
 
 namespace Magelink\Auth;
 
@@ -8,6 +14,7 @@ use Zend\Console\Request as ConsoleRequest;
 
 class ACLGuardController extends BaseGuardController
 {  
+
     /**
     * @see parent::onDispatch()
     * @param  MvcEvent $event
@@ -15,13 +22,9 @@ class ACLGuardController extends BaseGuardController
     */
     public function onDispatch(MvcEvent $event)
     {
-        if (
-            ($event->getRequest() instanceof ConsoleRequest)
-            && (php_sapi_name() == 'cli')
-        ) {
-            return ;
+        if (!($event->getRequest() instanceof ConsoleRequest) || php_sapi_name() != 'cli') {
+            parent::onDispatch($event);
         }
-
-        return parent::onDispatch($event);
     }
+
 }

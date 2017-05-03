@@ -1,8 +1,6 @@
 <?php
 /**
- * Base search filter form
- * @category Magelink
- * @package Magelink\Controller
+ * @package Web\Form
  * @author Sean Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
@@ -16,8 +14,10 @@ use Zend\Form\Form;
 
 class BaseSearchFilterForm extends Form
 {
-    // Grouping the form fields for the entity fields
+
+    /** @var array $this->fieldGroup  Grouping the form fields for the entity fields */
     protected $fieldGroup = array();
+
 
     /**
      * Constructor

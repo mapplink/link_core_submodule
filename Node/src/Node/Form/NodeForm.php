@@ -1,12 +1,9 @@
 <?php
 /**
- * Node\Form
- *
- * @category    Node
- * @package     Node\Form
- * @author      Seo Yao
- * @copyright   Copyright (c) 2014 LERO9 Ltd.
- * @license     Commercial - All Rights Reserved
+ * @package Node\Form
+ * @author Sean Yao
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
  */
 
 namespace Node\Form;
@@ -127,6 +124,5 @@ class NodeForm extends DoctrineZFBaseForm
 
         return $result;
     }
-
 
 }

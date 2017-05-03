@@ -1,7 +1,6 @@
 <?php
 /*
  * The base abstract class for all Magelink Cron Tasks.
- * @category Application
  * @package Application
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.

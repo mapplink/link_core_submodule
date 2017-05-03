@@ -1,8 +1,7 @@
 <?php
 /**
  * Class for generating admin interface
- * @category Magelink
- * @package Magelink\Controller
+ * @package Web\Controller
  * @author Sean Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.

@@ -1,26 +1,31 @@
 <?php
 /**
+ * @package Web\Form
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
  */
+
 namespace Web\Form\Entity;
 
-use Zend\Form\Form;
-use Zend\InputFilter\InputFilter;
 use Entity\Entity;
 use Entity\Service\EntityService;
 use Entity\Service\EntityConfigService;
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
 use Magelink\Exception\MagelinkException;
 use Web\Helper\BaseEntityAttributes;
+use Zend\Form\Form;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 
 class EditForm extends Form implements ServiceLocatorAwareInterface
 {
     /** @var string */
     protected $_entityType;
-
     /** @var ServiceLocatorInterface The service locator */
     protected $_serviceLocator;
+
 
     /**
      * Constructor

@@ -1,6 +1,5 @@
 <?php
 /**
- * @category Magelink
  * @package Magelink\Exception
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

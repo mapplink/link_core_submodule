@@ -1,7 +1,6 @@
 <?php
 /**
  * Represents an instance of a Magelink Entity Action.
- * @category Entity
  * @package Entity
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>

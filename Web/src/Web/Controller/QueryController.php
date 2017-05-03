@@ -1,8 +1,5 @@
 <?php
 /**
- * Web\Controller
- *
- * @category Web
  * @package Web\Controller
  * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>
@@ -21,14 +18,15 @@ class QueryController extends BaseController
 
     /**
      * Perform some very basic checks to ensure that query does not contain invalid contents.
-     * @param $query
-     * @return bool
+     * @param string $query
+     * @return bool $isValidQuery
      */
-    protected function checkQuery($query){
-        if(preg_match('/INSERT |UPDATE |DELETE | user |REPLACE |SET |GRANT |--|; |EXECUTE |RUN |CREATE |USE | log_/i', $query)){
-            return false;
-        }
-        return true;
+    protected function checkQuery($query)
+    {
+        $pattern = '/INSERT |UPDATE |DELETE | user |REPLACE |SET |GRANT |--|; |EXECUTE |RUN |CREATE |USE | log_/i';
+        $isValidQuery = !preg_match($pattern, $query);
+
+        return $isValidQuery;
     }
 
     /**
@@ -106,4 +104,5 @@ class QueryController extends BaseController
             'error'=>$error,
         ));
     }
+
 }

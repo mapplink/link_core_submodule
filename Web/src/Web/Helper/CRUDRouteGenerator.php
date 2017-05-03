@@ -1,8 +1,6 @@
 <?php
 /**
- * Class to manage routes
- * @category Magelink
- * @package Magelink\Controller
+ * @package Web\Helper
  * @author Sean Yao
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
@@ -17,11 +15,12 @@ use Zend\Filter\Word\CamelCaseToDash;
 
 class CRUDRouteGenerator
 {
-    /** @var \Web\Controller\BaseController $controller */
-    protected $controller;
 
-    /** @var string */
+    /** @var \Web\Controller\BaseController $this->controller */
+    protected $controller;
+    /** @var string $this->routePrefix*/
     protected $routePrefix;
+
 
     /**
      * Constructor
@@ -71,63 +70,63 @@ class CRUDRouteGenerator
     {
         return array(
 
-            $this->routePrefix => array (
-                'type' => 'Zend\Mvc\Router\Http\Literal',
-                'options' => array(
-                    'route' => '/' . $this->routePrefix,
+            $this->routePrefix=>array (
+                'type'=>'Zend\Mvc\Router\Http\Literal',
+                'options'=>array(
+                    'route'=>'/' . $this->routePrefix,
                 ),
 
-                'child_routes' => array(
-                    'list' => array(
-                        'type' => 'Zend\Mvc\Router\Http\Segment',
-                        'options' => array(
-                            'route' => '/list[/:page]',
-                            'defaults' => array(
-                                'controller' => $this->controllerInvokableName,
-                                'action'     => 'list',
+                'child_routes'=>array(
+                    'list'=>array(
+                        'type'=>'Zend\Mvc\Router\Http\Segment',
+                        'options'=>array(
+                            'route'=>'/list[/:page]',
+                            'defaults'=>array(
+                                'controller'=>$this->controllerInvokableName,
+                                'action'    =>'list',
                             ),
-                            'constraints' => array(
-                                'page'     => '[0-9]+',
-                            ),
-                        ),
-                    ),
-
-                    'edit' => array(
-                        'type' => 'Zend\Mvc\Router\Http\Segment',
-                        'options' => array(
-                            'route' => '/edit/:id',
-                            'defaults' => array(
-                                'controller' => $this->controllerInvokableName,
-                                'action'     => 'edit',
-                            ),
-                            'constraints' => array(
-                                'page'     => '[0-9]+',
+                            'constraints'=>array(
+                                'page'    =>'[0-9]+',
                             ),
                         ),
                     ),
 
-                    'create' => array(
-                        'type' => 'Zend\Mvc\Router\Http\Literal',
-                        'options' => array(
-                            'route' => '/create',
-                            'defaults' => array(
-                                'controller' => $this->controllerInvokableName,
-                                'action'     => 'create',
+                    'edit'=>array(
+                        'type'=>'Zend\Mvc\Router\Http\Segment',
+                        'options'=>array(
+                            'route'=>'/edit/:id',
+                            'defaults'=>array(
+                                'controller'=>$this->controllerInvokableName,
+                                'action'    =>'edit',
+                            ),
+                            'constraints'=>array(
+                                'page'    =>'[0-9]+',
                             ),
                         ),
                     ),
 
-                    'delete' => array(
-                        'type' => 'Zend\Mvc\Router\Http\Segment',
-                        'options' => array(
-                            'route' => '/delete/:id',
-                            'defaults' => array(
-                                'controller' => $this->controllerInvokableName,
-                                'action'     => 'delete',
+                    'create'=>array(
+                        'type'=>'Zend\Mvc\Router\Http\Literal',
+                        'options'=>array(
+                            'route'=>'/create',
+                            'defaults'=>array(
+                                'controller'=>$this->controllerInvokableName,
+                                'action'    =>'create',
                             ),
                         ),
-                        'constraints' => array(
-                            'page'     => '[0-9]+',
+                    ),
+
+                    'delete'=>array(
+                        'type'=>'Zend\Mvc\Router\Http\Segment',
+                        'options'=>array(
+                            'route'=>'/delete/:id',
+                            'defaults'=>array(
+                                'controller'=>$this->controllerInvokableName,
+                                'action'    =>'delete',
+                            ),
+                        ),
+                        'constraints'=>array(
+                            'page'    =>'[0-9]+',
                         ),
                     ),
 

@@ -1,21 +1,19 @@
 <?php
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * Responsible for advanced query services
+ * @package Entity\Helper
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
  */
 
 namespace Entity\Helper;
 
 use Magelink\Exception\MagelinkException;
-use Magelink\Exception\NodeException;
 use Entity\Entity;
-use Zend\Db\Sql\Expression;
 
-/**
- * Responsible for advanced query services
- */
+
 class Querier extends AbstractHelper implements \Zend\ServiceManager\ServiceLocatorAwareInterface {
 
     /**
@@ -179,7 +177,7 @@ class Querier extends AbstractHelper implements \Zend\ServiceManager\ServiceLoca
                 $k = strtolower($k);
                 $id = $this->getEntityConfigService()->parseAttribute($k, $entityType);
                 if(!$id){
-                    throw new \Magelink\Exception\MagelinkException('Invalid attribute ' . $k);
+                    throw new MagelinkException('Invalid attribute ' . $k);
                 }
                 $options['join'] = str_replace($k, 'att_'.$id.'.value', $options['join']);
             }
@@ -196,7 +194,7 @@ class Querier extends AbstractHelper implements \Zend\ServiceManager\ServiceLoca
             $k = strtolower($k);
             $id = $this->getEntityConfigService()->parseAttribute($k, $entityType);
             if(!$id){
-                throw new \Magelink\Exception\MagelinkException('Invalid attribute ' . $k);
+                throw new MagelinkException('Invalid attribute ' . $k);
             }
             $att = $this->getEntityConfigService()->getAttribute($id);
 
@@ -229,7 +227,7 @@ class Querier extends AbstractHelper implements \Zend\ServiceManager\ServiceLoca
             if(in_array($val, $attributes)){
                 $vid = $this->getEntityConfigService()->parseAttribute($val, $entityType);
                 if(!$vid){
-                    throw new \Magelink\Exception\MagelinkException('Invalid attribute ' . $k);
+                    throw new MagelinkException('Invalid attribute ' . $k);
                 }
                 $val = 'att_'.$vid.'.value';
                 $escape = false;
@@ -239,7 +237,7 @@ class Querier extends AbstractHelper implements \Zend\ServiceManager\ServiceLoca
             if(in_array($att, $attributes)){
                 $aid = $this->getEntityConfigService()->parseAttribute($att, $entityType);
                 if(!$aid){
-                    throw new \Magelink\Exception\MagelinkException('Invalid attribute ' . $k);
+                    throw new MagelinkException('Invalid attribute ' . $k);
                 }
                 $att = 'att_'.$aid.'.value';
             }else if(strpos($att, '.') === false){

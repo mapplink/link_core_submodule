@@ -3,8 +3,8 @@
  * A transform to copy data from a foreign key referenced Entity to this Entity.
  *   Example: Copy custom product attribute on to order item:
  *     src_attribute = product, dest_attribute=custname, foreign_type=product, foreign_att=custname
- * @category Router
  * @package Router\Transform
+ * @author Matt Johnston
  * @author Andreas Gerhards <andreas@lero9.co.nz>
  * @copyright Copyright (c) 2014 LERO9 Ltd.
  * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
@@ -13,17 +13,18 @@
 namespace Router\Transform;
 
 
-class DenormalizeTransform extends AbstractTransform {
+class DenormalizeTransform extends AbstractTransform
+{
 
-    /** @var \Entity\Entity The foreign entity (resolved) */
+    /** @var \Entity\Entity $this->_foreignEntity  The foreign entity (resolved) */
     protected $_foreignEntity;
-    /** @var string The attribute to pull from the foreign entity */
+    /** @var string $this->_foreignAttribute  The attribute to pull from the foreign entity */
     protected $_foreignAttribute;
 
 
     /**
      * Perform any initialization/setup actions, and check any prerequisites.
-     * @return boolean Whether this transform is eligible to run
+     * @return boolean $isTransformEligible  Whether this transform is eligible to run
      */
     protected function _init()
     {
@@ -61,8 +62,7 @@ class DenormalizeTransform extends AbstractTransform {
 
     /**
      * Apply the transform on any necessary data
-     *
-     * @return array New data changes to be merged into the update.
+     * @return array $newCodeValuePair  New data changes to be merged into the update.
      */
     public function _apply()
     {

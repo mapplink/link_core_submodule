@@ -1,13 +1,17 @@
 <?php
-namespace Magelink\Model;
-
-/* 
- * Copyright (c) 2014 Lero9 Limited
- * All Rights Reserved
- * This software is subject to our terms of trade and any applicable licensing agreements.
+/**
+ * @package Magelink\Model
+ * @author Matt Johnston
+ * @author Andreas Gerhards <andreas@lero9.co.nz>
+ * @copyright Copyright (c) 2014 LERO9 Ltd.
+ * @license http://opensource.org/licenses/BSD-3-Clause BSD-3-Clause - Please view LICENSE.md for more information
  */
 
-class SimpleModel {
+namespace Magelink\Model;
+
+
+class SimpleModel
+{
     
     private $_data = null;
     
@@ -109,6 +113,10 @@ class SimpleModel {
         return preg_replace_callback('/_([a-z])/', $func, $str);
     }
 
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
     public function __set($name, $value) {
         if(strpos($name, '_') === false){
             $name = $this->_fromCamelCase($name);
@@ -117,6 +125,10 @@ class SimpleModel {
         return $this->setData($name, $value);
     }
 
+    /**
+     * @param string $name
+     * @return array|mixed|null $value
+     */
     public function __get($name) {
         if(strpos($name, '_') === false){
             $name = $this->_fromCamelCase($name);
